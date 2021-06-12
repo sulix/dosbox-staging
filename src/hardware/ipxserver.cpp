@@ -20,10 +20,11 @@
 
 #if C_IPX
 
+#include <cstdlib>
+#include <cstring>
+#include <atomic>
 #include "ipxserver.h"
 #include "timer.h"
-#include <stdlib.h>
-#include <string.h>
 #include "ipx.h"
 
 constexpr int UDP_UNICAST = -1; // SDLNet magic number
@@ -37,7 +38,9 @@ Bit8u inBuffer[IPXBUFFERSIZE];
 IPaddress ipconn[SOCKETTABLESIZE];  // Active TCP/IP connection
 UDPsocket tcpconn[SOCKETTABLESIZE]; // Active TCP/IP connections
 SDLNet_SocketSet serverSocketSet;
-TIMER_TickHandler* serverTimer;
+SDL_Thread *serverThread = nullptr;
+SDL_mutex *serverMutex = nullptr;
+std::atomic_bool terminateServer;
 
 Bit8u packetCRC(Bit8u *buffer, Bit16u bufSize) {
 	Bit8u tmpCRC = 0;
@@ -115,8 +118,11 @@ static void sendIPXPacket(Bit8u *buffer, Bit16s bufSize) {
 
 bool IPX_isConnectedToServer(Bits tableNum, IPaddress ** ptrAddr) {
 	if(tableNum >= SOCKETTABLESIZE) return false;
+	SDL_LockMutex(serverMutex);
 	*ptrAddr = &ipconn[tableNum];
-	return connBuffer[tableNum].connected;
+	bool connected = connBuffer[tableNum].connected;
+	SDL_UnlockMutex(serverMutex);
+	return connected;
 }
 
 static void ackClient(IPaddress clientAddr) {
@@ -146,7 +152,7 @@ static void ackClient(IPaddress clientAddr) {
 		        SDLNet_GetError());
 }
 
-static void IPX_ServerLoop() {
+static int IPX_ServerLoop(MAYBE_UNUSED void *ptr) {
 	UDPpacket inPacket;
 	IPaddress tmpAddr;
 
@@ -158,50 +164,64 @@ static void IPX_ServerLoop() {
 	inPacket.data = &inBuffer[0];
 	inPacket.maxlen = IPXBUFFERSIZE;
 
-	const int result = SDLNet_UDP_Recv(ipxServerSocket, &inPacket);
-	if (result != 0) {
-		// Check to see if incoming packet is a registration packet
-		// For this, I just spoofed the echo protocol packet designation 0x02
-		IPXHeader *tmpHeader;
-		tmpHeader = (IPXHeader *)&inBuffer[0];
+	while (1) {
+		if (terminateServer) return 0;		
+		int result = SDLNet_UDP_Recv(ipxServerSocket, &inPacket);
+		assert(result != -1);
+		if (result == 0) {
+			Delay(1);
+			continue;
+		}
+		bool isRegPacket = false;
+		{
+			// Check to see if incoming packet is a registration packet
+			// For this, I just spoofed the echo protocol packet designation 0x02
+			IPXHeader *tmpHeader;
+			tmpHeader = (IPXHeader *)&inBuffer[0];
 
-		// Check to see if echo packet
-		if(SDLNet_Read16(tmpHeader->dest.socket) == 0x2) {
-			// Null destination node means its a server registration packet
-			if(tmpHeader->dest.addr.byIP.host == 0x0) {
-				UnpackIP(tmpHeader->src.addr.byIP, &tmpAddr);
-				for (uint16_t i = 0; i < SOCKETTABLESIZE; ++i) {
-					if(!connBuffer[i].connected) {
-						// Use prefered host IP rather than the reported source IP
-						// It may be better to use the reported source
-						ipconn[i] = inPacket.address;
+			// Check to see if echo packet
+			SDL_LockMutex(serverMutex);
+			if(SDLNet_Read16(tmpHeader->dest.socket) == 0x2) {
+				// Null destination node means its a server registration packet
+				if(tmpHeader->dest.addr.byIP.host == 0x0) {
+					isRegPacket = true;
+					UnpackIP(tmpHeader->src.addr.byIP, &tmpAddr);
+					for (uint16_t i = 0; i < SOCKETTABLESIZE; ++i) {
+						if(!connBuffer[i].connected) {
+							// Use prefered host IP rather than the reported source IP
+							// It may be better to use the reported source
+							ipconn[i] = inPacket.address;
 
-						connBuffer[i].connected = true;
-						host = ipconn[i].host;
-						LOG_MSG("IPXSERVER: Connect from %d.%d.%d.%d", CONVIP(host));
-						ackClient(inPacket.address);
-						return;
-					} else {
-						if((ipconn[i].host == tmpAddr.host) && (ipconn[i].port == tmpAddr.port)) {
-
-							LOG_MSG("IPXSERVER: Reconnect from %d.%d.%d.%d", CONVIP(tmpAddr.host));
-							// Update anonymous port number if changed
-							ipconn[i].port = inPacket.address.port;
+							connBuffer[i].connected = true;
+							host = ipconn[i].host;
+							LOG_MSG("IPXSERVER: Connect from %d.%d.%d.%d", CONVIP(host));
 							ackClient(inPacket.address);
-							return;
+							break;
+						} else {
+							if((ipconn[i].host == tmpAddr.host) && (ipconn[i].port == tmpAddr.port)) {
+
+								LOG_MSG("IPXSERVER: Reconnect from %d.%d.%d.%d", CONVIP(tmpAddr.host));
+								// Update anonymous port number if changed
+								ipconn[i].port = inPacket.address.port;
+								ackClient(inPacket.address);
+								break;
+							}
 						}
 					}
 				}
 			}
-		}
 
-		// IPX packet is complete.  Now interpret IPX header and send to respective IP address
-		sendIPXPacket((Bit8u *)inPacket.data, inPacket.len);
+			// IPX packet is complete.  Now interpret IPX header and send to respective IP address
+			if (!isRegPacket) sendIPXPacket((Bit8u *)inPacket.data, inPacket.len);
+			SDL_UnlockMutex(serverMutex);
+		}
 	}
 }
 
 void IPX_StopServer() {
-	TIMER_DelTickHandler(&IPX_ServerLoop);
+	int ts;
+	terminateServer = true;
+	SDL_WaitThread(serverThread, &ts);
 	SDLNet_UDP_Close(ipxServerSocket);
 }
 
@@ -213,9 +233,12 @@ bool IPX_StartServer(uint16_t portnum)
 		if(!ipxServerSocket) return false;
 
 		for (uint16_t i = 0; i < SOCKETTABLESIZE; ++i)
-			connBuffer[i].connected = false;
-
-		TIMER_AddTickHandler(&IPX_ServerLoop);
+			connBuffer[i].connected = false;	
+		serverMutex = SDL_CreateMutex();
+		assert(serverMutex);
+		terminateServer = false;
+		serverThread = SDL_CreateThread(IPX_ServerLoop, "IPX_SERVER", nullptr);
+		assert(serverThread);
 		return true;
 	}
 	return false;
