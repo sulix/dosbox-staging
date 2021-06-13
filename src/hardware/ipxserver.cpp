@@ -184,7 +184,6 @@ static int IPX_ServerLoop(MAYBE_UNUSED void *ptr) {
 			if(SDLNet_Read16(tmpHeader->dest.socket) == 0x2) {
 				// Null destination node means its a server registration packet
 				if(tmpHeader->dest.addr.byIP.host == 0x0) {
-					isRegPacket = true;
 					UnpackIP(tmpHeader->src.addr.byIP, &tmpAddr);
 					for (uint16_t i = 0; i < SOCKETTABLESIZE; ++i) {
 						if(!connBuffer[i].connected) {
@@ -196,6 +195,7 @@ static int IPX_ServerLoop(MAYBE_UNUSED void *ptr) {
 							host = ipconn[i].host;
 							LOG_MSG("IPXSERVER: Connect from %d.%d.%d.%d", CONVIP(host));
 							ackClient(inPacket.address);
+							isRegPacket = true;
 							break;
 						} else {
 							if((ipconn[i].host == tmpAddr.host) && (ipconn[i].port == tmpAddr.port)) {
@@ -204,6 +204,7 @@ static int IPX_ServerLoop(MAYBE_UNUSED void *ptr) {
 								// Update anonymous port number if changed
 								ipconn[i].port = inPacket.address.port;
 								ackClient(inPacket.address);
+								isRegPacket = true;
 								break;
 							}
 						}
