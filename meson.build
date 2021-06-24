@@ -26,6 +26,8 @@ if cxx.has_argument('-Wextra-semi')
     add_project_arguments('-Wextra-semi', language : 'cpp')
 endif
 
+spdlog_proj = subproject('spdlog')
+spdlog_dep = spdlog_proj.get_variable('spdlog_dep')
 
 # gather data for config file
 #
@@ -184,6 +186,7 @@ msg = 'You can disable this dependency with: -D@0@=false'
 
 optional_dep  = dependency('', required : false)
 atomic_dep    = cxx.find_library('atomic', required : false)
+spdlog_dep    = dependency('spdlog')
 opus_dep      = dependency('opusfile',
                            static : ('opusfile' in static_libs_list))
 threads_dep   = dependency('threads')
@@ -345,7 +348,7 @@ subdir('tests')
 #
 version_file = vcs_tag(input : 'src/version.cpp.in', output : 'version.cpp')
 executable('dosbox', ['src/main.cpp', 'src/dosbox.cpp', version_file],
-           dependencies : [atomic_dep, threads_dep, sdl2_dep] + internal_deps,
+           dependencies : [atomic_dep, threads_dep, sdl2_dep, spdlog_dep] + internal_deps,
            include_directories : incdir,
            install : true)
 

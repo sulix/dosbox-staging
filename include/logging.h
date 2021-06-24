@@ -23,6 +23,23 @@
 
 #include "compiler.h"
 
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/bundled/printf.h>
+
+template <class loggerPtr, class... Args>
+void log_printf(loggerPtr logger,
+                    spdlog::level::level_enum level,
+                    const char *fmt,
+                    const Args &...args) noexcept
+{
+	if (logger && logger->should_log(level)) {
+		logger->log(level, "{}", fmt::sprintf(fmt, args...));
+	}
+}
+
+#define LOG_PRINTF(logger, level, ...) \
+	log_printf(logger, level, __VA_ARGS__)
+
 enum LOG_TYPES {
 	LOG_ALL,
 	LOG_VGA, LOG_VGAGFX,LOG_VGAMISC,LOG_INT10,
@@ -88,7 +105,7 @@ struct LOG
 }; //add missing operators to here
 	//try to avoid anything smaller than bit32...
 void GFX_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
-#define LOG_MSG GFX_ShowMsg
+#define LOG_MSG(...) LOG_PRINTF(spdlog::default_logger(),spdlog::level::info,__VA_ARGS__)
 
 #endif //C_DEBUG
 
@@ -97,26 +114,8 @@ void GFX_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 1,
 // be redirected into internal DOSBox debugger for DOS programs (C_DEBUG feature).
 #define DEBUG_LOG_MSG(...)
 #else
-// There's no portable way to expand variadic macro using C99/C++14 (or older)
-// alone. This language limitation got removed only with C++20 (through addition
-// of __VA_OPT__ macro).
-#ifdef _MSC_VER
-#define DEBUG_LOG_MSG(fmt, ...) fprintf(stderr, fmt "\n", __VA_ARGS__)
-//                                                      ~
-// MSVC silently eliminates trailing comma if needed:   ^
-#else
-#define DEBUG_LOG_MSG(fmt, ...) fprintf(stderr, fmt "\n", ##__VA_ARGS__)
-//                                                        ~~~~~~~~~~~~~
-//                                                        ^
-// GCC and Clang provide '##' token as a language extension to explicitly remove
-// trailing comma when there's no trailing parameters.
-#endif
-// If it'll ever be necessary to support another compiler, which does not
-// support C++20 nor GNU extension nor MSVC extension, then behaviour can be
-// simulated by implementing C++ variadic template wrapped inside a macro
-// (at the cost of slowing down compilation).
-//
-// Another option it to use vsnprintf (at the cost of slowing down runtime).
+//specific log implementation macros
+#define DEBUG_LOG_MSG(...) LOG_PRINTF(spdlog::default_logger(),spdlog::level::debug,__VA_ARGS__)
 #endif // NDEBUG
 
 #endif

@@ -1,4 +1,5 @@
 googletest-release-*
 munt-libmt32emu*
 fluidsynth-*
+spdlog-*
 packagecache

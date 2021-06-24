@@ -19,7 +19,7 @@ libints_sources = files([
 
 libints = static_library('ints', libints_sources,
                          include_directories : incdir,
-                         dependencies : [sdl2_dep])
+                         dependencies : [sdl2_dep, spdlog_dep])
 
 libints_dep = declare_dependency(link_with : libints)
 
