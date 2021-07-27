@@ -22,10 +22,13 @@ cc = meson.get_compiler('c')
 cxx = meson.get_compiler('cpp')
 
 add_project_arguments('-Weffc++', language : 'cpp')
+
 if cxx.has_argument('-Wextra-semi')
     add_project_arguments('-Wextra-semi', language : 'cpp')
 endif
 
+# Add our translation domain
+add_project_arguments('-DGETTEXT_PACKAGE="@0@"'.format (meson.project_name()), language:'cpp')
 
 # gather data for config file
 #
@@ -198,7 +201,7 @@ coreaudio_dep = optional_dep # macOS-only
 coremidi_dep  = optional_dep # macOS-only
 winsock2_dep  = optional_dep # Windows-only
 winmm_dep     = optional_dep # Windows-only
-
+intl_dep      = optional_dep # non-Linux-only
 
 if get_option('use_sdl2_net')
   sdl2_net_dep = dependency('SDL2_net', version : '>= 2.0.0',
@@ -283,6 +286,11 @@ if force_alsa or (using_linux and get_option('use_alsa') == 'auto')
   conf_data.set('C_ALSA', 1)
 endif
 
+# Non-Linux dependencies (non-GNU systems)
+if host_machine.system() != 'linux'
+  intl_dep = cxx.find_library('intl', required : true)
+endif
+
 # Windows-only dependencies
 #
 if host_machine.system() in ['windows', 'cygwin']
@@ -336,6 +344,8 @@ configure_file(input : 'src/config.h.in', output : 'config.h',
 project_source_root = meson.current_source_dir()
 subdir('tests')
 
+# localization
+subdir('po')
 
 # dosbox executable
 #

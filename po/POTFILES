@@ -1,0 +1,11 @@
+src/dos/dos_programs.cpp
+src/debug/debug_gui.cpp
+src/dosbox.cpp
+src/gui/sdlmain.cpp
+src/hardware/gus.cpp
+src/hardware/innovation.cpp
+src/midi/midi_fluidsynth.cpp
+src/midi/midi_mt32.cpp
+src/misc/programs.cpp
+src/shell/shell.cpp
+ 

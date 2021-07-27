@@ -128,32 +128,34 @@ Install build dependencies appropriate for your OS:
 ``` shell
 # Fedora
 sudo dnf install ccache gcc-c++ meson alsa-lib-devel libpng-devel \
-                 SDL2-devel SDL2_net-devel opusfile-devel fluidsynth-devel
+                 SDL2-devel SDL2_net-devel opusfile-devel \
+                 fluidsynth-devel gettext
 ```
 
 ``` shell
 # Debian, Ubuntu
 sudo apt install ccache build-essential meson libasound2-dev libpng-dev \
-                 libsdl2-dev libsdl2-net-dev libopusfile-dev libfluidsynth-dev
+                 libsdl2-dev libsdl2-net-dev libopusfile-dev \
+                 libfluidsynth-dev gettext
 ```
 
 ``` shell
 # Arch, Manjaro
 sudo pacman -S ccache gcc meson alsa-lib libpng sdl2 sdl2_net opusfile \
-               fluidsynth
+               fluidsynth gettext
 ```
 
 ``` shell
 # openSUSE
 sudo zypper install ccache gcc gcc-c++ meson alsa-devel libpng-devel \
                     libSDL2-devel libSDL2_net-devel opusfile-devel \
-                    fluidsynth-devel libmt32emu-devel
+                    fluidsynth-devel libmt32emu-devel gettext
 ```
 
 ``` shell
 # macOS
 xcode-select --install
-brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth
+brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth gettext
 ```
 
 Instructions for creating an optimised release build:
