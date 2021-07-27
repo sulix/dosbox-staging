@@ -24,6 +24,7 @@ BuildRequires: desktop-file-utils
 BuildRequires: fluidsynth-devel >= 2.0
 BuildRequires: gcc
 BuildRequires: gcc-c++
+BuildRequires: gettext
 BuildRequires: git
 BuildRequires: gtest-devel
 BuildRequires: libappstream-glib
