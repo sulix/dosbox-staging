@@ -34,9 +34,6 @@ extern bool exit_requested;
 [[noreturn]] void E_Exit(const char *message, ...)
         GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
 
-void MSG_Add(const char*,const char*); //add messages to the internal languagefile
-const char* MSG_Get(char const *);     //get messages from the internal languagefile
-
 class Section;
 
 typedef Bitu (LoopHandler)(void);
@@ -84,5 +81,9 @@ extern bool mono_cga;
 #ifndef DOSBOX_LOGGING_H
 #include "logging.h"
 #endif // the logging system.
+
+#ifndef DOSBOX_TRANSLATION_H
+#include "translation.h"
+#endif // the langauge translation system.
 
 #endif /* DOSBOX_DOSBOX_H */
