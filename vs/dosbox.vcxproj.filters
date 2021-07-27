@@ -600,6 +600,9 @@
     <ClInclude Include="..\include\timer.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\translation.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\vga.h">
       <Filter>include</Filter>
     </ClInclude>
