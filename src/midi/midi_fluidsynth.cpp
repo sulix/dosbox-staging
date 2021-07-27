@@ -49,14 +49,14 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	// Name 'default.sf2' picks the default soundfont if it's installed
 	// in the OS. Usually it's Fluid_R3.
 	auto *str_prop = secprop.Add_string("soundfont", when_idle, "default.sf2");
-	str_prop->Set_help(
+	str_prop->Set_help(_(
 	        "Path to a SoundFont file in .sf2 format. You can use an\n"
 	        "absolute or relative path, or the name of an .sf2 inside\n"
 	        "the 'soundfonts' directory within your DOSBox configuration\n"
 	        "directory.\n"
 	        "An optional percentage will scale the SoundFont's volume.\n"
 	        "For example: 'soundfont.sf2 50' will attenuate it by 50 percent.\n"
-	        "The scaling percentage can range from 1 to 500.");
+	        "The scaling percentage can range from 1 to 500."));
 }
 
 // SetMixerLevel is a callback that's given the user-desired mixer level,

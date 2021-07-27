@@ -180,14 +180,14 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	                        0};
 	auto *str_prop = sec_prop.Add_string("model", when_idle, "auto");
 	str_prop->Set_values(models);
-	str_prop->Set_help(
+	str_prop->Set_help(_(
 	        "Model of synthesizer to use.\n"
 	        "'auto' picks the first model with available ROMs, in order as listed.\n"
 	        "'cm32l' and 'mt32' pick the first model of their type, in the order listed.\n"
-	        "'mt32_old' and 'mt32_new' are aliases for 1.07 and 2.04, respectively.");
+	        "'mt32_old' and 'mt32_new' are aliases for 1.07 and 2.04, respectively."));
 
 	str_prop = sec_prop.Add_string("romdir", when_idle, "");
-	str_prop->Set_help(
+	str_prop->Set_help(_(
 	        "The directory containing ROMs for one or more models.\n"
 	        "The directory can be absolute or relative, or leave it blank to\n"
 	        "use the 'mt32-roms' directory in your DOSBox configuration\n"
@@ -195,7 +195,7 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "ROM files inside this directory may include any of the following:\n"
 	        "  - MT32_CONTROL.ROM and MT32_PCM.ROM, for the 'mt32' model.\n"
 	        "  - CM32L_CONTROL.ROM and CM32L_PCM.ROM, for the 'cm32l' model.\n"
-	        "  - Unzipped MAME MT-32 and CM-32L ROMs, for the versioned models.\n");
+	        "  - Unzipped MAME MT-32 and CM-32L ROMs, for the versioned models.\n"));
 }
 
 #if defined(WIN32)

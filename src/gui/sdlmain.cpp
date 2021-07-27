@@ -3118,36 +3118,38 @@ void Config_Add_SDL() {
 	constexpr auto on_start = Property::Changeable::OnlyAtStart;
 
 	Pbool = sdl_sec->Add_bool("fullscreen", always, false);
-	Pbool->Set_help("Start directly in fullscreen.\n"
-	                "Run INTRO and see Special Keys for window control hotkeys.");
+	Pbool->Set_help(
+	        _("Start directly in fullscreen.\n"
+	          "Run INTRO and see Special Keys for window control hotkeys."));
 
 	pint = sdl_sec->Add_int("display", on_start, 0);
-	pint->Set_help("Number of display to use; values depend on OS and user "
-	               "settings.");
+	pint->Set_help(_("Number of display to use; values depend on OS and user "
+	                 "settings."));
 
 	Pbool = sdl_sec->Add_bool("vsync", on_start, false);
-	Pbool->Set_help("Synchronize with display refresh rate if supported. This can\n"
-	                "reduce flickering and tearing, but may also impact performance.");
+	Pbool->Set_help(_(
+	        "Synchronize with display refresh rate if supported. This can\n"
+	        "reduce flickering and tearing, but may also impact performance."));
 
 	pint = sdl_sec->Add_int("vsync_skip", on_start, 7000);
-	pint->Set_help("Number of microseconds to allow rendering to block before skipping "
-	               "the next frame.");
+	pint->Set_help(_("Number of microseconds to allow rendering to block before skipping "
+	                 "the next frame."));
 	pint->SetMinMax(1, 14000);
 
 	Pstring = sdl_sec->Add_string("fullresolution", always, "desktop");
-	Pstring->Set_help("What resolution to use for fullscreen: 'original', 'desktop'\n"
-	                  "or a fixed size (e.g. 1024x768).");
+	Pstring->Set_help(_("What resolution to use for fullscreen: 'original', 'desktop'\n"
+	                    "or a fixed size (e.g. 1024x768)."));
 
 	pstring = sdl_sec->Add_string("windowresolution", on_start, "default");
 	pstring->Set_help(
-	        "Set window size when running in windowed mode:\n"
-	        "  default:   Select the best option based on your\n"
-	        "             environment and other settings.\n"
-	        "  small, medium, or large (or s, m, l):\n"
-	        "             Size the window relative to the desktop.\n"
-	        "  <custom>:  Scale the window to the given dimensions in\n"
-	        "             WxH format. For example: 1024x768.\n"
-	        "             Scaling is not performed for output=surface.");
+	        _("Set window size when running in windowed mode:\n"
+	          "  default:   Select the best option based on your\n"
+	          "             environment and other settings.\n"
+	          "  small, medium, or large (or s, m, l):\n"
+	          "             Size the window relative to the desktop.\n"
+	          "  <custom>:  Scale the window to the given dimensions in\n"
+	          "             WxH format. For example: 1024x768.\n"
+	          "             Scaling is not performed for output=surface."));
 
 	const char *outputs[] = {
 		"surface",
@@ -3167,12 +3169,12 @@ void Config_Add_SDL() {
 #else
 	Pstring = sdl_sec->Add_string("output", Property::Changeable::Always, "texture");
 #endif
-	Pstring->Set_help("What video system to use for output.");
+	Pstring->Set_help(_("What video system to use for output."));
 	Pstring->Set_values(outputs);
 
 	pstring = sdl_sec->Add_string("texture_renderer", always, "auto");
-	pstring->Set_help("Choose a renderer driver when using a texture output mode.\n"
-	                  "Use texture_renderer=auto for an automatic choice.");
+	pstring->Set_help(_("Choose a renderer driver when using a texture output mode.\n"
+	                    "Use texture_renderer=auto for an automatic choice."));
 	pstring->Set_values(Get_SDL_TextureRenderers());
 
 	// Define mouse control settings
@@ -3203,7 +3205,7 @@ void Config_Add_SDL() {
 	        ->Set_values(middle_controls);
 
 	// Construct and set the help block using defaults set above
-	std::string mouse_control_help(
+	std::string mouse_control_help(_(
 	        "Choose a mouse control method:\n"
 	        "   onclick:        Capture the mouse when clicking inside the window.\n"
 	        "   onstart:        Capture the mouse immediately on start.\n"
@@ -3212,12 +3214,13 @@ void Config_Add_SDL() {
 	        "Choose how middle-clicks are handled (second parameter):\n"
 	        "   middlegame:     Middle-clicks are sent to the game.\n"
 	        "   middlerelease:  Middle-click will release the captured mouse.\n"
-	        "Defaults (if not present or incorrect): ");
+	        "Defaults (if not present or incorrect): "));
 	mouse_control_help += mouse_control_defaults;
 	Pmulti->Set_help(mouse_control_help);
 
 	Pmulti = sdl_sec->Add_multi("sensitivity",Property::Changeable::Always, ",");
-	Pmulti->Set_help("Mouse sensitivity. The optional second parameter specifies vertical sensitivity (e.g. 100,-50).");
+	Pmulti->Set_help(_(
+	        "Mouse sensitivity. The optional second parameter specifies vertical sensitivity (e.g. 100,-50)."));
 	Pmulti->SetValue("100");
 	Pint = Pmulti->GetSection()->Add_int("xsens",Property::Changeable::Always,100);
 	Pint->SetMinMax(-1000,1000);
@@ -3226,18 +3229,18 @@ void Config_Add_SDL() {
 
 	pbool = sdl_sec->Add_bool("raw_mouse_input", on_start, false);
 	pbool->Set_help(
-	        "Enable this setting to bypass your operating system's mouse\n"
-	        "acceleration and sensitivity settings. This works in\n"
-	        "fullscreen or when the mouse is captured in window mode.");
+	        _("Enable this setting to bypass your operating system's mouse\n"
+	          "acceleration and sensitivity settings. This works in\n"
+	          "fullscreen or when the mouse is captured in window mode."));
 
 	Pbool = sdl_sec->Add_bool("waitonerror",Property::Changeable::Always, true);
-	Pbool->Set_help("Wait before closing the console if dosbox has an error.");
+	Pbool->Set_help(_("Wait before closing the console if dosbox has an error."));
 
 	Pmulti = sdl_sec->Add_multi("priority", Property::Changeable::Always, ",");
 	Pmulti->SetValue("auto,auto");
-	Pmulti->Set_help(
+	Pmulti->Set_help(_(
 	        "Priority levels for dosbox. Second entry behind the comma is for when dosbox is not focused/minimized.\n"
-	        "pause is only valid for the second entry. auto disables priority levels and uses OS defaults");
+	        "pause is only valid for the second entry. auto disables priority levels and uses OS defaults."));
 
 	const char *actt[] = {"auto",   "lowest",  "lower", "normal",
 	                      "higher", "highest", "pause", 0};
@@ -3254,14 +3257,13 @@ void Config_Add_SDL() {
 	Pstring->Set_values(inactt);
 
 	pstring = sdl_sec->Add_path("mapperfile", always, MAPPERFILE);
-	pstring->Set_help("File used to load/save the key/event mappings from.\n"
-	                  "Resetmapper only works with the default value.");
+	pstring->Set_help(_("File used to load/save the key/event mappings from.\n"
+	                    "Resetmapper only works with the default value."));
 
 	pstring = sdl_sec->Add_string("screensaver", on_start, "auto");
-	pstring->Set_help(
-	        "Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER\n"
-	        "environment variable (which usually blocks the OS screensaver\n"
-	        "while the emulator is running).");
+	pstring->Set_help(_("Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER\n"
+	                    "environment variable (which usually blocks the OS screensaver\n"
+	                    "while the emulator is running)."));
 	const char *ssopts[] = {"auto", "allow", "block", 0};
 	pstring->Set_values(ssopts);
 }

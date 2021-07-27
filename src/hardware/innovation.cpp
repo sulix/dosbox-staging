@@ -269,43 +269,43 @@ static void init_innovation_dosbox_settings(Section_prop &sec_prop)
 	auto *str_prop = sec_prop.Add_string("sidmodel", when_idle, "none");
 	const char *sid_models[] = {"auto", "6581", "8580", "none", 0};
 	str_prop->Set_values(sid_models);
-	str_prop->Set_help(
+	str_prop->Set_help(_(
 	        "Model of chip to emulate in the Innovation SSI-2001 card:\n"
 	        " - auto:  Selects the 6581 chip.\n"
 	        " - 6581:  The original chip, known for its bassy and rich character.\n"
 	        " - 8580:  A later revision that more closely matched the SID specification.\n"
 	        "          It fixed the 6581's DC bias and is less prone to distortion.\n"
 	        "          The 8580 is an option on reproduction cards, like the DuoSID.\n"
-	        " - none:  Disables the card.");
+	        " - none:  Disables the card."));
 
 	// Chip clock frequency
 	str_prop = sec_prop.Add_string("sidclock", when_idle, "default");
 	const char *sid_clocks[] = {"default", "c64ntsc", "c64pal", "hardsid", 0};
 	str_prop->Set_values(sid_clocks);
-	str_prop->Set_help(
+	str_prop->Set_help(_(
 	        "The SID chip's clock frequency, which is jumperable on reproduction cards.\n"
 	        " - default: uses 0.895 MHz, per the original SSI-2001 card.\n"
 	        " - c64ntsc: uses 1.023 MHz, per NTSC Commodore PCs and the DuoSID.\n"
 	        " - c64pal:  uses 0.985 MHz, per PAL Commodore PCs and the DuoSID.\n"
-	        " - hardsid: uses 1.000 MHz, available on the DuoSID.");
+	        " - hardsid: uses 1.000 MHz, available on the DuoSID."));
 
 	// IO Address
 	auto *hex_prop = sec_prop.Add_hex("sidport", when_idle, 0x280);
 	const char *sid_ports[] = {"240", "260", "280", "2a0", "2c0", 0};
 	hex_prop->Set_values(sid_ports);
-	hex_prop->Set_help("The IO port address of the Innovation SSI-2001.");
+	hex_prop->Set_help(_("The IO port address of the Innovation SSI-2001."));
 
 	// Filter strengths
 	auto *int_prop = sec_prop.Add_int("6581filter", when_idle, 50);
 	int_prop->SetMinMax(0, 100);
-	int_prop->Set_help(
+	int_prop->Set_help(_(
 	        "The SID's analog filtering meant that each chip was physically unique.\n"
-	        "Adjusts the 6581's filtering strength as a percent from 0 to 100.");
+	        "Adjusts the 6581's filtering strength as a percent from 0 to 100."));
 
 	int_prop = sec_prop.Add_int("8580filter", when_idle, 50);
 	int_prop->SetMinMax(0, 100);
-	int_prop->Set_help(
-	        "Adjusts the 8580's filtering strength as a percent from 0 to 100.");
+	int_prop->Set_help(_(
+	        "Adjusts the 8580's filtering strength as a percent from 0 to 100."));
 }
 
 void INNOVATION_AddConfigSection(Config *conf)

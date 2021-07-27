@@ -322,7 +322,6 @@ bool Program::SetEnv(const char * entry,const char * new_string) {
 	return true;
 }
 
-bool MSG_Write(const char *);
 void restart_program(std::vector<std::string> & parameters);
 
 class CONFIG final : public Program {
@@ -363,19 +362,29 @@ void CONFIG::Run(void) {
 		"-get", "-set",
 		"-writelang", "-wl", "-securemode", "" };
 	enum prs {
-		P_NOMATCH, P_NOPARAMS, // fixed return values for GetParameterFromList
+		P_NOMATCH,
+		P_NOPARAMS, // fixed return values for GetParameterFromList
 		P_RESTART,
-		P_WRITECONF_PORTABLE, P_WRITECONF_DEFAULT, P_WRITECONF, P_WRITECONF2,
-		P_LISTCONF,	P_KILLCONF,
-		P_HELP, P_HELP2, P_HELP3,
-		P_AUTOEXEC_CLEAR, P_AUTOEXEC_ADD, P_AUTOEXEC_TYPE,
-		P_REC_AVI_START, P_REC_AVI_STOP,
+		P_WRITECONF_PORTABLE,
+		P_WRITECONF_DEFAULT,
+		P_WRITECONF,
+		P_WRITECONF2,
+		P_LISTCONF,
+		P_KILLCONF,
+		P_HELP,
+		P_HELP2,
+		P_HELP3,
+		P_AUTOEXEC_CLEAR,
+		P_AUTOEXEC_ADD,
+		P_AUTOEXEC_TYPE,
+		P_REC_AVI_START,
+		P_REC_AVI_STOP,
 		P_START_MAPPER,
-		P_GETPROP, P_SETPROP,
-		P_WRITELANG, P_WRITELANG2,
+		P_GETPROP,
+		P_SETPROP,
 		P_SECURE
 	} presult = P_NOMATCH;
-	
+
 	bool first = true;
 	std::vector<std::string> pvars;
 	// Loop through the passed parameters
@@ -828,20 +837,6 @@ void CONFIG::Run(void) {
 			tsec->ExecuteInit(false);
 			return;
 		}
-		case P_WRITELANG: case P_WRITELANG2:
-			// In secure mode don't allow a new languagefile to be created
-			// Who knows which kind of file we would overwrite.
-			if (securemode_check()) return;
-			if (pvars.size() < 1) {
-				WriteOut(MSG_Get("PROGRAM_CONFIG_MISSINGPARAM"));
-				return;
-			}
-			if (!MSG_Write(pvars[0].c_str())) {
-				WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"),pvars[0].c_str());
-				return;
-			}
-			break;
-
 		case P_SECURE:
 			// Code for switching to secure mode
 			control->SwitchToSecureMode();
@@ -870,58 +865,69 @@ void PROGRAMS_Init(Section* /*sec*/) {
 	PROGRAMS_MakeFile("CONFIG.COM",CONFIG_ProgramStart);
 
 	// listconf
-	MSG_Add("PROGRAM_CONFIG_NOCONFIGFILE","No config file loaded!\n");
-	MSG_Add("PROGRAM_CONFIG_PRIMARY_CONF","Primary config file: \n%s\n");
-	MSG_Add("PROGRAM_CONFIG_ADDITIONAL_CONF","Additional config files:\n");
+	MSG_Add("PROGRAM_CONFIG_NOCONFIGFILE", _("No config file loaded!\n"));
+	MSG_Add("PROGRAM_CONFIG_PRIMARY_CONF", _("Primary config file: \n%s\n"));
+	MSG_Add("PROGRAM_CONFIG_ADDITIONAL_CONF", _("Additional config files:\n"));
 	MSG_Add("PROGRAM_CONFIG_CONFDIR",
-	        "DOSBox Staging %s configuration directory: \n%s\n\n");
+	        _("DOSBox Staging %s configuration directory: \n%s\n\n"));
 
 	// writeconf
-	MSG_Add("PROGRAM_CONFIG_FILE_ERROR","\nCan't open file %s\n");
-	MSG_Add("PROGRAM_CONFIG_FILE_WHICH", "Writing config file %s\n");
-	
+	MSG_Add("PROGRAM_CONFIG_FILE_ERROR", _("\nCan't open file %s\n"));
+	MSG_Add("PROGRAM_CONFIG_FILE_WHICH", _("Writing config file %s\n"));
+
 	// help
 	MSG_Add("PROGRAM_CONFIG_USAGE",
-	        "Config tool:\n"
-	        "-writeconf or -wc without parameter: write to primary loaded config file.\n"
-	        "-writeconf or -wc with filename: write file to config directory.\n"
-	        "Use -writelang or -wl filename to write the current language strings.\n"
-	        "-r [parameters]\n"
-	        " Restart DOSBox, either using the previous parameters or any that are appended.\n"
-	        "-wcp [filename]\n"
-	        " Write config file to the program directory, dosbox.conf or the specified\n"
-	        " filename.\n"
-	        "-wcd\n"
-	        " Write to the default config file in the config directory.\n"
-	        "-l lists configuration parameters.\n"
-	        "-h, -help, -? sections / sectionname / propertyname\n"
-	        " Without parameters, displays this help screen. Add \"sections\" for a list of\n"
-	        " sections."
-	        " For info about a specific section or property add its name behind.\n"
-	        "-axclear clears the autoexec section.\n"
-	        "-axadd [line] adds a line to the autoexec section.\n"
-	        "-axtype prints the content of the autoexec section.\n"
-	        "-securemode switches to secure mode.\n"
-	        "-avistart starts AVI recording.\n"
-	        "-avistop stops AVI recording.\n"
-	        "-startmapper starts the keymapper.\n"
-	        "-get \"section property\" returns the value of the property.\n"
-	        "-set \"section property=value\" sets the value.\n");
-	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP","Purpose of property \"%s\" (contained in section \"%s\"):\n%s\n\nPossible Values: %s\nDefault value: %s\nCurrent value: %s\n");
-	MSG_Add("PROGRAM_CONFIG_HLP_LINEHLP","Purpose of section \"%s\":\n%s\nCurrent value:\n%s\n");
-	MSG_Add("PROGRAM_CONFIG_HLP_NOCHANGE","This property cannot be changed at runtime.\n");
-	MSG_Add("PROGRAM_CONFIG_HLP_POSINT","positive integer"); 
-	MSG_Add("PROGRAM_CONFIG_HLP_SECTHLP","Section %s contains the following properties:\n");				
-	MSG_Add("PROGRAM_CONFIG_HLP_SECTLIST","DOSBox configuration contains the following sections:\n\n");
+	        _("Config tool:\n"
+	          "-writeconf or -wc without parameter: write to primary loaded config file.\n"
+	          "-writeconf or -wc with filename: write file to config directory.\n"
+	          "Use -writelang or -wl filename to write the current language strings.\n"
+	          "-r [parameters]\n"
+	          " Restart DOSBox, either using the previous parameters or any that are appended.\n"
+	          "-wcp [filename]\n"
+	          " Write config file to the program directory, dosbox.conf or the specified\n"
+	          " filename.\n"
+	          "-wcd\n"
+	          " Write to the default config file in the config directory.\n"
+	          "-l lists configuration parameters.\n"
+	          "-h, -help, -? sections / sectionname / propertyname\n"
+	          " Without parameters, displays this help screen. Add \"sections\" for a list of\n"
+	          " sections."
+	          " For info about a specific section or property add its name behind.\n"
+	          "-axclear clears the autoexec section.\n"
+	          "-axadd [line] adds a line to the autoexec section.\n"
+	          "-axtype prints the content of the autoexec section.\n"
+	          "-securemode switches to secure mode.\n"
+	          "-avistart starts AVI recording.\n"
+	          "-avistop stops AVI recording.\n"
+	          "-startmapper starts the keymapper.\n"
+	          "-get \"section property\" returns the value of the property.\n"
+	          "-set \"section property=value\" sets the value.\n"));
+	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP",
+	        _("Purpose of property \"%s\" (contained in section \"%s\"):\n%s\n\nPossible Values: %s\nDefault value: %s\nCurrent value: %s\n"));
+	MSG_Add("PROGRAM_CONFIG_HLP_LINEHLP",
+	        _("Purpose of section \"%s\":\n%s\nCurrent value:\n%s\n"));
+	MSG_Add("PROGRAM_CONFIG_HLP_NOCHANGE",
+	        _("This property cannot be changed at runtime.\n"));
+	MSG_Add("PROGRAM_CONFIG_HLP_POSINT", _("positive integer"));
+	MSG_Add("PROGRAM_CONFIG_HLP_SECTHLP",
+	        _("Section %s contains the following properties:\n"));
+	MSG_Add("PROGRAM_CONFIG_HLP_SECTLIST",
+	        _("DOSBox configuration contains the following sections:\n\n"));
 
-	MSG_Add("PROGRAM_CONFIG_SECURE_ON","Switched to secure mode.\n");
-	MSG_Add("PROGRAM_CONFIG_SECURE_DISALLOW","This operation is not permitted in secure mode.\n");
-	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR", "Section \"%s\" doesn't exist.\n");
-	MSG_Add("PROGRAM_CONFIG_VALUE_ERROR","\"%s\" is not a valid value for property %s.\n");
-	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR","No such section or property.\n");
-	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY", "There is no property \"%s\" in section \"%s\".\n");
-	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX","Correct syntax: config -set \"section property\".\n");
-	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX","Correct syntax: config -get \"section property\".\n");
-	MSG_Add("PROGRAM_CONFIG_PRINT_STARTUP", "\nDOSBox was started with the following command line parameters:\n%s\n");
-	MSG_Add("PROGRAM_CONFIG_MISSINGPARAM", "Missing parameter.\n");
+	MSG_Add("PROGRAM_CONFIG_SECURE_ON", _("Switched to secure mode.\n"));
+	MSG_Add("PROGRAM_CONFIG_SECURE_DISALLOW",
+	        _("This operation is not permitted in secure mode.\n"));
+	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR", _("Section \"%s\" doesn't exist.\n"));
+	MSG_Add("PROGRAM_CONFIG_VALUE_ERROR",
+	        _("\"%s\" is not a valid value for property %s.\n"));
+	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", _("No such section or property.\n"));
+	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
+	        _("There is no property \"%s\" in section \"%s\".\n"));
+	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
+	        _("Correct syntax: config -set \"section property\".\n"));
+	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX",
+	        _("Correct syntax: config -get \"section property\".\n"));
+	MSG_Add("PROGRAM_CONFIG_PRINT_STARTUP",
+	        _("\nDOSBox was started with the following command line parameters:\n%s\n"));
+	MSG_Add("PROGRAM_CONFIG_MISSINGPARAM", _("Missing parameter.\n"));
 }
