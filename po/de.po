@@ -1,0 +1,1929 @@
+# German translations for dosbox-staging package.
+# Copyright (C) 2021 THE dosbox-staging'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the dosbox-staging package.
+# Automatically generated, 2021.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: dosbox-staging 0.78.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-07-26 19:15-0700\n"
+"PO-Revision-Date: 2021-07-26 19:15-0700\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: src/dos/dos_programs.cpp:1673
+#, c-format
+msgid "CDROMs found: %d\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1674
+msgid "Drive"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1675
+msgid "Type"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1676
+msgid "Label"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1677
+#, c-format
+msgid "Drive %c is mounted as %s\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1678
+msgid "The currently mounted drives are:\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1679
+#, c-format
+msgid "Directory %s doesn't exist.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1680
+#, c-format
+msgid "%s isn't a directory\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1681
+#, c-format
+msgid "Illegal type %s\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1683
+#, c-format
+msgid "Drive %c already mounted with %s\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1684
+#, c-format
+msgid "Drive %c isn't mounted.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1686
+#, c-format
+msgid "Drive %c has successfully been removed.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1688
+msgid "Virtual Drives can not be unMOUNTed.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1690
+#, c-format
+msgid "'%c' is not a valid drive identifier.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1692
+msgid ""
+"[31;1mMounting c:\\ is NOT recommended. Please mount a (sub)directory next "
+"time.[0m\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1694
+msgid ""
+"[31;1mMounting / is NOT recommended. Please mount a (sub)directory next time."
+"[0m\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1696
+#, c-format
+msgid "Warning: Ignoring unsupported option '%s'.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1698
+msgid ""
+"A normal directory needs to be MOUNTed first before an overlay can be added "
+"on top.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1700
+msgid "The overlay is NOT compatible with the drive that is specified.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1702
+msgid ""
+"The overlay needs to be specified using the same addressing as the "
+"underlying drive. No mixing of relative and absolute paths."
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1704
+msgid "The overlay directory can not be the same as underlying drive.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1705
+msgid "Something went wrong.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1707
+#, c-format
+msgid "Overlay %s on drive %c mounted.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1709
+#, c-format
+msgid "Can't move drive Z. Drive %c is mounted already.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1711
+#, c-format
+msgid "%10d kB free conventional memory\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1712
+#, c-format
+msgid "%10d kB free extended memory\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1713
+#, c-format
+msgid "%10d kB free expanded memory\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1715
+#, c-format
+msgid "%10d kB free upper memory in %d blocks (largest UMB %d kB)\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1717
+#, c-format
+msgid "%d kB allocated.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1718
+#, c-format
+msgid "%d kB freed.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1719
+msgid "Used memory freed.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1720
+msgid "Memory allocation error.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1722
+msgid "MSCDEX installed.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1724
+msgid ""
+"MSCDEX: Failure: Drive-letters of multiple CD-ROM drives have to be "
+"continuous.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1726
+msgid "MSCDEX: Failure: Not yet supported.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1728
+msgid "MSCDEX: Specified location is not a CD-ROM drive.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1730
+msgid "MSCDEX: Failure: Invalid file or unable to open.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1732
+msgid ""
+"MSCDEX: Failure: Too many CD-ROM drives (max: 5). MSCDEX Installation "
+"failed.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1734
+msgid "MSCDEX: Mounted subdirectory: limited support.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1736
+msgid "MSCDEX: Failure: File is either no ISO/CUE image or contains errors.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1737
+msgid "MSCDEX: Failure: Unknown error.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1739
+#, c-format
+msgid "MSCDEX: Warning: Ignoring unsupported option '%s'.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1741
+msgid "Drive cache cleared.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1744
+msgid ""
+"[2J[32;1mWelcome to DOSBox Staging[0m, an x86 emulator with sound and "
+"graphics.\n"
+"DOSBox creates a shell for you which looks like old plain DOS.\n"
+"\n"
+"For information about basic mount type [34;1mintro mount[0m\n"
+"For information about CD-ROM support type [34;1mintro cdrom[0m\n"
+"For information about special keys type [34;1mintro special[0m\n"
+"For more imformation, visit DOSBox Staging wiki:[34;1m\n"
+"https://github.com/dosbox-staging/dosbox-staging/wiki[0m\n"
+"\n"
+"[31;1mDOSBox will stop/exit without a warning if an error occurred![0m\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1755
+msgid ""
+"[2J[32;1mHere are some commands to get you started:[0m\n"
+"Before you can use the files located on your own filesystem,\n"
+"You have to mount the directory containing the files.\n"
+"\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1760
+msgid ""
+"[44;1mͻ\n"
+" [32mmount c c:\\dosgames\\[37m will create a C drive with c:\\dosgames as "
+"contents.\n"
+"                                                                         \n"
+" [32mc:\\dosgames\\[37m is an example. Replace it with your own games "
+"directory.  [37m \n"
+"ͼ[0m\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1770
+msgid ""
+"[44;1mͻ\n"
+" [32mmount c ~/dosgames[37m will create a C drive with ~/dosgames as "
+"contents.\n"
+"                                                                      \n"
+" [32m~/dosgames[37m is an example. Replace it with your own games directory."
+"[37m  \n"
+"ͼ[0m\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1780
+msgid ""
+"After successfully mounting the disk you can type [34;1mc:[0m to go to your "
+"freshly\n"
+"mounted C-drive. Typing [34;1mdir[0m there will show its contents. "
+"[34;1mcd[0m will allow you to\n"
+"enter a directory (recognised by the [33;1m[][0m in a directory listing).\n"
+"You can run programs/files with extensions [31m.exe .bat[0m and [31m."
+"com[0m.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1786
+msgid ""
+"[2J[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:[0m\n"
+"DOSBox provides CD-ROM emulation on several levels.\n"
+"\n"
+"This works on all normal directories, installs MSCDEX and marks the files\n"
+"read-only. Usually this is enough for most games:\n"
+"\n"
+"[34;1mmount D C:\\example -t cdrom[0m\n"
+"\n"
+"If it doesn't work you might have to tell DOSBox the label of the CD-ROM:\n"
+"\n"
+"[34;1mmount D C:\\example -t cdrom -label CDLABEL[0m\n"
+"\n"
+"Additionally, you can use imgmount to mount iso or cue/bin images:\n"
+"\n"
+"[34;1mimgmount D C:\\cd.iso -t cdrom[0m\n"
+"\n"
+"[34;1mimgmount D C:\\cd.cue -t cdrom[0m\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1804
+msgid ""
+"[2J[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:[0m\n"
+"DOSBox provides CD-ROM emulation on several levels.\n"
+"\n"
+"This works on all normal directories, installs MSCDEX and marks the files\n"
+"read-only. Usually this is enough for most games:\n"
+"\n"
+"[34;1mmount D ~/example -t cdrom[0m\n"
+"\n"
+"If it doesn't work you might have to tell DOSBox the label of the CD-ROM:\n"
+"\n"
+"[34;1mmount D ~/example -t cdrom -label CDLABEL[0m\n"
+"\n"
+"Additionally, you can use imgmount to mount iso or cue/bin images:\n"
+"\n"
+"[34;1mimgmount D ~/cd.iso -t cdrom[0m\n"
+"\n"
+"[34;1mimgmount D ~/cd.cue -t cdrom[0m\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1822
+#, c-format
+msgid ""
+"[2J[32;1mSpecial keys:[0m\n"
+"These are the default keybindings.\n"
+"They can be changed in the [33mkeymapper[0m.\n"
+"\n"
+"[33;1m%s+Enter[0m  Switch between fullscreen and window mode.\n"
+"[33;1m%s+Pause[0m  Pause/Unpause emulator.\n"
+"[33;1m%s+F1[0m   %s Start the [33mkeymapper[0m.\n"
+"[33;1m%s+F4[0m   %s Swap mounted disk image, update directory cache for all "
+"drives.\n"
+"[33;1m%s+F5[0m   %s Save a screenshot.\n"
+"[33;1m%s+F6[0m   %s Start/Stop recording sound output to a wave file.\n"
+"[33;1m%s+F7[0m   %s Start/Stop recording video output to a zmbv file.\n"
+"[33;1m%s+F9[0m   %s Shutdown emulator.\n"
+"[33;1m%s+F10[0m  %s Capture/Release the mouse.\n"
+"[33;1m%s+F11[0m  %s Slow down emulation.\n"
+"[33;1m%s+F12[0m  %s Speed up emulation.\n"
+"[33;1m%s+F12[0m    Unlock speed (turbo button/fast forward).\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1840
+msgid "Bootdisk file does not exist.  Failing.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1841
+msgid "Cannot open bootdisk file.  Failing.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1843
+msgid "Image file is read-only! Might create problems.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1845
+#, c-format
+msgid ""
+"This command boots DOSBox from either a floppy or hard disk image.\n"
+"\n"
+"For this command, one can specify a succession of floppy disks swappable\n"
+"by pressing %s+F4, and -l specifies the mounted drive to boot from.  If\n"
+"no drive letter is specified, this defaults to booting from the A drive.\n"
+"The only bootable drive letters are A, C, and D.  For booting from a hard\n"
+"drive (C or D), the image should have already been mounted using the\n"
+"[34;1mIMGMOUNT[0m command.\n"
+"\n"
+"The syntax of this command is:\n"
+"\n"
+"[34;1mBOOT [diskimg1.img diskimg2.img] [-l driveletter][0m\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1854
+#, c-format
+msgid "Unable to boot off of drive %c"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1855
+#, c-format
+msgid "Opening image file: %s\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1856
+#, c-format
+msgid "Cannot open %s"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1857
+#, c-format
+msgid "Booting from drive %c...\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1859
+msgid "PCjr cartridge found, but machine is not PCjr"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1861
+#, c-format
+msgid "Available PCjr cartridge commands: %s"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1862
+msgid "No PCjr cartridge commands found"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1865
+msgid "Must specify ROM file to load.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1866
+msgid "ROM file not accessible.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1867
+msgid "ROM file too large.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1869
+msgid "Video BIOS not supported by machine type.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1870
+msgid "ROM file not recognized.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1871
+msgid "BASIC ROM loaded.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1874
+msgid ""
+"mounts compact disc image(s) or floppy disk image(s) to a given drive "
+"letter.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1877
+#, c-format
+msgid ""
+"Mount a CD-ROM, floppy, or disk image to a drive letter.\n"
+"\n"
+"Usage:\n"
+"  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mCDROM-SET[0m [CDROM-SET2 [..]] [-fs "
+"iso] -t cdrom|iso\n"
+"  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mIMAGEFILE[0m [IMAGEFILE2 [..]] [-fs "
+"fat] -t hdd|floppy\n"
+"  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mBOOTIMAGE[0m [-fs fat|none] -t hdd -"
+"size GEOMETRY\n"
+"  [32;1mimgmount[0m -u [37;1mDRIVE[0m  (unmounts the DRIVE's image)\n"
+"\n"
+"Where:\n"
+"  [37;1mDRIVE[0m     is the drive letter where the image will be mounted: a, "
+"c, d, ...\n"
+"  [36;1mCDROM-SET[0m is an ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/"
+"MP3/WAV\n"
+"  [36;1mIMAGEFILE[0m is a hard drive or floppy image in FAT16 or FAT12 "
+"format\n"
+"  [36;1mBOOTIMAGE[0m is a bootable disk image with specified -size "
+"GEOMETRY:\n"
+"            bytes-per-sector,sectors-per-head,heads,cylinders\n"
+"Notes:\n"
+"  - %s+F4 swaps & mounts the next CDROM-SET or IMAGEFILE, if provided.\n"
+"\n"
+"Examples:\n"
+"  [32;1mimgmount[0m [37;1mD[0m [36;1mC:\\games\\doom.iso[0m -t cdrom\n"
+"  [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom\n"
+"  [32;1mimgmount[0m [37;1mA[0m [36;1mfloppy1.img floppy2.img floppy3.img[0m -"
+"t floppy\n"
+"  [32;1mimgmount[0m [37;1mC[0m [36;1mC:\\dos\\c_drive.img[0m -t hdd\n"
+"  [32;1mimgmount[0m [37;1mC[0m [36;1mbootable.img[0m -t hdd -fs none -size "
+"512,63,32,1023\n"
+"  [32;1mimgmount[0m [37;1mD[0m [36;1m/Users/USERNAME/games/doom.iso[0m -t "
+"cdrom\n"
+"  [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom\n"
+"  [32;1mimgmount[0m [37;1mA[0m [36;1mfloppy1.img floppy2.img floppy3.img[0m -"
+"t floppy\n"
+"  [32;1mimgmount[0m [37;1mC[0m [36;1m~/dos/c_drive.img[0m -t hdd\n"
+"  [32;1mimgmount[0m [37;1mC[0m [36;1mbootable.img[0m -t hdd -fs none -size "
+"512,63,32,1023\n"
+"  [32;1mimgmount[0m [37;1mD[0m [36;1m/home/USERNAME/games/doom.iso[0m -t "
+"cdrom\n"
+"  [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom\n"
+"  [32;1mimgmount[0m [37;1mA[0m [36;1mfloppy1.img floppy2.img floppy3.img[0m -"
+"t floppy\n"
+"  [32;1mimgmount[0m [37;1mC[0m [36;1m~/dos/c_drive.img[0m -t hdd\n"
+"  [32;1mimgmount[0m [37;1mC[0m [36;1mbootable.img[0m -t hdd -fs none -size "
+"512,63,32,1023\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1917
+msgid "maps physical folders or drives to a virtual drive letter.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1920
+msgid ""
+"Mount a directory from the host OS to a drive letter.\n"
+"\n"
+"Usage:\n"
+"  [32;1mmount[0m [37;1mDRIVE[0m [36;1mDIRECTORY[0m [-t TYPE] [-freesize "
+"SIZE] [-label LABEL]\n"
+"  [32;1mmount[0m -u [37;1mDRIVE[0m  (unmounts the DRIVE's directory)\n"
+"\n"
+"Where:\n"
+"  [37;1mDRIVE[0m     the drive letter where the directory will be mounted: "
+"A, C, D, ...\n"
+"  [36;1mDIRECTORY[0m is the directory on the host OS to be mounted\n"
+"  TYPE      type of the directory to mount: dir, floppy, cdrom, or overlay\n"
+"  SIZE      free space for the virtual drive (KiB for floppies, MiB "
+"otherwise)\n"
+"  LABEL     drive label name to be used\n"
+"\n"
+"Notes:\n"
+"  - '-t overlay' redirects writes for mounted drive to another directory.\n"
+"  - Additional options are described in the manual (README file, chapter "
+"4).\n"
+"\n"
+"Examples:\n"
+"  [32;1mmount[0m [37;1mC[0m [36;1mC:\\dosgames[0m\n"
+"  [32;1mmount[0m [37;1mD[0m [36;1mD:\\[0m -t cdrom\n"
+"  [32;1mmount[0m [37;1mC[0m [36;1mmy_savegame_files[0m -t overlay\n"
+"  [32;1mmount[0m [37;1mC[0m [36;1m~/dosgames[0m\n"
+"  [32;1mmount[0m [37;1mD[0m [36;1m\"/Volumes/Game CD\"[0m -t cdrom\n"
+"  [32;1mmount[0m [37;1mC[0m [36;1mmy_savegame_files[0m -t overlay\n"
+"  [32;1mmount[0m [37;1mC[0m [36;1m~/dosgames[0m\n"
+"  [32;1mmount[0m [37;1mD[0m [36;1m\"/media/USERNAME/Game CD\"[0m -t cdrom\n"
+"  [32;1mmount[0m [37;1mC[0m [36;1mmy_savegame_files[0m -t overlay\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1954
+msgid "Must specify drive letter to mount image at.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1956
+msgid ""
+"Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,"
+"hdb).\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1958
+msgid ""
+"For [33mCD-ROM[0m images:   [34;1mIMGMOUNT drive-letter location-of-image -t "
+"iso[0m\n"
+"\n"
+"For [33mhardrive[0m images: Must specify drive geometry for hard drives:\n"
+"bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.\n"
+"[34;1mIMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl[0m\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1964
+msgid ""
+"Could not load image file.\n"
+"Check that the path is correct and the image is accessible.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1967
+msgid ""
+"Could not extract drive geometry from image.\n"
+"Use parameter -size bps,spc,hpc,cyl to specify the geometry.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1970
+#, c-format
+msgid "Type '%s' is unsupported. Specify 'floppy', 'hdd', 'cdrom', or 'iso'.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1972
+#, c-format
+msgid "Format \"%s\" is unsupported. Specify \"fat\" or \"iso\" or \"none\".\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1974
+msgid "Must specify file-image to mount.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1975
+msgid "Image file not found.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1977
+msgid ""
+"To mount directories, use the [34;1mMOUNT[0m command, not the "
+"[34;1mIMGMOUNT[0m command.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1979
+msgid "Drive already mounted at that letter.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1980
+msgid "Can't create drive from file.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1982
+#, c-format
+msgid "Drive number %d mounted as %s\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1984
+msgid "The image must be on a host or local drive.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1986
+msgid "Using multiple files is only supported for cue/iso images.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1988
+#, c-format
+msgid "Codepage %i has been loaded\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1990
+#, c-format
+msgid "Codepage %i has been loaded for layout %s\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1992
+msgid ""
+"[32;1mKEYB[0m [keyboard layout ID[ codepage number[ codepage file]]]\n"
+"\n"
+"Some examples:\n"
+"  [32;1mKEYB[0m: Display currently loaded codepage.\n"
+"  [32;1mKEYB[0m sp: Load the spanish (SP) layout, use an appropriate "
+"codepage.\n"
+"  [32;1mKEYB[0m sp 850: Load the spanish (SP) layout, use codepage 850.\n"
+"  [32;1mKEYB[0m sp 850 mycp.cpi: Same as above, but use file mycp.cpi.\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:1999
+#, c-format
+msgid "Keyboard layout %s loaded for codepage %i\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:2000
+#, c-format
+msgid ""
+"Keyboard file %s not found\n"
+"\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:2001
+#, c-format
+msgid "Keyboard file %s invalid\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:2003
+#, c-format
+msgid "No layout in %s for codepage %i\n"
+msgstr ""
+
+#: src/dos/dos_programs.cpp:2005
+#, c-format
+msgid ""
+"None or invalid codepage file for layout %s\n"
+"\n"
+msgstr ""
+
+#: src/debug/debug_gui.cpp:263
+msgid "file where the log messages will be saved to"
+msgstr ""
+
+#: src/debug/debug_gui.cpp:269
+msgid "Enable/Disable logging of this type."
+msgstr ""
+
+#: src/dosbox.cpp:438
+msgid "Select another language file."
+msgstr ""
+
+#: src/dosbox.cpp:442
+msgid "The type of machine DOSBox tries to emulate."
+msgstr ""
+
+#: src/dosbox.cpp:446
+msgid "Directory where things like wave, midi, screenshot get captured."
+msgstr ""
+
+#: src/dosbox.cpp:459
+msgid ""
+"Amount of memory DOSBox has in megabytes.\n"
+"This value is best left at its default to avoid problems with some games,\n"
+"though few games might require a higher value.\n"
+"There is generally no speed advantage when raising this value."
+msgstr ""
+
+#: src/dosbox.cpp:476
+msgid ""
+"Controls verbosity prior to displaying the program:\n"
+"Verbosity   | Splash | Welcome | Early stdout\n"
+"high        |  yes   |   yes   |    yes\n"
+"medium      |  no    |   yes   |    yes\n"
+"low         |  no    |   no    |    yes\n"
+"quiet       |  no    |   no    |    no\n"
+"splash_only |  yes   |   no    |    no\n"
+"auto        | 'low' if exec or dir is passed, otherwise 'high'"
+msgstr ""
+
+#: src/dosbox.cpp:488
+msgid "How many frames DOSBox skips before drawing one."
+msgstr ""
+
+#: src/dosbox.cpp:492
+msgid ""
+"Scales the vertical resolution to produce a 4:3 display aspect\n"
+"ratio, matching that of the original standard-definition monitors\n"
+"for which the majority of DOS games were designed. This setting\n"
+"only affects video modes that use non-square pixels, such as\n"
+"320x200 or 640x400; where as square-pixel modes, such as 640x480\n"
+"and 800x600, will be displayed as-is."
+msgstr ""
+
+#: src/dosbox.cpp:501
+msgid ""
+"Select default palette for monochrome display.\n"
+"Works only when emulating hercules or cga_mono.\n"
+"You can also cycle through available colours using F11."
+msgstr ""
+
+#: src/dosbox.cpp:510
+msgid ""
+"Scaler used to enlarge/enhance low resolution modes.\n"
+"If 'forced' is appended, then the scaler will be used even if\n"
+"the result might not be desired.\n"
+"Note that some scalers may use black borders to fit the image\n"
+"within your configured display resolution. If this is\n"
+"undesirable, try either a different scaler or enabling\n"
+"fullresolution output."
+msgstr ""
+
+#: src/dosbox.cpp:537
+msgid ""
+"Either 'none' or a GLSL shader name. Works only with\n"
+"OpenGL output.  Can be either an absolute path, a file\n"
+"in the 'glshaders' subdirectory of the DOSBox\n"
+"configuration directory, or one of the built-in shaders:\n"
+"advinterp2x, advinterp3x, advmame2x, advmame3x,\n"
+"crt-easymode-flat, crt-fakelottes-flat, rgb2x, rgb3x,\n"
+"scan2x, scan3x, tv2x, tv3x, sharp (default)."
+msgstr ""
+
+#: src/dosbox.cpp:554
+msgid ""
+"CPU Core used in emulation. auto will switch to dynamic if available and\n"
+"appropriate."
+msgstr ""
+
+#: src/dosbox.cpp:561
+msgid "CPU Type used in emulation. auto is the fastest choice."
+msgstr ""
+
+#: src/dosbox.cpp:565
+msgid ""
+"Number of instructions DOSBox tries to emulate each millisecond.\n"
+"Setting this value too high results in sound dropouts and lags.\n"
+"Cycles can be set in 3 ways:\n"
+"  'auto'          tries to guess what a game needs.\n"
+"                  It usually works, but can fail for certain games.\n"
+"  'fixed #number' will set a fixed number of cycles. This is what you "
+"usually\n"
+"                  need if 'auto' fails (Example: fixed 4000).\n"
+"  'max'           will allocate as much cycles as your computer is able to\n"
+"                  handle."
+msgstr ""
+
+#: src/dosbox.cpp:584
+msgid ""
+"Number of cycles added or subtracted with speed control hotkeys.\n"
+"Run INTRO and see Special Keys for list of hotkeys."
+msgstr ""
+
+#: src/dosbox.cpp:589
+msgid "Setting it lower than 100 will be a percentage."
+msgstr ""
+
+#: src/dosbox.cpp:606
+msgid "Enable silent mode, sound is still emulated though."
+msgstr ""
+
+#: src/dosbox.cpp:611
+msgid ""
+"Mixer sample rate, setting any device's rate higher than this will probably "
+"lower their sound quality."
+msgstr ""
+
+#: src/dosbox.cpp:618
+msgid ""
+"Mixer block size, larger blocks might help sound stuttering but sound will "
+"also be more lagged."
+msgstr ""
+
+#: src/dosbox.cpp:623
+msgid "How many milliseconds of data to keep on top of the blocksize."
+msgstr ""
+
+#: src/dosbox.cpp:657
+msgid ""
+"Device that will receive the MIDI data (from the emulated MIDI\n"
+"interface - MPU-401). Choose one of the following:\n"
+"'fluidsynth', to use the built-in MIDI synthesizer. See the\n"
+"       [fluidsynth] section for detailed configuration.\n"
+"'mt32', to use the built-in Roland MT-32 synthesizer.\n"
+"       See the [mt32] section for detailed configuration.\n"
+"'auto', to use the first working external MIDI player. This\n"
+"       might be a software synthesizer or physical device."
+msgstr ""
+
+#: src/dosbox.cpp:672
+msgid ""
+"Configuration options for the selected MIDI interface.\n"
+"This is usually the id or name of the MIDI synthesizer you want\n"
+"to use (find the id/name with DOS command 'mixer /listmidi').\n"
+"- This option has no effect when using the built-in synthesizers\n"
+"  (mididevice = fluidsynth or mt32).\n"
+"- When using CoreAudio, you can specify a soundfont here.\n"
+"- When using ALSA, use Linux command 'aconnect -l' to list open\n"
+"  MIDI ports, and select one (for example 'midiconfig=14:0'\n"
+"  for sequencer client 14, port 0).\n"
+"- If you're using a physical Roland MT-32 with revision 0 PCB,\n"
+"  the hardware may require a delay in order to prevent its\n"
+"  buffer from overflowing. In that case, add 'delaysysex',\n"
+"  for example: 'midiconfig=2 delaysysex'.\n"
+"See the README/Manual for more details."
+msgstr ""
+
+#: src/dosbox.cpp:696
+msgid "Type of MPU-401 to emulate."
+msgstr ""
+
+#: src/dosbox.cpp:716
+msgid "Type of Sound Blaster to emulate. 'gb' is Game Blaster."
+msgstr ""
+
+#: src/dosbox.cpp:721
+msgid "The IO address of the Sound Blaster."
+msgstr ""
+
+#: src/dosbox.cpp:726
+msgid "The IRQ number of the Sound Blaster."
+msgstr ""
+
+#: src/dosbox.cpp:731
+msgid "The DMA number of the Sound Blaster."
+msgstr ""
+
+#: src/dosbox.cpp:735
+msgid "The High DMA number of the Sound Blaster."
+msgstr ""
+
+#: src/dosbox.cpp:739
+msgid "Allow the Sound Blaster mixer to modify the DOSBox mixer."
+msgstr ""
+
+#: src/dosbox.cpp:743
+msgid ""
+"oplrate is deprecated. The OPL waveform is now sampled\n"
+"        at the mixer's playback rate to avoid resampling."
+msgstr ""
+
+#: src/dosbox.cpp:750
+msgid ""
+"Type of OPL emulation. On 'auto' the mode is determined by 'sbtype'.\n"
+"All OPL modes are AdLib-compatible, except for 'cms'."
+msgstr ""
+
+#: src/dosbox.cpp:757
+msgid ""
+"Provider for the OPL emulation. 'compat' provides better quality,\n"
+"'nuked' is the default and most accurate (but the most CPU-intensive)."
+msgstr ""
+
+#: src/dosbox.cpp:768
+msgid "Enable PC-Speaker emulation."
+msgstr ""
+
+#: src/dosbox.cpp:783
+msgid "Sample rate of the PC-Speaker sound generation."
+msgstr ""
+
+#: src/dosbox.cpp:789
+msgid ""
+"Neutralizes and prevents the PC speaker's DC-offset from harming other "
+"sources.\n"
+"'auto' enables this for non-Windows systems and disables it on Windows.\n"
+"If your OS performs its own DC-offset correction, then set this to 'false'."
+msgstr ""
+
+#: src/dosbox.cpp:798
+msgid ""
+"Enable Tandy Sound System emulation. For 'auto', emulation is present only "
+"if machine is set to 'tandy'."
+msgstr ""
+
+#: src/dosbox.cpp:802
+msgid "Sample rate of the Tandy 3-Voice generation."
+msgstr ""
+
+#: src/dosbox.cpp:808
+msgid ""
+"Enable Disney Sound Source emulation. (Covox Voice Master and Speech Thing "
+"compatible)."
+msgstr ""
+
+#: src/dosbox.cpp:813
+msgid "Enable IBM PS/1 Audio emulation."
+msgstr ""
+
+#: src/dosbox.cpp:823
+msgid ""
+"Type of joystick to emulate: auto (default),\n"
+"none (disables joystick emulation),\n"
+"2axis (supports two joysticks),\n"
+"4axis (supports one joystick, first joystick used),\n"
+"4axis_2 (supports one joystick, second joystick used),\n"
+"fcs (Thrustmaster), ch (CH Flightstick).\n"
+"auto chooses emulation depending on real joystick(s).\n"
+"(Remember to reset DOSBox's mapperfile if you saved it earlier)"
+msgstr ""
+
+#: src/dosbox.cpp:834
+msgid ""
+"enable timed intervals for axis. Experiment with this option, if your "
+"joystick drifts (away)."
+msgstr ""
+
+#: src/dosbox.cpp:838
+msgid "continuously fires as long as you keep the button pressed."
+msgstr ""
+
+#: src/dosbox.cpp:842
+msgid "swap the 3rd and the 4th axis. Can be useful for certain joysticks."
+msgstr ""
+
+#: src/dosbox.cpp:846
+msgid "enable button wrapping at the number of emulated buttons."
+msgstr ""
+
+#: src/dosbox.cpp:850
+msgid ""
+"enable translation of circular input to square output.\n"
+"Try enabling this if your left analog stick can only move in a circle."
+msgstr ""
+
+#: src/dosbox.cpp:856
+msgid ""
+"the percentage of motion to ignore. 100 turns the stick into a digital one."
+msgstr ""
+
+#: src/dosbox.cpp:868
+msgid ""
+"set type of device connected to com port.\n"
+"Can be disabled, dummy, modem, nullmodem, directserial.\n"
+"Additional parameters must be in the same line in the form of\n"
+"parameter:value. Parameter for all types is irq (optional).\n"
+"for directserial: realport (required), rxdelay (optional).\n"
+"                 (realport:COM1 realport:ttyS0).\n"
+"for modem: listenport (optional).\n"
+"for nullmodem: server, rxdelay, txdelay, telnet, usedtr,\n"
+"               transparent, port, inhsocket (all optional).\n"
+"Example: serial1=modem listenport:5000"
+msgstr ""
+
+#: src/dosbox.cpp:884 src/dosbox.cpp:891 src/dosbox.cpp:898
+msgid "see serial1"
+msgstr ""
+
+#: src/dosbox.cpp:901
+msgid "File used to map fake phone numbers to addresses."
+msgstr ""
+
+#: src/dosbox.cpp:907
+msgid "Enable XMS support."
+msgstr ""
+
+#: src/dosbox.cpp:914
+msgid ""
+"Enable EMS support. The default (=true) provides the best\n"
+"compatibility but certain applications may run better with\n"
+"other choices, or require EMS support to be disabled (=false)\n"
+"to work at all."
+msgstr ""
+
+#: src/dosbox.cpp:920
+msgid "Enable UMB support."
+msgstr ""
+
+#: src/dosbox.cpp:923
+msgid ""
+"Set DOS version (5.0 by default). Specify as major.minor format.\n"
+"A single number is treated as the major version.\n"
+"Common settings are 3.3, 5.0, 6.22, and 7.1."
+msgstr ""
+
+#: src/dosbox.cpp:929
+msgid "Language code of the keyboard layout (or none)."
+msgstr ""
+
+#: src/dosbox.cpp:938
+msgid "Enable ipx over UDP/IP emulation."
+msgstr ""
+
+#: src/dosbox.cpp:944
+msgid ""
+"macaddr -- The physical address the emulator will use on your network.\n"
+"           If you have multiple DOSBoxes running on your network,\n"
+"           this has to be changed. Modify the last three number blocks.\n"
+"           I.e. AC:DE:48:88:99:AB.\n"
+"realnic -- Specifies which of your network interfaces is used.\n"
+"           Write 'list' here to see the list of devices in the\n"
+"           Status Window. Then make your choice and put either the\n"
+"           interface number (2 or something) or a part of your adapters\n"
+"           name, e.g. VIA here.\n"
+msgstr ""
+
+#: src/dosbox.cpp:955
+msgid "Enable Ethernet passthrough. Requires [Win]Pcap."
+msgstr ""
+
+#: src/dosbox.cpp:958
+msgid "The base address of the NE2000 board."
+msgstr ""
+
+#: src/dosbox.cpp:961
+msgid "The interrupt it uses. Note serial2 uses IRQ3 as default."
+msgstr ""
+
+#: src/dosbox.cpp:965
+msgid ""
+"The physical address the emulator will use on your network.\n"
+"If you have multiple DOSBoxes running on your network,\n"
+"this has to be changed for each. AC:DE:48 is an address range reserved for\n"
+"private use, so modify the last three number blocks.\n"
+"I.e. AC:DE:48:88:99:AB."
+msgstr ""
+
+#: src/dosbox.cpp:973
+msgid ""
+"Specifies which of your network interfaces is used.\n"
+"Write 'list' here to see the list of devices in the\n"
+"Status Window. Then make your choice and put either the\n"
+"interface number (2 or something) or a part of your adapters\n"
+"name, e.g. VIA here."
+msgstr ""
+
+#: src/dosbox.cpp:984
+msgid ""
+"Lines in this section will be run at startup.\n"
+"You can put your MOUNT lines here.\n"
+msgstr ""
+
+#: src/dosbox.cpp:987
+#, c-format
+msgid ""
+"# This is the configuration file for dosbox-staging (%s).\n"
+"# Lines starting with a '#' character are comments.\n"
+msgstr ""
+
+#: src/dosbox.cpp:989
+msgid "Possible values"
+msgstr ""
+
+#: src/gui/sdlmain.cpp:3122
+msgid ""
+"Start directly in fullscreen.\n"
+"Run INTRO and see Special Keys for window control hotkeys."
+msgstr ""
+
+#: src/gui/sdlmain.cpp:3126
+msgid "Number of display to use; values depend on OS and user settings."
+msgstr ""
+
+#: src/gui/sdlmain.cpp:3131
+msgid ""
+"Synchronize with display refresh rate if supported. This can\n"
+"reduce flickering and tearing, but may also impact performance."
+msgstr ""
+
+#: src/gui/sdlmain.cpp:3135
+msgid ""
+"Number of microseconds to allow rendering to block before skipping the next "
+"frame."
+msgstr ""
+
+#: src/gui/sdlmain.cpp:3140
+msgid ""
+"What resolution to use for fullscreen: 'original', 'desktop'\n"
+"or a fixed size (e.g. 1024x768)."
+msgstr ""
+
+#: src/gui/sdlmain.cpp:3145
+msgid ""
+"Set window size when running in windowed mode:\n"
+"  default:   Select the best option based on your\n"
+"             environment and other settings.\n"
+"  small, medium, or large (or s, m, l):\n"
+"             Size the window relative to the desktop.\n"
+"  <custom>:  Scale the window to the given dimensions in\n"
+"             WxH format. For example: 1024x768.\n"
+"             Scaling is not performed for output=surface."
+msgstr ""
+
+#: src/gui/sdlmain.cpp:3172
+msgid "What video system to use for output."
+msgstr ""
+
+#: src/gui/sdlmain.cpp:3176
+msgid ""
+"Choose a renderer driver when using a texture output mode.\n"
+"Use texture_renderer=auto for an automatic choice."
+msgstr ""
+
+#: src/gui/sdlmain.cpp:3209
+msgid ""
+"Choose a mouse control method:\n"
+"   onclick:        Capture the mouse when clicking inside the window.\n"
+"   onstart:        Capture the mouse immediately on start.\n"
+"   seamless:       Never cature the mouse; let it move seamlessly.\n"
+"   nomouse:        Hide the mouse and don't send input to the game.\n"
+"Choose how middle-clicks are handled (second parameter):\n"
+"   middlegame:     Middle-clicks are sent to the game.\n"
+"   middlerelease:  Middle-click will release the captured mouse.\n"
+"Defaults (if not present or incorrect): "
+msgstr ""
+
+#: src/gui/sdlmain.cpp:3223
+msgid ""
+"Mouse sensitivity. The optional second parameter specifies vertical "
+"sensitivity (e.g. 100,-50)."
+msgstr ""
+
+#: src/gui/sdlmain.cpp:3232
+msgid ""
+"Enable this setting to bypass your operating system's mouse\n"
+"acceleration and sensitivity settings. This works in\n"
+"fullscreen or when the mouse is captured in window mode."
+msgstr ""
+
+#: src/gui/sdlmain.cpp:3237
+msgid "Wait before closing the console if dosbox has an error."
+msgstr ""
+
+#: src/gui/sdlmain.cpp:3242
+msgid ""
+"Priority levels for dosbox. Second entry behind the comma is for when dosbox "
+"is not focused/minimized.\n"
+"pause is only valid for the second entry. auto disables priority levels and "
+"uses OS defaults."
+msgstr ""
+
+#: src/gui/sdlmain.cpp:3260
+msgid ""
+"File used to load/save the key/event mappings from.\n"
+"Resetmapper only works with the default value."
+msgstr ""
+
+#: src/gui/sdlmain.cpp:3264
+msgid ""
+"Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER\n"
+"environment variable (which usually blocks the OS screensaver\n"
+"while the emulator is running)."
+msgstr ""
+
+#: src/hardware/gus.cpp:1489
+msgid "Enable Gravis UltraSound emulation."
+msgstr ""
+
+#: src/hardware/gus.cpp:1496
+msgid "The IO base address of the Gravis UltraSound."
+msgstr ""
+
+#: src/hardware/gus.cpp:1503
+msgid "The IRQ number of the Gravis UltraSound."
+msgstr ""
+
+#: src/hardware/gus.cpp:1509
+msgid "The DMA channel of the Gravis UltraSound."
+msgstr ""
+
+#: src/hardware/gus.cpp:1513
+msgid ""
+"Path to UltraSound directory. In this directory\n"
+"there should be a MIDI directory that contains\n"
+"the patch files for GUS playback. Patch sets used\n"
+"with Timidity should work fine."
+msgstr ""
+
+#: src/hardware/innovation.cpp:273
+msgid ""
+"Model of chip to emulate in the Innovation SSI-2001 card:\n"
+" - auto:  Selects the 6581 chip.\n"
+" - 6581:  The original chip, known for its bassy and rich character.\n"
+" - 8580:  A later revision that more closely matched the SID specification.\n"
+"          It fixed the 6581's DC bias and is less prone to distortion.\n"
+"          The 8580 is an option on reproduction cards, like the DuoSID.\n"
+" - none:  Disables the card."
+msgstr ""
+
+#: src/hardware/innovation.cpp:286
+msgid ""
+"The SID chip's clock frequency, which is jumperable on reproduction cards.\n"
+" - default: uses 0.895 MHz, per the original SSI-2001 card.\n"
+" - c64ntsc: uses 1.023 MHz, per NTSC Commodore PCs and the DuoSID.\n"
+" - c64pal:  uses 0.985 MHz, per PAL Commodore PCs and the DuoSID.\n"
+" - hardsid: uses 1.000 MHz, available on the DuoSID."
+msgstr ""
+
+#: src/hardware/innovation.cpp:296
+msgid "The IO port address of the Innovation SSI-2001."
+msgstr ""
+
+#: src/hardware/innovation.cpp:302
+msgid ""
+"The SID's analog filtering meant that each chip was physically unique.\n"
+"Adjusts the 6581's filtering strength as a percent from 0 to 100."
+msgstr ""
+
+#: src/hardware/innovation.cpp:308
+msgid "Adjusts the 8580's filtering strength as a percent from 0 to 100."
+msgstr ""
+
+#: src/midi/midi_fluidsynth.cpp:53
+msgid ""
+"Path to a SoundFont file in .sf2 format. You can use an\n"
+"absolute or relative path, or the name of an .sf2 inside\n"
+"the 'soundfonts' directory within your DOSBox configuration\n"
+"directory.\n"
+"An optional percentage will scale the SoundFont's volume.\n"
+"For example: 'soundfont.sf2 50' will attenuate it by 50 percent.\n"
+"The scaling percentage can range from 1 to 500."
+msgstr ""
+
+#: src/midi/midi_mt32.cpp:184
+msgid ""
+"Model of synthesizer to use.\n"
+"'auto' picks the first model with available ROMs, in order as listed.\n"
+"'cm32l' and 'mt32' pick the first model of their type, in the order listed.\n"
+"'mt32_old' and 'mt32_new' are aliases for 1.07 and 2.04, respectively."
+msgstr ""
+
+#: src/midi/midi_mt32.cpp:191
+msgid ""
+"The directory containing ROMs for one or more models.\n"
+"The directory can be absolute or relative, or leave it blank to\n"
+"use the 'mt32-roms' directory in your DOSBox configuration\n"
+"directory. Other common system locations will be checked as well.\n"
+"ROM files inside this directory may include any of the following:\n"
+"  - MT32_CONTROL.ROM and MT32_PCM.ROM, for the 'mt32' model.\n"
+"  - CM32L_CONTROL.ROM and CM32L_PCM.ROM, for the 'cm32l' model.\n"
+"  - Unzipped MAME MT-32 and CM-32L ROMs, for the versioned models.\n"
+msgstr ""
+
+#: src/misc/programs.cpp:868
+msgid "No config file loaded!\n"
+msgstr ""
+
+#: src/misc/programs.cpp:869
+#, c-format
+msgid ""
+"Primary config file: \n"
+"%s\n"
+msgstr ""
+
+#: src/misc/programs.cpp:870
+msgid "Additional config files:\n"
+msgstr ""
+
+#: src/misc/programs.cpp:872
+#, c-format
+msgid ""
+"DOSBox Staging %s configuration directory: \n"
+"%s\n"
+"\n"
+msgstr ""
+
+#: src/misc/programs.cpp:875
+#, c-format
+msgid ""
+"\n"
+"Can't open file %s\n"
+msgstr ""
+
+#: src/misc/programs.cpp:876
+#, c-format
+msgid "Writing config file %s\n"
+msgstr ""
+
+#: src/misc/programs.cpp:880
+msgid ""
+"Config tool:\n"
+"-writeconf or -wc without parameter: write to primary loaded config file.\n"
+"-writeconf or -wc with filename: write file to config directory.\n"
+"Use -writelang or -wl filename to write the current language strings.\n"
+"-r [parameters]\n"
+" Restart DOSBox, either using the previous parameters or any that are "
+"appended.\n"
+"-wcp [filename]\n"
+" Write config file to the program directory, dosbox.conf or the specified\n"
+" filename.\n"
+"-wcd\n"
+" Write to the default config file in the config directory.\n"
+"-l lists configuration parameters.\n"
+"-h, -help, -? sections / sectionname / propertyname\n"
+" Without parameters, displays this help screen. Add \"sections\" for a list "
+"of\n"
+" sections. For info about a specific section or property add its name "
+"behind.\n"
+"-axclear clears the autoexec section.\n"
+"-axadd [line] adds a line to the autoexec section.\n"
+"-axtype prints the content of the autoexec section.\n"
+"-securemode switches to secure mode.\n"
+"-avistart starts AVI recording.\n"
+"-avistop stops AVI recording.\n"
+"-startmapper starts the keymapper.\n"
+"-get \"section property\" returns the value of the property.\n"
+"-set \"section property=value\" sets the value.\n"
+msgstr ""
+
+#: src/misc/programs.cpp:906
+#, c-format
+msgid ""
+"Purpose of property \"%s\" (contained in section \"%s\"):\n"
+"%s\n"
+"\n"
+"Possible Values: %s\n"
+"Default value: %s\n"
+"Current value: %s\n"
+msgstr ""
+
+#: src/misc/programs.cpp:908
+#, c-format
+msgid ""
+"Purpose of section \"%s\":\n"
+"%s\n"
+"Current value:\n"
+"%s\n"
+msgstr ""
+
+#: src/misc/programs.cpp:910
+msgid "This property cannot be changed at runtime.\n"
+msgstr ""
+
+#: src/misc/programs.cpp:911
+msgid "positive integer"
+msgstr ""
+
+#: src/misc/programs.cpp:913
+#, c-format
+msgid "Section %s contains the following properties:\n"
+msgstr ""
+
+#: src/misc/programs.cpp:915
+msgid ""
+"DOSBox configuration contains the following sections:\n"
+"\n"
+msgstr ""
+
+#: src/misc/programs.cpp:917
+msgid "Switched to secure mode.\n"
+msgstr ""
+
+#: src/misc/programs.cpp:919
+msgid "This operation is not permitted in secure mode.\n"
+msgstr ""
+
+#: src/misc/programs.cpp:920
+#, c-format
+msgid "Section \"%s\" doesn't exist.\n"
+msgstr ""
+
+#: src/misc/programs.cpp:922
+#, c-format
+msgid "\"%s\" is not a valid value for property %s.\n"
+msgstr ""
+
+#: src/misc/programs.cpp:923
+msgid "No such section or property.\n"
+msgstr ""
+
+#: src/misc/programs.cpp:925
+#, c-format
+msgid "There is no property \"%s\" in section \"%s\".\n"
+msgstr ""
+
+#: src/misc/programs.cpp:927
+msgid "Correct syntax: config -set \"section property\".\n"
+msgstr ""
+
+#: src/misc/programs.cpp:929
+msgid "Correct syntax: config -get \"section property\".\n"
+msgstr ""
+
+#: src/misc/programs.cpp:931
+#, c-format
+msgid ""
+"\n"
+"DOSBox was started with the following command line parameters:\n"
+"%s\n"
+msgstr ""
+
+#: src/misc/programs.cpp:932
+msgid "Missing parameter.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:586
+msgid "Illegal Path.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:588
+msgid ""
+"If you want a list of all supported commands type [33;1mhelp /all[0m .\n"
+"A short list of the most often used commands:\n"
+msgstr ""
+
+#: src/shell/shell.cpp:589
+msgid "ECHO is on.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:590
+msgid "ECHO is off.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:591
+#, c-format
+msgid "Illegal switch: %s.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:592
+msgid "Required parameter missing.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:593
+#, c-format
+msgid "Unable to change to: %s.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:595
+#, c-format
+msgid "Hint: To change to different drive type [31m%c:[0m\n"
+msgstr ""
+
+#: src/shell/shell.cpp:597
+#, c-format
+msgid ""
+"directoryname is longer than 8 characters and/or contains spaces.\n"
+"Try [31mcd %s[0m\n"
+msgstr ""
+
+#: src/shell/shell.cpp:599
+msgid "You are still on drive Z:, change to a mounted drive with [31mC:[0m.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:600
+msgid "Displays or changes the internal date.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:601
+msgid "The specified date is not correct.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:602
+msgid "3SunMonTueWedThuFriSat"
+msgstr ""
+
+#: src/shell/shell.cpp:603
+msgid "Current date: "
+msgstr ""
+
+#: src/shell/shell.cpp:604
+msgid "Type 'date MM-DD-YYYY' to change.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:605
+msgid "M/D/Y"
+msgstr ""
+
+#: src/shell/shell.cpp:607
+msgid ""
+"DATE [[/T] [/H] [/S] | MM-DD-YYYY]\n"
+"  MM-DD-YYYY: new date to set\n"
+"  /S:         Permanently use host time and date as DOS time\n"
+"  /F:         Switch back to DOSBox internal time (opposite of /S)\n"
+"  /T:         Only display date\n"
+"  /H:         Synchronize with host\n"
+msgstr ""
+
+#: src/shell/shell.cpp:613
+msgid "Displays the internal time.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:614
+msgid "Current time: "
+msgstr ""
+
+#: src/shell/shell.cpp:616
+msgid ""
+"TIME [/T] [/H]\n"
+"  /T:         Display simple time\n"
+"  /H:         Synchronize with host\n"
+msgstr ""
+
+#: src/shell/shell.cpp:619
+#, c-format
+msgid "Unable to make: %s.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:620
+#, c-format
+msgid "Unable to remove: %s.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:621
+#, c-format
+msgid "Unable to delete: %s.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:622
+msgid "The syntax of the command is incorrect.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:623
+#, c-format
+msgid "Environment variable %s not defined.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:625
+msgid "Not enough environment space left.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:627
+msgid "IF EXIST: Missing filename.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:629
+msgid "IF ERRORLEVEL: Missing number.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:631
+msgid "IF ERRORLEVEL: Invalid number.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:633
+msgid "No label supplied to GOTO command.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:634
+#, c-format
+msgid "GOTO: Label %s not found.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:635
+#, c-format
+msgid "File %s not found.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:636
+#, c-format
+msgid "File %s already exists.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:637
+#, c-format
+msgid " Volume in drive %c is %s\n"
+msgstr ""
+
+#: src/shell/shell.cpp:638
+#, c-format
+msgid " Directory of %s\n"
+msgstr ""
+
+#: src/shell/shell.cpp:639
+#, c-format
+msgid "%17d file(s) %21s bytes\n"
+msgstr ""
+
+#: src/shell/shell.cpp:640
+#, c-format
+msgid "%17d dir(s)  %21s bytes free\n"
+msgstr ""
+
+#: src/shell/shell.cpp:642
+#, c-format
+msgid ""
+"Drive %c does not exist!\n"
+"You must [31mmount[0m it first. Type [1;33mintro[0m or [1;33mintro mount[0m "
+"for more information.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:643
+#, c-format
+msgid "Illegal command: %s.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:644
+msgid "Press any key to continue..."
+msgstr ""
+
+#: src/shell/shell.cpp:645
+msgid "Waits for 1 keystroke to continue.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:646
+#, c-format
+msgid "Copy failure : %s.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:647
+#, c-format
+msgid "   %d File(s) copied.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:649
+msgid "Unable to remove, drive not in use.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:651
+msgid ""
+"SUBST failed. You either made an error in your commandline or the target "
+"drive is already used.\n"
+"It's only possible to use SUBST on Local drives"
+msgstr ""
+
+#: src/shell/shell.cpp:654
+#, c-format
+msgid ""
+"[44;1mͻ\n"
+" [32mWelcome to DOSBox Staging %-40s[37m \n"
+"                                                                    \n"
+" For a short introduction for new users type: "
+"[33mINTRO[37m                 \n"
+" For supported shell commands type: "
+"[33mHELP[37m                            \n"
+"                                                                    \n"
+" To adjust the emulated CPU speed, use [31m%s+F11[37m and [31m%s+F12[37m.%s"
+"%s       \n"
+" To activate the keymapper [31m%s+F1[37m."
+"%s                                 \n"
+" For more information read the [36mREADME[37m file in the DOSBox "
+"directory. \n"
+"                                                                    \n"
+msgstr ""
+
+#: src/shell/shell.cpp:667
+#, c-format
+msgid ""
+" DOSBox supports Composite CGA mode.                                \n"
+" Use [31mF12[37m to set composite output ON, OFF, or AUTO "
+"(default).        \n"
+" [31m(%s+)F11[37m changes hue; [31m%s+%s+F11[37m selects early/late CGA "
+"model.%s  \n"
+"                                                                    \n"
+msgstr ""
+
+#: src/shell/shell.cpp:672
+#, c-format
+msgid ""
+" Use [31mF11[37m to cycle through green, amber, white and paper-white "
+"mode, \n"
+" and [31m%s+F11[37m to change contrast/brightness settings.                \n"
+msgstr ""
+
+#: src/shell/shell.cpp:675
+msgid ""
+" Use [31mF11[37m to cycle through white, amber, and green monochrome "
+"color. \n"
+"                                                                    \n"
+msgstr ""
+
+#: src/shell/shell.cpp:678
+#, c-format
+msgid ""
+" Press [31m%s+Pause[37m to enter the debugger or start the exe with "
+"[33mDEBUG[37m. \n"
+"                                                                    \n"
+msgstr ""
+
+#: src/shell/shell.cpp:681
+msgid ""
+" [33mhttps://dosbox-staging.github."
+"io[37m                                   \n"
+"ͼ[0m\n"
+"\n"
+msgstr ""
+
+#: src/shell/shell.cpp:687
+#, c-format
+msgid "[32;1mdosbox-staging %s[0m\n"
+msgstr ""
+
+#: src/shell/shell.cpp:689
+msgid "Displays/changes the current directory.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:691
+msgid ""
+"CHDIR [drive:][path]\n"
+"CHDIR [..]\n"
+"CD [drive:][path]\n"
+"CD [..]\n"
+"\n"
+"  ..   Specifies that you want to change to the parent directory.\n"
+"\n"
+"Type CD drive: to display the current directory in the specified drive.\n"
+"Type CD without parameters to display the current drive and directory.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:699
+msgid "Clear the screen.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:702
+msgid "Displays a list of files and subdirectories in a directory.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:704
+msgid ""
+"DIR [drive:][path][filename] [/[W|B]] [/P] [/[AD]|[A-D]] [/O[-][N|E|S|D]]\n"
+"\n"
+"  [drive:][path][filename]\n"
+"              Specifies drive, directory, and/or files to list.\n"
+"  /W          Uses wide list format.\n"
+"  /B          Uses bare format (no heading information or summary).\n"
+"  /P          Pauses after each screenful of information.\n"
+"  /AD         Displays all directories.\n"
+"  /A-D        Displays all files.\n"
+"  /O          List by files in sorted order.\n"
+"               -  Prefix to reverse order\n"
+"  sortorder    N  By name (alphabetic)       S  By size (smallest first)\n"
+"               E  By extension (alphabetic)  D  By date & time (oldest "
+"first)\n"
+msgstr ""
+
+#: src/shell/shell.cpp:718
+msgid "Display messages and enable/disable command echoing.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:719
+msgid "Exit from the shell.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:720
+msgid "Show help.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:721
+msgid "HELP [command]\n"
+msgstr ""
+
+#: src/shell/shell.cpp:722
+msgid "Make Directory.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:723
+msgid ""
+"MKDIR [drive:][path]\n"
+"MD [drive:][path]\n"
+msgstr ""
+
+#: src/shell/shell.cpp:725
+msgid "Remove Directory.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:726
+msgid ""
+"RMDIR [drive:][path]\n"
+"RD [drive:][path]\n"
+msgstr ""
+
+#: src/shell/shell.cpp:728
+msgid "Change environment variables.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:730
+msgid "Performs conditional processing in batch programs.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:732
+msgid "Jump to a labeled line in a batch script.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:734
+msgid "Leftshift commandline parameters in a batch script.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:735
+msgid "Display the contents of a text-file.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:736
+msgid "TYPE [drive:][path][filename]\n"
+msgstr ""
+
+#: src/shell/shell.cpp:737
+msgid "Add comments in a batch file.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:738
+msgid "REM [comment]\n"
+msgstr ""
+
+#: src/shell/shell.cpp:740
+msgid "This is a simple version of the command, no wildcards allowed!\n"
+msgstr ""
+
+#: src/shell/shell.cpp:741
+msgid "Renames one or more files.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:743
+msgid ""
+"RENAME [drive:][path]filename1 filename2.\n"
+"REN [drive:][path]filename1 filename2.\n"
+"\n"
+"Note that you can not specify a new drive or path for your destination "
+"file.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:746
+msgid "Removes one or more files.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:748
+msgid ""
+"Usage:\n"
+"  [32;1mdel[0m [36;1mPATTERN[0m\n"
+"  [32;1merase[0m [36;1mPATTERN[0m\n"
+"\n"
+"Where:\n"
+"  [36;1mPATTERN[0m can be either an exact filename (such as [36;1mfile."
+"txt[0m) or an inexact\n"
+"          filename using one or more wildcards, which are the asterisk (*)\n"
+"          representing any sequence of one or more characters, and the "
+"question\n"
+"          mark (?) representing any single character, such as [36;1m*.bat[0m "
+"and [36;1mc?.txt[0m.\n"
+"\n"
+"Warning:\n"
+"  Be careful when using a pattern with wildcards, especially [36;1m*.*[0m, "
+"as all files\n"
+"  matching the pattern will be deleted.\n"
+"\n"
+"Examples:\n"
+"  [32;1mdel[0m [36;1mtest.bat[0m\n"
+"  [32;1mdel[0m [36;1mc*.*[0m\n"
+"  [32;1mdel[0m [36;1ma?b.c*[0m\n"
+msgstr ""
+
+#: src/shell/shell.cpp:766
+msgid "Copy files.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:768
+msgid "Start a batch file from within another batch file.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:770
+msgid "Assign an internal directory to a drive.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:772
+msgid "Loads a program into upper memory (requires xms=true,umb=true).\n"
+msgstr ""
+
+#: src/shell/shell.cpp:774
+msgid "List directory contents.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:775
+msgid "ls [/?] [PATTERN]\n"
+msgstr ""
+
+#: src/shell/shell.cpp:777
+#, c-format
+msgid "ls: cannot access '%s': No such file or directory\n"
+msgstr ""
+
+#: src/shell/shell.cpp:780
+msgid "Waits for a keypress and sets ERRORLEVEL.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:782
+msgid ""
+"CHOICE [/C:choices] [/N] [/S] text\n"
+"  /C[:]choices  -  Specifies allowable keys.  Default is: yn.\n"
+"  /N  -  Do not display the choices at end of prompt.\n"
+"  /S  -  Enables case-sensitive choices to be selected.\n"
+"  text  -  The text to display as a prompt.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:788
+msgid "Does nothing. Provided for compatibility.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:789
+msgid "Provided for compatibility.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:791
+msgid "View or set the reported DOS version.\n"
+msgstr ""
+
+#: src/shell/shell.cpp:793
+msgid ""
+"Usage:\n"
+"  [32;1mver[0m\n"
+"  [32;1mver[0m [37;1mset[0m [36;1mVERSION[0m\n"
+"\n"
+"Where:\n"
+"  [36;1mVERSION[0m can be a whole number, such as [36;1m5[0m, or include a "
+"two-digit decimal\n"
+"          value, such as: [36;1m6.22[0m, [36;1m7.01[0m, or [36;1m7.10[0m. "
+"The decimal can alternatively be\n"
+"          space-separated, such as: [36;1m6 22[0m, [36;1m7 01[0m, or [36;1m7 "
+"10[0m.\n"
+"\n"
+"Notes:\n"
+"  The DOS version can also be set in the configuration file under the [dos]\n"
+"  section using the \"ver = [36;1mVERSION[0m\" setting.\n"
+"\n"
+"Examples:\n"
+"  [32;1mver[0m [37;1mset[0m [36;1m6.22[0m\n"
+"  [32;1mver[0m [37;1mset[0m [36;1m7 10[0m\n"
+msgstr ""
+
+#: src/shell/shell.cpp:809
+#, c-format
+msgid ""
+"DOSBox Staging version %s\n"
+"DOS version %d.%02d\n"
+msgstr ""
+
+#: src/shell/shell.cpp:812
+msgid "The specified DOS version is not correct.\n"
+msgstr ""
