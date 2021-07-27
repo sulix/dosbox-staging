@@ -93,7 +93,7 @@ jobs:
         if:   matrix.conf.os != 'ubuntu-20.04'
         run: |
           sudo apt-get install python3-setuptools
-          sudo pip3 install meson ninja
+          sudo pip3 install meson i18n ninja
 
       - name:  Prepare compiler cache
         id:    prep-ccache
@@ -159,7 +159,7 @@ jobs:
         if:   matrix.conf.os != 'ubuntu-20.04'
         run: |
           sudo apt-get install python3-setuptools
-          sudo pip3 install meson ninja
+          sudo pip3 install meson i18n ninja
 
       - name:  Prepare compiler cache
         id:    prep-ccache
