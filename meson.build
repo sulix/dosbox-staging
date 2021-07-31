@@ -186,7 +186,6 @@ msg = 'You can disable this dependency with: -D@0@=false'
 
 optional_dep  = dependency('', required : false)
 atomic_dep    = cxx.find_library('atomic', required : false)
-spdlog_dep    = dependency('spdlog')
 opus_dep      = dependency('opusfile',
                            static : ('opusfile' in static_libs_list))
 threads_dep   = dependency('threads')
