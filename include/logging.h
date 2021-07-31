@@ -24,7 +24,11 @@
 #include "compiler.h"
 
 #include <spdlog/spdlog.h>
+#if defined(SPDLOG_FMT_EXTERNAL) || defined(_WIN32) // needed until vcpkg fixes the spdlog package
+#include <fmt/printf.h>
+#else
 #include <spdlog/fmt/bundled/printf.h>
+#endif
 
 template <class loggerPtr, class... Args>
 void log_printf(loggerPtr logger,

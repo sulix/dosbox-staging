@@ -3469,6 +3469,11 @@ void GFX_GetSize(int &width, int &height, bool &fullscreen)
 int sdl_main(int argc, char *argv[])
 {
 	int rcode = 0; // assume good until proven otherwise
+#if NDEBUG	
+	spdlog::set_level(spdlog::level::info); 
+#else
+	spdlog::set_level(spdlog::level::debug);
+#endif
 	try {
 		Disable_OS_Scaling(); //Do this early on, maybe override it through some parameter.
 		OverrideWMClass(); // Before SDL2 video subsystem is initialized
