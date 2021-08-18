@@ -375,7 +375,7 @@ static void DISNEY_CallBack(uint16_t len) {
 
 static void DISNEY_ShutDown(MAYBE_UNUSED Section *sec)
 {
-	DEBUG_LOG_MSG("DISNEY: Shutting down");
+	LOG_DEBUG("DISNEY: Shutting down");
 
 	// Remove interrupt events
 	PIC_RemoveEvents(DISNEY_disable);

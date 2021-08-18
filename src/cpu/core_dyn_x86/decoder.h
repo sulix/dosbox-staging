@@ -72,14 +72,14 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 			}
 		}
 		if (handler->flags & PFLAG_NOCODE) {
-			LOG_MSG("DYNX86:Can't run code in this page!");
+			LOG_ERROR("DYNX86:Can't run code in this page!");
 			cph=0;		return false;
 		}
 	} 
 	Bitu lin_page=lin_addr >> 12;
 	Bitu phys_page=lin_page;
 	if (!PAGING_MakePhysPage(phys_page)) {
-		LOG_MSG("DYNX86:Can't find physpage");
+		LOG_ERROR("DYNX86:Can't find physpage");
 		cph=0;		return false;
 	}
 	/* Find a free CodePage */
@@ -90,13 +90,13 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 			if ((cache.used_pages->next) && (cache.used_pages->next != decode.page.code))
 				cache.used_pages->next->ClearRelease();
 			else {
-				LOG_MSG("DYNX86:Invalid cache links");
+				LOG_ERROR("DYNX86:Invalid cache links");
 				cache.used_pages->ClearRelease();
 			}
 		}
 	}
 	if (!cache.free_pages) {
-		LOG_MSG("DYNX86:cache.free_pages is not usable");
+		LOG_ERROR("DYNX86:cache.free_pages is not usable");
 		return false;
 	}
 	CodePageHandler * cpagehandler=cache.free_pages;
@@ -179,7 +179,7 @@ static INLINE void decode_increase_wmapmask(Bitu size) {
 			if (newmasklen<mapidx+size) newmasklen=((mapidx+size)&~3)*2;
 			Bit8u* tempmem=(Bit8u*)malloc(newmasklen);
 			if (tempmem == nullptr) {
-				LOG_MSG("Unable to allocate %" PRIuPTR " bytes for tempmem", newmasklen);
+				LOG_ERROR("Unable to allocate {} bytes for tempmem", newmasklen);
 				return;
 			}
 			memset(tempmem,0,newmasklen);
@@ -2293,7 +2293,7 @@ restart_prefix:
 
 			default:
 #if DYN_LOG
-				LOG_MSG("Unhandled dual opcode 0F%02X",dual_code);
+				LOG_ERROR("Unhandled dual opcode 0F{:02X}",dual_code);
 #endif
 				goto illegalopcode;
 			}

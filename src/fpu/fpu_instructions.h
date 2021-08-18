@@ -87,7 +87,7 @@ static void FPU_FPOP(void){
 			//No need to set 0x80 as the exception is masked.
 			LOG(LOG_FPU,LOG_ERROR)("Masked stack underflow encountered!");
 		} else {
-			LOG_MSG("Unmasked Stack underflow!"); //Also log in release mode
+			LOG_ERROR("Unmasked Stack underflow!"); //Also log in release mode
 		}
 #endif
 	}

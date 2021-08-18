@@ -65,7 +65,7 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/)
 	
 	FILE * hand = fopen_wrap(temp_name,"wb+");
 	if (!hand) {
-		LOG_MSG("Warning: file creation failed: %s",newname);
+		LOG_ERROR("Warning: file creation failed: {}",newname);
 		return false;
 	}
    
@@ -166,7 +166,7 @@ bool localDrive::FileOpen(DOS_File **file, char *name, Bit32u flags)
 			if (IsFirstEncounter(newname)) {
 				// For brevity and clarity to the user, we show just the
 				// filename instead of the more cluttered absolute path.
-				LOG_MSG("FILESYSTEM: protected from modification: %s",
+				LOG_WARN("FILESYSTEM: protected from modification: {}",
 				        get_basename(newname).c_str());
 			}
 #endif
@@ -183,7 +183,7 @@ bool localDrive::FileOpen(DOS_File **file, char *name, Bit32u flags)
 	else {
 		open_msg = "succeeded with desired flags";
 	}
-	LOG_MSG("FILESYSTEM: flags=%2s, %-12s %s",
+	LOG_DEBUG("FILESYSTEM: flags={:2s}, {:-12s} {}",
 	        flags_str.c_str(),
 	        get_basename(newname).c_str(),
 	        open_msg.c_str());
@@ -222,7 +222,7 @@ bool localDrive::GetSystemFilename(char *sysName, char const * const dosName) {
 // Attempt to delete the file name from our local drive mount
 bool localDrive::FileUnlink(char * name) {
 	if (!FileExists(name)) {
-		DEBUG_LOG_MSG("FS: Skipping removal of %s because it doesn't exist",
+		LOG_DEBUG("FS: Skipping removal of {} because it doesn't exist",
 		              name);
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
@@ -257,7 +257,7 @@ bool localDrive::FileUnlink(char * name) {
 			return true;
 		}
 	}
-	DEBUG_LOG_MSG("FS: Unable to remove file %s", fullname);
+	LOG_DEBUG("FS: Unable to remove file {}", fullname);
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
@@ -481,7 +481,7 @@ bool localDrive::FileStat(const char* name, FileStat_Block * const stat_block) {
 		stat_block->time = DOS_PackTime(datetime);
 		stat_block->date = DOS_PackDate(datetime);
 	} else {
-		LOG_MSG("FS: error while converting date in: %s", name);
+		LOG_ERROR("FS: error while converting date in: {}", name);
 	}
 	stat_block->size=(Bit32u)temp_stat.st_size;
 	return true;
@@ -533,7 +533,7 @@ bool localFile::ftell_and_check()
 	if (stream_pos >= 0)
 		return true;
 
-	DEBUG_LOG_MSG("FS: Failed obtaining position in file %s", name.c_str());
+	LOG_DEBUG("FS: Failed obtaining position in file {}", name.c_str());
 	return false;
 }
 
@@ -547,7 +547,7 @@ bool localFile::fseek_to_and_check(long pos, int whence)
 		stream_pos = pos;
 		return true;
 	}
-	DEBUG_LOG_MSG("FS: Failed seeking to byte %ld in file %s", stream_pos, name.c_str());
+	LOG_DEBUG("FS: Failed seeking to byte {} in file {}", stream_pos, name.c_str());
 	return false;
 }
 
@@ -609,14 +609,14 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 	if (*size == 0) {
 		const auto file = cross_fileno(fhandle);
 		if (file == -1) {
-			DEBUG_LOG_MSG("FS: Could not resolve file number for %s", name.c_str());
+			LOG_DEBUG("FS: Could not resolve file number for {}", name.c_str());
 			return false;
 		}
 		if (!ftell_and_check()) {
 			return false;
 		}
 		if (ftruncate(file, stream_pos) != 0) {
-			DEBUG_LOG_MSG("FS: Failed truncating file %s", name.c_str());
+			LOG_DEBUG("FS: Failed truncating file {}", name.c_str());
 			return false;
 		}
 		// Truncation succeeded if we made it here
@@ -627,7 +627,7 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 	const auto requested = *size;
 	const auto actual = static_cast<uint16_t>(fwrite(data, 1, requested, fhandle));
 	if (actual != requested)
-		DEBUG_LOG_MSG("FS: Only wrote %u of %u requested bytes to file %s",
+		LOG_DEBUG("FS: Only wrote {} of {} requested bytes to file {}",
 		              actual, requested, name.c_str());
 	*size = actual; // always save the actual
 	return true;    // always return true, even if partially written

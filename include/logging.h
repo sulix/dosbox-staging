@@ -24,25 +24,6 @@
 #include "compiler.h"
 
 #include <spdlog/spdlog.h>
-#if defined(SPDLOG_FMT_EXTERNAL) || defined(_WIN32) // needed until vcpkg fixes the spdlog package
-#include <fmt/printf.h>
-#else
-#include <spdlog/fmt/bundled/printf.h>
-#endif
-
-template <class loggerPtr, class... Args>
-void log_printf(loggerPtr logger,
-                    spdlog::level::level_enum level,
-                    const char *fmt,
-                    const Args &...args) noexcept
-{
-	if (logger && logger->should_log(level)) {
-		logger->log(level, "{}", fmt::sprintf(fmt, args...));
-	}
-}
-
-#define LOG_PRINTF(logger, level, ...) \
-	log_printf(logger, level, __VA_ARGS__)
 
 enum LOG_TYPES {
 	LOG_ALL,
@@ -109,17 +90,13 @@ struct LOG
 }; //add missing operators to here
 	//try to avoid anything smaller than bit32...
 void GFX_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
-#define LOG_MSG(...) LOG_PRINTF(spdlog::default_logger(),spdlog::level::info,__VA_ARGS__)
-
 #endif //C_DEBUG
 
-#ifdef NDEBUG
-// DEBUG_LOG_MSG exists only for messages useful during development, and not to
-// be redirected into internal DOSBox debugger for DOS programs (C_DEBUG feature).
-#define DEBUG_LOG_MSG(...)
-#else
-//specific log implementation macros
-#define DEBUG_LOG_MSG(...) LOG_PRINTF(spdlog::default_logger(),spdlog::level::debug,__VA_ARGS__)
-#endif // NDEBUG
+#define LOG_ERROR(...)	spdlog::error(__VA_ARGS__)
+#define LOG_WARN(...)	spdlog::warn(__VA_ARGS__)
+#define LOG_INFO(...)	spdlog::info(__VA_ARGS__)
+#define LOG_DEBUG(...)	spdlog::debug(__VA_ARGS__)
+#define LOG_TRACE(...)	spdlog::trace(__VA_ARGS__)
+//#define LOG_MSG(...)
 
 #endif

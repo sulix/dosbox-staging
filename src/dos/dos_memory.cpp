@@ -371,7 +371,7 @@ bool DOS_LinkUMBsToMemChain(Bit16u linkstate) {
 			}
 			break;
 		default:
-			LOG_MSG("Invalid link state %x when reconfiguring MCB chain",linkstate);
+			LOG_ERROR("Invalid link state {} when reconfiguring MCB chain",linkstate);
 			return false;
 	}
 

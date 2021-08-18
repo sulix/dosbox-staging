@@ -740,7 +740,7 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 			case 667:	case 668:	case 790:	case 867:	case 991:	case 57781:
 						sprintf(cp_filename, "EGA10.CPI"); break;
 			default:
-				LOG_MSG("No matching cpi file for codepage %i",codepage_id);
+				LOG_ERROR("No matching cpi file for codepage {}",codepage_id);
 				return KEYB_INVALIDCPFILE;
 		}
 	}
@@ -1280,12 +1280,12 @@ public:
 		} */
 		if (loaded_layout->read_keyboard_file(layoutname, dos.loaded_codepage)) {
 			if (strncmp(layoutname,"auto",4)) {
-				LOG_MSG("Error loading keyboard layout %s",layoutname);
+				LOG_ERROR("Error loading keyboard layout {}",layoutname);
 			}
 		} else {
 			const char* lcode = loaded_layout->main_language_code();
 			if (lcode) {
-				LOG_MSG("DOS keyboard layout loaded with main language code %s for layout %s",lcode,layoutname);
+				LOG_INFO("DOS keyboard layout loaded with main language code {} for layout {}",lcode,layoutname);
 			}
 		}
 	}

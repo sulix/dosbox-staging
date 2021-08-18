@@ -565,7 +565,7 @@ static void gen_fill_branch(const Bit8u* data) {
 	ptrdiff_t len = cache.pos - data;
 	if (len<0) len=-len;
 	if (len > 126)
-		LOG_MSG("Big jump %" PRIdPTR, len);
+		LOG_INFO("Big jump {}", len);
 #endif
 	cache_addb((Bit8u)(cache.pos-data-1),data);
 }

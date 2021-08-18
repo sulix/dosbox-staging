@@ -380,7 +380,7 @@ forcenormal:
 	if (complexBlock) {
 #if RENDER_USE_ADVANCED_SCALERS>1
 		if ((width >= SCALER_COMPLEXWIDTH - 16) || height >= SCALER_COMPLEXHEIGHT - 16) {
-			LOG_MSG("Scaler can't handle this resolution, going back to normal");
+			LOG_WARN("Scaler can't handle this resolution, going back to normal");
 			goto forcenormal;
 		}
 #else
@@ -594,7 +594,7 @@ static void IncreaseFrameSkip(bool pressed) {
 	if (!pressed)
 		return;
 	if (render.frameskip.max<10) render.frameskip.max++;
-	LOG_MSG("Frame Skip at %d",render.frameskip.max);
+	LOG_INFO("Frame Skip at {}",render.frameskip.max);
 	GFX_SetTitle(-1,render.frameskip.max,false);
 }
 
@@ -602,7 +602,7 @@ static void DecreaseFrameSkip(bool pressed) {
 	if (!pressed)
 		return;
 	if (render.frameskip.max>0) render.frameskip.max--;
-	LOG_MSG("Frame Skip at %d",render.frameskip.max);
+	LOG_INFO("Frame Skip at {}",render.frameskip.max);
 	GFX_SetTitle(-1,render.frameskip.max,false);
 }
 /* Disabled as I don't want to waste a keybind for that. Might be used in the future (Qbix)
@@ -687,7 +687,7 @@ static bool RENDER_GetShader(std::string &shader_path, char *old_src)
 		// keep the same buffer if contents aren't different
 		if (old_src==NULL || s != old_src) {
 			src = strdup(s.c_str());
-			if (src==NULL) LOG_MSG("WARNING: Couldn't copy shader source");
+			if (src==NULL) LOG_WARN("WARNING: Couldn't copy shader source");
 		} else src = old_src;
 	} else src = NULL;
 	render.shader_src = src;
@@ -765,9 +765,9 @@ void RENDER_Init(Section * sec) {
 		path = path + "glshaders" + CROSS_FILESPLIT + f;
 		if (!RENDER_GetShader(path,shader_src) && (sh->realpath==f || !RENDER_GetShader(f,shader_src))) {
 			sh->SetValue("none");
-			LOG_MSG("RENDER: Shader file '%s' not found", f.c_str());
+			LOG_ERROR("RENDER: Shader file '{}' not found", f.c_str());
 		} else if (using_opengl) {
-			LOG_MSG("RENDER: Using GLSL shader '%s'", f.c_str());
+			LOG_INFO("RENDER: Using GLSL shader '{}'", f.c_str());
 		}
 	}
 	if (shader_src!=render.shader_src) free(shader_src);

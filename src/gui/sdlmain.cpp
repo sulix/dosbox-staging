@@ -397,9 +397,9 @@ void main() {
 void OPENGL_ERROR(const char* message) {
 	GLenum r = glGetError();
 	if (r == GL_NO_ERROR) return;
-	LOG_MSG("errors from %s",message);
+	LOG_ERROR("errors from {}",message);
 	do {
-		LOG_MSG("%X",r);
+		LOG_ERROR("{}",r);
 	} while ( (r=glGetError()) != GL_NO_ERROR);
 }
 #else
@@ -511,7 +511,7 @@ static void RequestExit(bool pressed)
 {
 	exit_requested = pressed;
 	if (exit_requested)
-		DEBUG_LOG_MSG("SDL: Exit requested");
+		LOG_DEBUG("SDL: Exit requested");
 }
 
 MAYBE_UNUSED static void PauseDOSBox(bool pressed)
@@ -713,7 +713,7 @@ static void log_display_properties(const int in_x,
 		return "Unknown mode!";
 	};
 
-	LOG_MSG("DISPLAY: %s scaling source %dx%d (PAR %#.3g) by %.1fx%.1f -> %dx%d (PAR %#.3g)",
+	LOG_INFO("DISPLAY: {} scaling source {}x{} (PAR {:#.3g}) by {:.1f}x{:.1f} -> {}x{} (PAR {:#.3g})",
 	        describe_scaling_mode(), in_x, in_y, in_par, scale_x, scale_y,
 	        out_x, out_y, out_par);
 }
@@ -754,7 +754,7 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		const int pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
 		sdl.window = SDL_CreateWindow("", pos, pos, width, height, flags);
 		if (!sdl.window) {
-			LOG_MSG("SDL: %s", SDL_GetError());
+			LOG_ERROR("SDL: {}", SDL_GetError());
 			return nullptr;
 		}
 
@@ -972,7 +972,7 @@ static GLuint BuildShader ( GLenum type, const char *shaderSrc ) {
 		if (info_len > 1) {
 			std::vector<GLchar> info_log(info_len);
 			glGetShaderInfoLog(shader, info_len, NULL, info_log.data());
-			LOG_MSG("Error compiling shader: %s", info_log.data());
+			LOG_ERROR("Error compiling shader: {}", info_log.data());
 		}
 
 		glDeleteShader(shader);
@@ -1116,7 +1116,7 @@ dosurface:
 
 	case SCREEN_TEXTURE: {
 		if (!SetupWindowScaled(SCREEN_TEXTURE, false)) {
-			LOG_MSG("DISPLAY: Can't initialise 'texture' window");
+			LOG_ERROR("DISPLAY: Can't initialise 'texture' window");
 			E_Exit("Creating window failed");
 		}
 
@@ -1126,8 +1126,8 @@ dosurface:
 		                                  SDL_RENDERER_ACCELERATED |
 		                                  (sdl.desktop.vsync ? SDL_RENDERER_PRESENTVSYNC : 0));
 		if (!sdl.renderer) {
-			LOG_MSG("%s\n", SDL_GetError());
-			LOG_MSG("SDL:Can't create renderer, falling back to surface");
+			LOG_ERROR("{}", SDL_GetError());
+			LOG_ERROR("SDL: Can't create renderer, falling back to surface");
 			goto dosurface;
 		}
 		/* Use renderer's default format */
@@ -1140,13 +1140,13 @@ dosurface:
 		if (!sdl.texture.texture) {
 			SDL_DestroyRenderer(sdl.renderer);
 			sdl.renderer = nullptr;
-			LOG_MSG("SDL:Can't create texture, falling back to surface");
+			LOG_ERROR("SDL:Can't create texture, falling back to surface");
 			goto dosurface;
 		}
 
 		sdl.texture.input_surface = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, texture_format);
 		if (!sdl.texture.input_surface) {
-			LOG_MSG("SDL: Error while preparing texture input");
+			LOG_ERROR("SDL: Error while preparing texture input");
 			goto dosurface;
 		}
 
@@ -1166,7 +1166,7 @@ dosurface:
 		// Log changes to the rendering driver
 		static std::string render_driver = {};
 		if (render_driver != rinfo.name) {
-			LOG_MSG("SDL: Using driver \"%s\" for texture renderer", rinfo.name);
+			LOG_INFO("SDL: Using driver \"{}\" for texture renderer", rinfo.name);
 			render_driver = rinfo.name;
 		}
 		
@@ -1189,7 +1189,7 @@ dosurface:
 			goto dosurface;
 		int texsize = 2 << int_log2(width > height ? width : height);
 		if (texsize>sdl.opengl.max_texsize) {
-			LOG_MSG("SDL:OPENGL: No support for texturesize of %d, falling back to surface",texsize);
+			LOG_ERROR("SDL:OPENGL: No support for texturesize of {}, falling back to surface",texsize);
 			goto dosurface;
 		}
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -1198,12 +1198,12 @@ dosurface:
 		/* We may simply use SDL_BYTESPERPIXEL
 		here rather than SDL_BITSPERPIXEL   */
 		if (!sdl.window || SDL_BYTESPERPIXEL(SDL_GetWindowPixelFormat(sdl.window))<2) {
-			LOG_MSG("SDL:OPENGL:Can't open drawing window, are you running in 16bpp(or higher) mode?");
+			LOG_ERROR("SDL:OPENGL:Can't open drawing window, are you running in 16bpp(or higher) mode?");
 			goto dosurface;
 		}
 		sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
 		if (sdl.opengl.context == NULL) {
-			LOG_MSG("SDL:OPENGL:Can't create OpenGL context, falling back to surface");
+			LOG_ERROR("SDL:OPENGL:Can't create OpenGL context, falling back to surface");
 			goto dosurface;
 		}
 		/* Sync to VBlank if desired */
@@ -1231,11 +1231,11 @@ dosurface:
 					GLuint vertexShader, fragmentShader;
 					const char *src = sdl.opengl.shader_src;
 					if (src && !LoadGLShaders(src, &vertexShader, &fragmentShader)) {
-						LOG_MSG("SDL:OPENGL:Failed to compile shader, falling back to default");
+						LOG_ERROR("SDL:OPENGL:Failed to compile shader, falling back to default");
 						src = NULL;
 					}
 					if (src == NULL && !LoadGLShaders(shader_src_default, &vertexShader, &fragmentShader)) {
-						LOG_MSG("SDL:OPENGL:Failed to compile default shader!");
+						LOG_ERROR("SDL:OPENGL:Failed to compile default shader!");
 						goto dosurface;
 					}
 
@@ -1243,7 +1243,7 @@ dosurface:
 					if (!sdl.opengl.program_object) {
 						glDeleteShader(vertexShader);
 						glDeleteShader(fragmentShader);
-						LOG_MSG("SDL:OPENGL:Can't create program object, falling back to surface");
+						LOG_ERROR("SDL:OPENGL:Can't create program object, falling back to surface");
 						goto dosurface;
 					}
 					glAttachShader(sdl.opengl.program_object, vertexShader);
@@ -1264,7 +1264,7 @@ dosurface:
 						if (info_len > 1) {
 							std::vector<GLchar> info_log(info_len);
 							glGetProgramInfoLog(sdl.opengl.program_object, info_len, NULL, info_log.data());
-							LOG_MSG("SDL:OPENGL:Error link program:\n %s", info_log.data());
+							LOG_ERROR("SDL:OPENGL:Error link program:\n {}", info_log.data());
 						}
 						glDeleteProgram(sdl.opengl.program_object);
 						sdl.opengl.program_object = 0;
@@ -1453,7 +1453,7 @@ void GFX_ToggleMouseCapture(void) {
 		       mouse_is_captured ? "put the mouse in"
 		                         : "take the mouse out of");
 	}
-	LOG_MSG("SDL: %s the mouse", mouse_is_captured ? "captured" : "released");
+	LOG_INFO("SDL: {} the mouse", mouse_is_captured ? "captured" : "released");
 }
 
 static void ToggleMouseCapture(bool pressed) {
@@ -1959,7 +1959,7 @@ static void DisplaySplash(int time_ms)
 
 	const auto flags = GFX_SetSize(src_w, src_h, GFX_CAN_32, 1.0, 1.0, nullptr, 1.0);
 	if (!(flags & GFX_CAN_32)) {
-		LOG_MSG("Can't show 32bpp splash.");
+		LOG_ERROR("Can't show 32bpp splash.");
 		return;
 	}
 
@@ -2030,14 +2030,14 @@ static bool detect_resizable_window()
 {
 #if C_OPENGL
 	if (sdl.desktop.want_type != SCREEN_OPENGL) {
-		LOG_MSG("DISPLAY: Disabled resizable window, only compatible with OpenGL output");
+		LOG_WARN("DISPLAY: Disabled resizable window, only compatible with OpenGL output");
 		return false;
 	}
 
 	const std::string sname = get_glshader_value();
 
 	if (sname != "sharp" && sname != "none" && sname != "default") {
-		LOG_MSG("DISPLAY: Disabled resizable window, only compatible with 'sharp' and 'none' glshaders");
+		LOG_WARN("DISPLAY: Disabled resizable window, only compatible with 'sharp' and 'none' glshaders");
 		return false;
 	}
 
@@ -2140,14 +2140,14 @@ static SDL_Point window_bounds_from_resolution(const std::string &pref,
 
 	const bool is_out_of_bounds = (w > desktop.w || h > desktop.h);
 	if (was_parsed && is_out_of_bounds)
-		LOG_MSG("DISPLAY: Requested windowresolution '%dx%d' is larger than the desktop '%dx%d'",
+		LOG_WARN("DISPLAY: Requested windowresolution '{}x{}' is larger than the desktop '{}x{}'",
 		        w, h, desktop.w, desktop.h);
 
 	const bool is_valid = (w > 0 && h > 0);
 	if (was_parsed && is_valid)
 		return {w, h};
 
-	LOG_MSG("DISPLAY: Requested windowresolution '%s' is not valid, falling back to '%dx%d' instead",
+	LOG_WARN("DISPLAY: Requested windowresolution '{}' is not valid, falling back to '{}x{}' instead",
 	        pref.c_str(), FALLBACK_WINDOW_DIMENSIONS.x,
 	        FALLBACK_WINDOW_DIMENSIONS.y);
 
@@ -2167,7 +2167,7 @@ static SDL_Point window_bounds_from_label(const std::string &pref,
 	else if (pref == "desktop")
 		percent = 100;
 	else
-		LOG_MSG("DISPLAY: Requested windowresolution '%s' is invalid, using 'default' instead",
+		LOG_WARN("DISPLAY: Requested windowresolution '{}' is invalid, using 'default' instead",
 		        pref.c_str());
 
 	const int w = ceil_sdivide(desktop.w * percent, 100);
@@ -2249,7 +2249,7 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 	sdl.desktop.window.height = static_cast<uint16_t>(refined_size.y);
 
 	// Let the user know the resulting window properties
-	LOG_MSG("DISPLAY: Initialized %dx%d window-mode on %dx%d display-%d",
+	LOG_INFO("DISPLAY: Initialized {}x{} window-mode on {}x{} display-{}",
 	        refined_size.x, refined_size.y, desktop.w, desktop.h,
 	        sdl.display_number);
 }
@@ -2328,7 +2328,7 @@ static void GUI_StartUp(Section *sec)
 		sdl.priority.focus = PRIORITY_LEVEL_AUTO;
 		sdl.priority.nofocus = PRIORITY_LEVEL_AUTO;
 		if (focus != "auto" || notfocus != "auto")
-			LOG_MSG("MAIN: \"priority\" can't be \"auto\" for just one value, overriding");
+			LOG_WARN("MAIN: \"priority\" can't be \"auto\" for just one value, overriding");
 	} else {
 		if (focus == "lowest")
 			sdl.priority.focus = PRIORITY_LEVEL_LOWEST;
@@ -2389,7 +2389,7 @@ static void GUI_StartUp(Section *sec)
 	if ((display >= 0) && (display < SDL_GetNumVideoDisplays())) {
 		sdl.display_number = display;
 	} else {
-		LOG_MSG("SDL: Display number out of bounds, using display 0");
+		LOG_WARN("SDL: Display number out of bounds, using display 0");
 		sdl.display_number = 0;
 	}
 
@@ -2430,7 +2430,7 @@ static void GUI_StartUp(Section *sec)
 		sdl.opengl.bilinear = false;
 #endif
 	} else {
-		LOG_MSG("SDL: Unsupported output device %s, switching back to surface",output.c_str());
+		LOG_ERROR("SDL: Unsupported output device {}, switching back to surface",output.c_str());
 		sdl.desktop.want_type=SCREEN_SURFACE;//SHOULDN'T BE POSSIBLE anymore
 	}
 
@@ -2456,12 +2456,12 @@ static void GUI_StartUp(Section *sec)
 #if C_OPENGL
 	if (sdl.desktop.want_type == SCREEN_OPENGL) { /* OPENGL is requested */
 		if (!SetDefaultWindowMode()) {
-			LOG_MSG("Could not create OpenGL window, switching back to surface");
+			LOG_ERROR("Could not create OpenGL window, switching back to surface");
 			sdl.desktop.want_type = SCREEN_SURFACE;
 		} else {
 			sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
 			if (sdl.opengl.context == 0) {
-				LOG_MSG("Could not create OpenGL context, switching back to surface");
+				LOG_ERROR("Could not create OpenGL context, switching back to surface");
 				sdl.desktop.want_type = SCREEN_SURFACE;
 			}
 		}
@@ -2522,7 +2522,7 @@ static void GUI_StartUp(Section *sec)
 #ifdef DB_DISABLE_DBO
 			sdl.opengl.pixel_buffer_object = false;
 #endif
-			LOG_MSG("OPENGL: Pixel buffer object extension: %s",
+			LOG_INFO("OPENGL: Pixel buffer object extension: {}",
 			        sdl.opengl.pixel_buffer_object ? "available"
 			                                       : "missing");
 		}
@@ -2593,7 +2593,7 @@ static void GUI_StartUp(Section *sec)
 		                        section->Get_bool("raw_mouse_input") ? "0" : "1",
 		                        SDL_HINT_OVERRIDE);
 	}
-	LOG_MSG("SDL: Mouse %s%s.", mouse_control_msg.c_str(), middle_control_msg.c_str());
+	LOG_INFO("SDL: Mouse {}{}.", mouse_control_msg.c_str(), middle_control_msg.c_str());
 
 	/* Get some Event handlers */
 	MAPPER_AddHandler(RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD, "shutdown",
@@ -2794,7 +2794,7 @@ bool GFX_Events()
 		case SDL_WINDOWEVENT:
 			switch (event.window.event) {
 			case SDL_WINDOWEVENT_RESTORED:
-				DEBUG_LOG_MSG("SDL: Window has been restored");
+				LOG_DEBUG("SDL: Window has been restored");
 				/* We may need to re-create a texture
 				 * and more on Android. Another case:
 				 * Update surface while using X11.
@@ -2850,7 +2850,7 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_LOST:
-				DEBUG_LOG_MSG("SDL: Window has lost keyboard focus");
+				LOG_DEBUG("SDL: Window has lost keyboard focus");
 #ifdef WIN32
 				if (sdl.desktop.fullscreen) {
 					VGA_KillDrawing();
@@ -2872,16 +2872,16 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_SHOWN:
-				DEBUG_LOG_MSG("SDL: Window has been shown");
+				LOG_DEBUG("SDL: Window has been shown");
 				continue;
 
 			case SDL_WINDOWEVENT_HIDDEN:
-				DEBUG_LOG_MSG("SDL: Window has been hidden");
+				LOG_DEBUG("SDL: Window has been hidden");
 				continue;
 
 #if 0 // ifdefed out only because it's too noisy
 			case SDL_WINDOWEVENT_MOVED:
-				DEBUG_LOG_MSG("SDL: Window has been moved to %d, %d",
+				LOG_TRACE("SDL: Window has been moved to %d, %d",
 				              event.window.data1,
 				              event.window.data2);
 				continue;
@@ -2900,15 +2900,15 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_MINIMIZED:
-				DEBUG_LOG_MSG("SDL: Window has been minimized");
+				LOG_DEBUG("SDL: Window has been minimized");
 				break;
 
 			case SDL_WINDOWEVENT_MAXIMIZED:
-				DEBUG_LOG_MSG("SDL: Window has been maximized");
+				LOG_DEBUG("SDL: Window has been maximized");
 				continue;
 
 			case SDL_WINDOWEVENT_CLOSE:
-				DEBUG_LOG_MSG("SDL: The window manager "
+				LOG_DEBUG("SDL: The window manager "
 				              "requests that the window be "
 				              "closed");
 				RequestExit(true);
@@ -2921,7 +2921,7 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_HIT_TEST:
-				DEBUG_LOG_MSG("SDL: Window had a hit test that "
+				LOG_DEBUG("SDL: Window had a hit test that "
 				              "wasn't SDL_HITTEST_NORMAL");
 				continue;
 
@@ -3551,8 +3551,8 @@ int sdl_main(int argc, char *argv[])
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE) ConsoleEventHandler,TRUE);
 #endif
 
-	LOG_MSG("dosbox-staging version %s", DOSBOX_GetDetailedVersion());
-	LOG_MSG("---");
+	LOG_INFO("dosbox-staging version {}", DOSBOX_GetDetailedVersion());
+	LOG_INFO("---");
 
 	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0)
 		E_Exit("Can't init SDL %s", SDL_GetError());
@@ -3579,8 +3579,8 @@ int sdl_main(int argc, char *argv[])
 			Cross::GetPlatformConfigName(config_file);
 			config_combined = config_path + config_file;
 			if (control->PrintConfig(config_combined)) {
-				LOG_MSG("CONFIG: Generating default configuration\n"
-					"CONFIG: Writing it to %s",
+				LOG_INFO("CONFIG: Generating default configuration\n"
+					"CONFIG: Writing it to {}",
 					config_combined.c_str());
 				// Load them as well. Makes relative paths much easier
 				control->ParseConfigFile(config_combined.c_str());
@@ -3593,7 +3593,7 @@ int sdl_main(int argc, char *argv[])
 		if (!control->ParseConfigFile(config_file.c_str())) {
 			// try to load it from the user directory
 			if (!control->ParseConfigFile((config_path + config_file).c_str())) {
-				LOG_MSG("CONFIG: Can't open specified config file: %s",config_file.c_str());
+				LOG_ERROR("CONFIG: Can't open specified config file: {}",config_file.c_str());
 			}
 		}
 	}
@@ -3614,32 +3614,32 @@ int sdl_main(int argc, char *argv[])
 		Cross::GetPlatformConfigName(config_file);
 		config_combined = config_path + config_file;
 		if (control->PrintConfig(config_combined)) {
-			LOG_MSG("CONFIG: Generating default configuration\n"
-				"CONFIG: Writing it to %s",
+			LOG_INFO("CONFIG: Generating default configuration\n"
+				"CONFIG: Writing it to {}",
 				config_combined.c_str());
 			// Load them as well. Makes relative paths much easier
 			control->ParseConfigFile(config_combined.c_str());
 		} else {
-			LOG_MSG("CONFIG: Using default settings. Create a configfile to change them");
+			LOG_INFO("CONFIG: Using default settings. Create a configfile to change them");
 		}
 	}
 
 #if C_OPENGL
 	const std::string glshaders_dir = config_path + "glshaders";
 	if (create_dir(glshaders_dir.c_str(), 0700, OK_IF_EXISTS) != 0)
-		LOG_MSG("CONFIG: Can't create dir '%s': %s",
+		LOG_ERROR("CONFIG: Can't create dir '{}': {}",
 			glshaders_dir.c_str(), safe_strerror(errno).c_str());
 #endif // C_OPENGL
 #if C_FLUIDSYNTH
 	const std::string soundfonts_dir = config_path + "soundfonts";
 	if (create_dir(soundfonts_dir.c_str(), 0700, OK_IF_EXISTS) != 0)
-		LOG_MSG("CONFIG: Can't create dir '%s': %s",
+		LOG_ERROR("CONFIG: Can't create dir '{}': {}",
 			soundfonts_dir.c_str(), safe_strerror(errno).c_str());
 #endif // C_FLUIDSYNTH
 #if C_MT32EMU
 	const std::string mt32_rom_dir = config_path + "mt32-roms";
 	if (create_dir(mt32_rom_dir.c_str(), 0700, OK_IF_EXISTS) != 0)
-		LOG_MSG("CONFIG: Can't create dir '%s': %s",
+		LOG_ERROR("CONFIG: Can't create dir '{}': {}",
 			mt32_rom_dir.c_str(), safe_strerror(errno).c_str());
 #endif // C_MT32EMU
 

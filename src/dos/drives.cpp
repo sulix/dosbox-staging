@@ -200,7 +200,7 @@ void DriveManager::CycleDisks(int drive, bool notify) {
 		strcpy(newDisk->curdir, oldDisk->curdir);
 		newDisk->Activate();
 		Drives[drive] = newDisk;
-		if (notify) LOG_MSG("Drive %c: disk %d of %d now active", 'A'+drive, currentDisk+1, numDisks);
+		if (notify) LOG_INFO("Drive {}: disk {} of {} now active", 'A'+drive, currentDisk+1, numDisks);
 	}
 }
 

@@ -1164,7 +1164,7 @@ static void gen_fill_branch(const Bit8u * data,const Bit8u * from=cache.pos) {
 	Bits len=from-data-1;
 	if (len<0) len=~len;
 	if (len>127)
-		LOG_MSG("Big jump %" sBitfs(d),len);
+		LOG_INFO("Big jump {}",len);
 #endif
 	cache_addb((Bit8u)(from-data-1),data);
 }

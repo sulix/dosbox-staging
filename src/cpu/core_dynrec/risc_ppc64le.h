@@ -630,7 +630,7 @@ static void gen_fill_branch(DRC_PTR_SIZE_IM data)
 #if C_DEBUG
 	Bits len=(Bit64u)cache.pos-data;
 	if (len<0) len=-len;
-	if (len >= 0x8000) LOG_MSG("Big jump %d",len);
+	if (len >= 0x8000) LOG_INFO("Big jump {}",len);
 #endif
 
 	// FIXME: assert???

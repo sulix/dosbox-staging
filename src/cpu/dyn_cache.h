@@ -767,7 +767,7 @@ static inline void dyn_mem_set_access(void *ptr, size_t size, const bool execute
 	                                                &old_protect);
 	assert(vp_res != 0);
 #else
-	LOG_MSG("No method to set memory access %p, %zu, %d on this platform",
+	LOG_DEBUG("No method to set memory access {}, {}, {} on this platform",
 	        ptr, size, execute);
 #endif
 }
@@ -833,7 +833,7 @@ static void cache_init(bool enable) {
 			                     MEM_RESERVE | MEM_COMMIT,
 			                     PAGE_READWRITE));
 			if (!cache_code_start_ptr) {
-				LOG_MSG("VirtualAlloc error, using malloc");
+				LOG_ERROR("VirtualAlloc error, using malloc");
 				cache_code_start_ptr=static_cast<uint8_t *>(malloc(cache_code_size));
 			}
 #elif defined(HAVE_MMAP)

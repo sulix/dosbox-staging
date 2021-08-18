@@ -812,9 +812,9 @@ static void OPL_SaveRawEvent(bool pressed) {
 	if ( module->capture ) {
 		delete module->capture;
 		module->capture = 0;
-		LOG_MSG("Stopped Raw OPL capturing.");
+		LOG_INFO("Stopped Raw OPL capturing.");
 	} else {
-		LOG_MSG("Preparing to capture Raw OPL, will start with first note played.");
+		LOG_INFO("Preparing to capture Raw OPL, will start with first note played.");
 		module->capture = new Adlib::Capture( &module->cache );
 	}
 }

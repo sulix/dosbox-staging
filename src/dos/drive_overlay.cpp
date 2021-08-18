@@ -78,7 +78,7 @@ using namespace std;
 bool Overlay_Drive::RemoveDir(char * dir) {
 	//DOS_RemoveDir checks if directory exists.
 #if OVERLAY_DIR
-	if (logoverlay) LOG_MSG("Overlay: trying to remove directory: %s",dir);
+	if (logoverlay) LOG_INFO("Overlay: trying to remove directory: {}",dir);
 #else
 	E_Exit("Overlay: trying to remove directory: %s",dir);
 #endif
@@ -115,7 +115,7 @@ bool Overlay_Drive::RemoveDir(char * dir) {
 		do {
 			char name[DOS_NAMELENGTH_ASCII];Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
 			dta.GetResult(name,size,date,time,attr);
-			if (logoverlay) LOG_MSG("RemoveDir found %s",name);
+			if (logoverlay) LOG_INFO("RemoveDir found {}",name);
 			if (empty && strcmp(".",name ) && strcmp("..",name)) 
 				empty = false; //Neither . or .. so directory not empty.
 		} while (this->FindNext(dta));
@@ -124,7 +124,7 @@ bool Overlay_Drive::RemoveDir(char * dir) {
 		dos.errorcode = olderror;
 
 		if (!empty) return false;
-		if (logoverlay) LOG_MSG("directory empty! Hide it.");
+		if (logoverlay) LOG_INFO("directory empty! Hide it.");
 		//Directory is empty, mark it as deleted and create DBOVERLAY file.
 		//Ensure that overlap folder can not be created.
 		add_deleted_path(dir,true);
@@ -137,7 +137,7 @@ bool Overlay_Drive::MakeDir(char * dir) {
 	if (TestDir(dir)) return false;
 	if (overlap_folder == dir) return false; //TODO Test
 #if OVERLAY_DIR
-	if (logoverlay) LOG_MSG("Overlay trying to make directory: %s",dir);
+	if (logoverlay) LOG_INFO("Overlay trying to make directory: {}",dir);
 #else
 	E_Exit("Overlay trying to make directory: %s",dir);
 #endif
@@ -199,21 +199,21 @@ public:
 	          overlay_active(false)
 	{
 		if (logoverlay)
-			LOG_MSG("constructing OverlayFile: %s", name);
+			LOG_INFO("constructing OverlayFile: {}", name);
 	}
 
 	bool Write(Bit8u * data,Bit16u * size) {
 		Bit32u f = flags&0xf;
 		if (!overlay_active && (f == OPEN_READWRITE || f == OPEN_WRITE)) {
-			if (logoverlay) LOG_MSG("write detected, switching file for %s",GetName());
+			if (logoverlay) LOG_INFO("write detected, switching file for {}",GetName());
 			if (*data == 0) {
-				if (logoverlay) LOG_MSG("OPTIMISE: truncate on switch!!!!");
+				if (logoverlay) LOG_INFO("OPTIMISE: truncate on switch!!!!");
 			}
 			const auto a = logoverlay ? GetTicks() : 0;
 			bool r = create_copy();
 			const auto b = logoverlay ? GetTicksSince(a) : 0;
 			if (b > 2)
-				LOG_MSG("OPTIMISE: switching took %d", b);
+				LOG_INFO("OPTIMISE: switching took {}", b);
 			if (!r) return false;
 			overlay_active = true;
 			
@@ -230,7 +230,7 @@ public:
 
 FILE *Overlay_Drive::create_file_in_overlay(const char *dos_filename, char const *mode)
 {
-	if (logoverlay) LOG_MSG("create_file_in_overlay called %s %s",dos_filename,mode);
+	if (logoverlay) LOG_INFO("create_file_in_overlay called {} {}",dos_filename,mode);
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, overlaydir); // TODO GOG make part of class and
 	                                  // join in
@@ -243,7 +243,7 @@ FILE *Overlay_Drive::create_file_in_overlay(const char *dos_filename, char const
 	const char *dir = strrchr(dos_filename, '\\');
 
 	if (!f && dir && *dir) {
-		if (logoverlay) LOG_MSG("Overlay: warning creating a file inside a directory %s",dos_filename);
+		if (logoverlay) LOG_WARN("Overlay: warning creating a file inside a directory {}",dos_filename);
 		//ensure they exist, else make them in the overlay if they exist in the original....
 		Sync_leading_dirs(dos_filename);
 		//try again
@@ -260,7 +260,7 @@ FILE *Overlay_Drive::create_file_in_overlay(const char *dos_filename, char const
 bool OverlayFile::create_copy() {
 	//test if open/valid/etc
 	//ensure file position
-	if (logoverlay) LOG_MSG("create_copy called %s",GetName());
+	if (logoverlay) LOG_INFO("create_copy called {}",GetName());
 
 	FILE* lhandle = this->fhandle;
 	fseek(lhandle,ftell(lhandle),SEEK_SET);
@@ -285,7 +285,7 @@ bool OverlayFile::create_copy() {
 	fseek(newhandle,location_in_old_file,SEEK_SET);
 	this->fhandle = newhandle;
 	//Flags ?
-	if (logoverlay) LOG_MSG("success");
+	if (logoverlay) LOG_INFO("success");
 	return true;
 }
 
@@ -396,7 +396,7 @@ void Overlay_Drive::convert_overlay_to_DOSname_in_base(char* dirname )
 				strcat(dirname,dosboxdirname);
 				strcat(dirname,"\\");
 
-				if (logoverlay) LOG_MSG("HIDE directory: %s",dirname);
+				if (logoverlay) LOG_INFO("HIDE directory: {}",dirname);
 
 
 				b=++p;
@@ -444,7 +444,7 @@ bool Overlay_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	FILE * hand = fopen_wrap(newname,type);
 	bool fileopened = false;
 	if (hand) {
-		if (logoverlay) LOG_MSG("overlay file opened %s",newname);
+		if (logoverlay) LOG_INFO("overlay file opened {}",newname);
 		*file = new localFile(name, hand, overlaydir);
 		(*file)->flags=flags;
 		fileopened = true;
@@ -460,7 +460,7 @@ bool Overlay_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 
 
 	if (fileopened) {
-		if (logoverlay) LOG_MSG("file opened %s",name);
+		if (logoverlay) LOG_INFO("file opened {}",name);
 		//Convert file to OverlayFile
 		OverlayFile* f = ccc(*file);
 		f->flags = flags; //ccc copies the flags of the localfile, which were not correct in this case
@@ -480,7 +480,7 @@ bool Overlay_Drive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes
 
 	FILE* f = create_file_in_overlay(name,"wb+");
 	if(!f) {
-		if (logoverlay) LOG_MSG("File creation in overlay system failed %s",name);
+		if (logoverlay) LOG_ERROR("File creation in overlay system failed {}",name);
 		return false;
 	}
 	*file = new localFile(name, f, overlaydir);
@@ -522,7 +522,7 @@ bool Overlay_Drive::Sync_leading_dirs(const char* dos_filename){
 		char dirname[CROSS_LEN] = {0};
 		strncpy(dirname,dos_filename,leaddir-dos_filename);
 
-		if (logoverlay) LOG_MSG("syncdir: %s",dirname);
+		if (logoverlay) LOG_INFO("syncdir: {}",dirname);
 		//Test if directory exist in base.
 		char dirnamebase[CROSS_LEN] ={0};
 		safe_strcpy(dirnamebase, basedir);
@@ -530,7 +530,7 @@ bool Overlay_Drive::Sync_leading_dirs(const char* dos_filename){
 		CROSS_FILENAME(dirnamebase);
 		struct stat basetest;
 		if (stat(dirCache.GetExpandName(dirnamebase),&basetest) == 0 && basetest.st_mode & S_IFDIR) {
-			if (logoverlay) LOG_MSG("base exists: %s",dirnamebase);
+			if (logoverlay) LOG_INFO("base exists: {}",dirnamebase);
 			//Directory exists in base folder.
 			//Ensure it exists in overlay as well
 
@@ -544,7 +544,7 @@ bool Overlay_Drive::Sync_leading_dirs(const char* dos_filename){
 				if ((overlaytest.st_mode & S_IFDIR) ==0) return false;
 			} else {
 				//folder does not exist, make it
-				if (logoverlay) LOG_MSG("creating %s",dirnameoverlay);
+				if (logoverlay) LOG_INFO("creating {}",dirnameoverlay);
 				if (create_dir(dirnameoverlay, 0700) != 0)
 					return false;
 			}
@@ -670,7 +670,7 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 			safe_strcpy(dosname, (*i).c_str());
 			upcase(dosname);  //Should not be really needed, as uppercase in the overlay is a requirement...
 			CROSS_DOSFILENAME(dosname);
-			if (logoverlay) LOG_MSG("update cache add dosname %s",dosname);
+			if (logoverlay) LOG_INFO("update cache add dosname {}",dosname);
 			DOSnames_cache.push_back(dosname);
 		}
 	}
@@ -728,13 +728,13 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 				add_deleted_path(name.c_str(),false);
 
 			} else {
-				if (logoverlay) LOG_MSG("unsupported operation %s on %s",special_operation.c_str(),(*i).c_str());
+				if (logoverlay) LOG_ERROR("unsupported operation {} on {}",special_operation.c_str(),(*i).c_str());
 			}
 
 		}
 	}
 	if (logoverlay)
-		LOG_MSG("OPTIMISE: update cache took %d", GetTicksSince(a));
+		LOG_INFO("OPTIMISE: update cache took {}", GetTicksSince(a));
 }
 
 bool Overlay_Drive::FindNext(DOS_DTA & dta) {
@@ -779,7 +779,7 @@ again:
 	//Check hidden/deleted directories first. TODO is this really needed. If the directory exist in the overlay things are weird anyway.
 	//the deleted paths are added to the deleted_files list.
 	if (is_deleted_dir(prel)) {
-		LOG_MSG("skipping early out deleted dir %s",prel);
+		LOG_INFO("skipping early out deleted dir {}",prel);
 		goto again;
 	}
 #endif
@@ -787,19 +787,19 @@ again:
 	safe_strcat(ovname, prel);
 	bool statok = ( stat(ovname,&stat_block)==0);
 
-	if (logoverlay) LOG_MSG("listing %s",dir_entcopy);
+	if (logoverlay) LOG_INFO("listing {}",dir_entcopy);
 	if (statok) {
-		if (logoverlay) LOG_MSG("using overlay data for %s : %s",full_name, ovname);
+		if (logoverlay) LOG_INFO("using overlay data for {} : {}",full_name, ovname);
 	} else {
 		char preldos[CROSS_LEN];
 		safe_strcpy(preldos, prel);
 		CROSS_DOSFILENAME(preldos);
 		if (is_deleted_file(preldos)) { //dir.. maybe lower or keep it as is TODO
-			if (logoverlay) LOG_MSG("skipping deleted file %s %s %s",preldos,full_name,ovname);
+			if (logoverlay) LOG_WARN("skipping deleted file {} {} {}",preldos,full_name,ovname);
 			goto again;
 		}
 		if (stat(dirCache.GetExpandName(full_name),&stat_block)!=0) {
-			if (logoverlay) LOG_MSG("stat failed for %s . This should not happen.",dirCache.GetExpandName(full_name));
+			if (logoverlay) LOG_ERROR("stat failed for {} . This should not happen.",dirCache.GetExpandName(full_name));
 			goto again;//No symlinks and such
 		}
 	}
@@ -836,7 +836,7 @@ bool Overlay_Drive::FileUnlink(char * name) {
 	// TODO check the basedir for file existence in order if we need to add the file to deleted file list.
 	const auto a = logoverlay ? GetTicks() : 0;
 	if (logoverlay)
-		LOG_MSG("calling unlink on %s", name);
+		LOG_INFO("calling unlink on {}", name);
 	char basename[CROSS_LEN];
 	safe_strcpy(basename, basedir);
 	safe_strcat(basename, name);
@@ -921,7 +921,7 @@ bool Overlay_Drive::FileUnlink(char * name) {
 
 		update_cache(false);
 		if (logoverlay)
-			LOG_MSG("OPTIMISE: unlink took %d", GetTicksSince(a));
+			LOG_INFO("OPTIMISE: unlink took {}", GetTicksSince(a));
 		return true;
 	}
 }
@@ -950,7 +950,7 @@ bool Overlay_Drive::GetFileAttr(char * name,Bit16u * attr) {
 
 
 void Overlay_Drive::add_deleted_file(const char* name,bool create_on_disk) {
-	if (logoverlay) LOG_MSG("add del file %s",name);
+	if (logoverlay) LOG_INFO("add del file {}",name);
 	if (!is_deleted_file(name)) {
 		deleted_files_in_base.push_back(name);
 		if (create_on_disk) add_special_file_to_disk(name, "DEL");
@@ -1014,7 +1014,7 @@ bool Overlay_Drive::is_deleted_file(const char* name) {
 
 void Overlay_Drive::add_DOSdir_to_cache(const char* name) {
 	if (!name || !*name ) return; //Skip empty file.
-	LOG_MSG("Adding name to overlay_only_dir_cache %s",name);
+	LOG_INFO("Adding name to overlay_only_dir_cache {}",name);
 	if (!is_dir_only_in_overlay(name)) {
 		DOSdirs_cache.push_back(name); 
 	}
@@ -1040,7 +1040,7 @@ void Overlay_Drive::remove_deleted_file(const char* name,bool create_on_disk) {
 }
 void Overlay_Drive::add_deleted_path(const char* name, bool create_on_disk) {
 	if (!name || !*name ) return; //Skip empty file.
-	if (logoverlay) LOG_MSG("add del path %s",name);
+	if (logoverlay) LOG_INFO("add del path {}",name);
 	if (!is_deleted_path(name)) {
 		deleted_paths_in_base.push_back(name);
 		//Add it to deleted files as well, so it gets skipped in FindNext. 
@@ -1162,7 +1162,7 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 		add_deleted_file(oldname,true);
 		temp =0; //success
 		if (logoverlay)
-			LOG_MSG("OPTIMISE: update rename with copy took %d",
+			LOG_INFO("OPTIMISE: update rename with copy took {}",
 			        GetTicksSince(aa));
 	}
 	if (temp ==0) {
@@ -1172,7 +1172,7 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 		dirCache.EmptyCache();
 		update_cache(true);
 		if (logoverlay)
-			LOG_MSG("OPTIMISE: rename took %d", GetTicksSince(a));
+			LOG_INFO("OPTIMISE: rename took {}", GetTicksSince(a));
 	}
 	return (temp==0);
 
@@ -1180,7 +1180,7 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 #endif
 
 bool Overlay_Drive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
-	if (logoverlay) LOG_MSG("FindFirst in %s",_dir);
+	if (logoverlay) LOG_INFO("FindFirst in {}",_dir);
 	
 	if (is_deleted_path(_dir)) {
 		//No accidental listing of files in there.
@@ -1207,7 +1207,7 @@ bool Overlay_Drive::FileStat(const char* name, FileStat_Block * const stat_block
 		stat_block->time = DOS_PackTime(datetime);
 		stat_block->date = DOS_PackDate(datetime);
 	} else {
-		LOG_MSG("OVERLAY: Error while converting date in: %s", name);
+		LOG_ERROR("OVERLAY: Error while converting date in: {}", name);
 	}
 	stat_block->size=(Bit32u)temp_stat.st_size;
 	return true;

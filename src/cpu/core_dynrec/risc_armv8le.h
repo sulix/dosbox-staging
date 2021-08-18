@@ -836,7 +836,7 @@ static void INLINE gen_fill_branch(const Bit8u* data) {
 #if C_DEBUG
 	Bits len=cache.pos-data;
 	if (len<0) len=-len;
-	if (len>=0x00100000) LOG_MSG("Big jump %d",len);
+	if (len>=0x00100000) LOG_INFO("Big jump {}",len);
 #endif
 	Bit32u offset = (Bit32u)(cache.pos-data) << 3;
 	cache_addw(((Bit16u)offset&~0x1f)|(data[0]&0x1f),data);

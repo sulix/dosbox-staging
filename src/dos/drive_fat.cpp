@@ -752,7 +752,7 @@ fatDrive::fatDrive(const char *sysFilename,
 
 		loadedDisk->Read_Sector(0,0,1,&mbrData);
 
-		if(mbrData.magic1!= 0x55 ||	mbrData.magic2!= 0xaa) LOG_MSG("Possibly invalid partition table in disk image.");
+		if(mbrData.magic1!= 0x55 ||	mbrData.magic2!= 0xaa) LOG_WARN("Possibly invalid partition table in disk image.");
 
 		startSector = 63;
 		int m;
@@ -761,13 +761,13 @@ fatDrive::fatDrive(const char *sysFilename,
 			if(mbrData.pentry[m].partSize != 0x00) {
 				mbrData.pentry[m].absSectStart = host_to_le(mbrData.pentry[m].absSectStart);
 				mbrData.pentry[m].partSize     = host_to_le(mbrData.pentry[m].partSize);
-				LOG_MSG("Using partition %d on drive; skipping %d sectors", m, mbrData.pentry[m].absSectStart);
+				LOG_INFO("Using partition {} on drive; skipping {} sectors", m, mbrData.pentry[m].absSectStart);
 				startSector = mbrData.pentry[m].absSectStart;
 				break;
 			}
 		}
 
-		if(m==4) LOG_MSG("No good partition found in image.");
+		if(m==4) LOG_ERROR("No good partition found in image.");
 
 		partSectOff = startSector;
 	} else {
@@ -850,7 +850,7 @@ fatDrive::fatDrive(const char *sysFilename,
 
 	if ((bootbuffer.magic1 != 0x55) || (bootbuffer.magic2 != 0xaa)) {
 		/* Not a FAT filesystem */
-		LOG_MSG("Loaded image has no valid magicnumbers at the end!");
+		LOG_ERROR("Loaded image has no valid magicnumbers at the end!");
 	}
 
 	/* Sanity checks */
@@ -888,13 +888,13 @@ fatDrive::fatDrive(const char *sysFilename,
 
 	if(CountOfClusters < 4085) {
 		/* Volume is FAT12 */
-		LOG_MSG("Mounted FAT volume is FAT12 with %d clusters", CountOfClusters);
+		LOG_INFO("Mounted FAT volume is FAT12 with {} clusters", CountOfClusters);
 		fattype = FAT12;
 	} else if (CountOfClusters < 65525) {
-		LOG_MSG("Mounted FAT volume is FAT16 with %d clusters", CountOfClusters);
+		LOG_INFO("Mounted FAT volume is FAT16 with {} clusters", CountOfClusters);
 		fattype = FAT16;
 	} else {
-		LOG_MSG("Mounted FAT volume is FAT32 with %d clusters", CountOfClusters);
+		LOG_INFO("Mounted FAT volume is FAT32 with {} clusters", CountOfClusters);
 		fattype = FAT32;
 	}
 

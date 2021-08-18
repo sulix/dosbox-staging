@@ -335,15 +335,15 @@ public:
 
 			const std::string real_path = to_native_path(temp_line);
 			if (real_path.empty()) {
-				LOG_MSG("MOUNT: Path '%s' not found", temp_line.c_str());
+				LOG_ERROR("MOUNT: Path '{}' not found", temp_line.c_str());
 			} else {
 				std::string home_resolve = temp_line;
 				Cross::ResolveHomedir(home_resolve);
 				if (home_resolve == real_path) {
-					LOG_MSG("MOUNT: Path '%s' found",
+					LOG_INFO("MOUNT: Path '{}' found",
 					        temp_line.c_str());
 				} else {
-					LOG_MSG("MOUNT: Path '%s' found, while looking for '%s'",
+					LOG_INFO("MOUNT: Path '{}' found, while looking for '{}'",
 					        real_path.c_str(),
 					        temp_line.c_str());
 				}
@@ -737,7 +737,7 @@ public:
 					/* read cartridge data into buffer */
 					fseek(usefile_1,0x200L, SEEK_SET);
 					if (fread(rombuf, 1, rombytesize_1-0x200, usefile_1) < rombytesize_1 - 0x200) {
-						LOG_MSG("Failed to read sufficient cartridge data");
+						LOG_ERROR("Failed to read sufficient cartridge data");
 						fclose(usefile_1);
 						return;
 					}
@@ -817,7 +817,7 @@ public:
 				if (usefile_2!=NULL) {
 					fseek(usefile_2, 0x0L, SEEK_SET);
 					if (fread(rombuf, 1, 0x200, usefile_2) < 0x200) {
-						LOG_MSG("Failed to read sufficient ROM data");
+						LOG_ERROR("Failed to read sufficient ROM data");
 						fclose(usefile_2);
 						return;
 					}
@@ -827,7 +827,7 @@ public:
 					/* read cartridge data into buffer */
 					fseek(usefile_2, 0x200L, SEEK_SET);
 					if (fread(rombuf, 1, rombytesize_2-0x200, usefile_2) < rombytesize_2 - 0x200) {
-						LOG_MSG("Failed to read sufficient ROM data");
+						LOG_ERROR("Failed to read sufficient ROM data");
 						fclose(usefile_2);
 						return;
 					}
@@ -840,7 +840,7 @@ public:
 
 				fseek(usefile_1, 0x0L, SEEK_SET);
 				if (fread(rombuf, 1, 0x200, usefile_1) < 0x200) {
-					LOG_MSG("Failed to read sufficient cartridge data");
+					LOG_ERROR("Failed to read sufficient cartridge data");
 					fclose(usefile_1);
 					return;
 				}
@@ -850,7 +850,7 @@ public:
 				/* read cartridge data into buffer */
 				fseek(usefile_1,0x200L, SEEK_SET);
 				if (fread(rombuf, 1, rombytesize_1-0x200, usefile_1) < rombytesize_1 - 0x200) {
-					LOG_MSG("Failed to read sufficient cartridge data");
+					LOG_ERROR("Failed to read sufficient cartridge data");
 					fclose(usefile_1);
 					return;
 				}
@@ -982,7 +982,7 @@ public:
 					phys_writeb(PhysMake(0xf000, 0xf065), 0xcf);
 					reg_flags &= ~FLAG_IF;
 					CALLBACK_RunRealFar(0xc000, 0x0003);
-					LOG_MSG("Video BIOS ROM loaded and initialized.");
+					LOG_INFO("Video BIOS ROM loaded and initialized.");
 				}
 				else WriteOut(MSG_Get("PROGRAM_LOADROM_BASIC_LOADED"));
 			}
@@ -1347,16 +1347,16 @@ public:
 			// Try to find the path on native filesystem first
 			const std::string real_path = to_native_path(temp_line);
 			if (real_path.empty()) {
-				LOG_MSG("IMGMOUNT: Path '%s' not found, maybe it's a DOS path",
+				LOG_ERROR("IMGMOUNT: Path '{}' not found, maybe it's a DOS path",
 				        temp_line.c_str());
 			} else {
 				std::string home_resolve = temp_line;
 				Cross::ResolveHomedir(home_resolve);
 				if (home_resolve == real_path) {
-					LOG_MSG("IMGMOUNT: Path '%s' found",
+					LOG_INFO("IMGMOUNT: Path '{}' found",
 					        temp_line.c_str());
 				} else {
-					LOG_MSG("IMGMOUNT: Path '%s' found, while looking for '%s'",
+					LOG_INFO("IMGMOUNT: Path '{}' found, while looking for '{}'",
 					        real_path.c_str(),
 					        temp_line.c_str());
 				}
@@ -1396,7 +1396,7 @@ public:
 						return;
 					}
 
-					LOG_MSG("IMGMOUNT: Path '%s' found on virtual drive %c:",
+					LOG_INFO("IMGMOUNT: Path '{}' found on virtual drive {}:",
 					        fullname, drive_letter(dummy));
 				}
 			}
@@ -1441,7 +1441,7 @@ public:
 				}
 				sizes[0]=512;	sizes[1]=63;	sizes[2]=16;	sizes[3]=sectors;
 
-				LOG_MSG("autosized image file: %d:%d:%d:%d",sizes[0],sizes[1],sizes[2],sizes[3]);
+				LOG_INFO("autosized image file: {}:{}:{}:{}",sizes[0],sizes[1],sizes[2],sizes[3]);
 			}
 
 			if (Drives[drive_index(drive)]) {

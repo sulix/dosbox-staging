@@ -667,7 +667,7 @@ void Gus::BeginPlayback()
 	irq_enabled = ((register_data & 0x400) != 0);
 	audio_channel->Enable(true);
 	if (prev_logged_voices != active_voices) {
-		LOG_MSG("GUS: Activated %u voices at %u Hz", active_voices,
+		LOG_INFO("GUS: Activated {} voices at {} Hz", active_voices,
 		        playback_rate);
 		prev_logged_voices = active_voices;
 	}
@@ -732,7 +732,7 @@ bool Gus::PerformDmaTransfer()
 		return false;
 
 #if LOG_GUS
-	LOG_MSG("GUS DMA event: max %u bytes. DMA: tc=%u mask=0 cnt=%u",
+	LOG_INFO("GUS DMA event: max {} bytes. DMA: tc={} mask=0 cnt={}",
 	        BYTES_PER_DMA_XFER, dma_channel->tcount ? 1 : 0,
 	        dma_channel->currcnt + 1);
 #endif
@@ -827,7 +827,7 @@ void Gus::PopulateAutoExec(uint16_t port, const std::string &ultradir)
 	char set_ultrasnd[] = "@SET ULTRASND=HHH,D,D,I,I";
 	snprintf(set_ultrasnd, sizeof(set_ultrasnd),
 	         "@SET ULTRASND=%x,%u,%u,%u,%u", port, dma1, dma2, irq1, irq2);
-	LOG_MSG("GUS: %s", set_ultrasnd);
+	LOG_INFO("GUS: {}", set_ultrasnd);
 	autoexec_lines.at(0).Install(set_ultrasnd);
 
 	// ULTRADIR variable
@@ -956,18 +956,18 @@ void Gus::PrintStats()
 
 	// Print info about the type of audio and voices used
 	if (used_16bit_voices == 0u)
-		LOG_MSG("GUS: Audio comprised of 8-bit samples from %u voices",
+		LOG_INFO("GUS: Audio comprised of 8-bit samples from {} voices",
 		        used_8bit_voices);
 	else if (used_8bit_voices == 0u)
-		LOG_MSG("GUS: Audio comprised of 16-bit samples from %u voices",
+		LOG_INFO("GUS: Audio comprised of 16-bit samples from {} voices",
 		        used_16bit_voices);
 	else {
 		const auto ratio_8bit = ceil_udivide(100u * combined_8bit_ms,
 		                                     combined_ms);
 		const auto ratio_16bit = ceil_udivide(100u * combined_16bit_ms,
 		                                      combined_ms);
-		LOG_MSG("GUS: Audio was made up of %u%% 8-bit %u-voice and "
-		        "%u%% 16-bit %u-voice samples",
+		LOG_INFO("GUS: Audio was made up of {}% 8-bit {}-voice and "
+		        "{}% 16-bit {}-voice samples",
 		        ratio_8bit, used_8bit_voices, ratio_16bit,
 		        used_16bit_voices);
 	}
@@ -1006,7 +1006,7 @@ Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
 		return dram_addr < ram.size() ? ram.at(dram_addr) : 0;
 	default:
 #if LOG_GUS
-		LOG_MSG("GUS: Read at port %#x", static_cast<uint16_t>(port));
+		LOG_INFO("GUS: Read at port {:#x}", static_cast<uint16_t>(port));
 #endif
 		break;
 	}
@@ -1090,7 +1090,7 @@ uint16_t Gus::ReadFromRegister()
 		return static_cast<uint16_t>(target_voice->ReadVolState() << 8);
 	default:
 #if LOG_GUS
-		LOG_MSG("GUS: Register %#x not implemented for reading",
+		LOG_INFO("GUS: Register {:#x} not implemented for reading",
 		        selected_register);
 #endif
 		break;
@@ -1184,7 +1184,7 @@ void Gus::UpdateDmaAddress(const uint8_t new_address)
 	assert(dma_channel);
 	dma_channel->Register_Callback(std::bind(&Gus::DmaCallback, this, _1, _2));
 #if LOG_GUS
-	LOG_MSG("GUS: Assigned DMA1 address to %u", dma1);
+	LOG_INFO("GUS: Assigned DMA1 address to {}", dma1);
 #endif
 }
 
@@ -1235,7 +1235,7 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 			if (address)
 				irq1 = address;
 #if LOG_GUS
-			LOG_MSG("GUS: Assigned IRQ1 to %d", irq1);
+			LOG_INFO("GUS: Assigned IRQ1 to {}", irq1);
 #endif
 		} else {
 			// DMA configuration, only use low bits for dma 1
@@ -1271,7 +1271,7 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 		break;
 	default:
 #if LOG_GUS
-		LOG_MSG("GUS: Write to port %#x with value %x",
+		LOG_INFO("GUS: Write to port {:#x} with value {:x}",
 		        static_cast<uint16_t>(port), static_cast<uint32_t>(val));
 #endif
 		break;
@@ -1426,7 +1426,7 @@ void Gus::WriteToRegister()
 		break;
 	default:
 #if LOG_GUS
-		LOG_MSG("GUS: Register %#x not implemented for writing",
+		LOG_INFO("GUS: Register {:#x} not implemented for writing",
 		        selected_register);
 #endif
 		break;
@@ -1436,7 +1436,7 @@ void Gus::WriteToRegister()
 
 Gus::~Gus()
 {
-	DEBUG_LOG_MSG("GUS: Shutting down");
+	LOG_DEBUG("GUS: Shutting down");
 	StopPlayback();
 
 	// remove the mixer channel

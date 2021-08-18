@@ -508,7 +508,7 @@ static Bitu DOS_21Handler(void) {
 		if( reg_ch > 23 || reg_cl > 59 || reg_dh > 59 || reg_dl > 99 )
 			reg_al = 0xff; 
 		else { //Allow time to be set to zero. Restore the orginal time for all other parameters. (QuickBasic)
-			if (reg_cx == 0 && reg_dx == 0) {time_start = mem_readd(BIOS_TIMER);LOG_MSG("Warning: game messes with DOS time!");}
+			if (reg_cx == 0 && reg_dx == 0) {time_start = mem_readd(BIOS_TIMER);LOG_WARN("Warning: game messes with DOS time!");}
 			else time_start = 0;
 			reg_al = 0;
 		}

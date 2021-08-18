@@ -382,7 +382,7 @@ static INLINE void gen_lea(HostReg dest_reg,Bitu scale,Bits imm) {
 // generate a call to a parameterless function
 static void INLINE gen_call_function_raw(void * func) {
 #if C_DEBUG
-	if (((Bit32u)cache.pos ^ (Bit32u)func) & 0xf0000000) LOG_MSG("jump overflow\n");
+	if (((Bit32u)cache.pos ^ (Bit32u)func) & 0xf0000000) LOG_INFO("jump overflow");
 #endif
 	temp1_valid = false;
 	cache_addd(0x0c000000+(((Bit32u)func>>2)&0x3ffffff));		// jal func
@@ -471,7 +471,7 @@ static void INLINE gen_fill_branch(const Bit8u* data) {
 #if C_DEBUG
 	Bits len=cache.pos-data;
 	if (len<0) len=-len;
-	if (len>126) LOG_MSG("Big jump %d",len);
+	if (len>126) LOG_INFO("Big jump {}",len);
 #endif
 	temp1_valid = false;			// this is a branch target
 	cache_addw((Bit16u)(cache.pos-data-4)>>2,data);

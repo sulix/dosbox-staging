@@ -152,7 +152,7 @@ static bool MakeCodePage(Bitu lin_addr, CodePageHandler *&cph)
 			}
 		}
 		if (handler->flags & PFLAG_NOCODE) {
-			LOG_MSG("DYNREC:Can't run code in this page");
+			LOG_ERROR("DYNREC:Can't run code in this page");
 			cph=0;
 			return false;
 		}
@@ -161,7 +161,7 @@ static bool MakeCodePage(Bitu lin_addr, CodePageHandler *&cph)
 	Bitu phys_page=lin_page;
 	// find the physical page that the linear page is mapped to
 	if (!PAGING_MakePhysPage(phys_page)) {
-		LOG_MSG("DYNREC:Can't find physpage");
+		LOG_ERROR("DYNREC:Can't find physpage");
 		cph=0;
 		return false;
 	}
@@ -173,7 +173,7 @@ static bool MakeCodePage(Bitu lin_addr, CodePageHandler *&cph)
 			if ((cache.used_pages->next) && (cache.used_pages->next!=decode.page.code))
 				cache.used_pages->next->ClearRelease();
 			else {
-				LOG_MSG("DYNREC:Invalid cache links");
+				LOG_ERROR("DYNREC:Invalid cache links");
 				cache.used_pages->ClearRelease();
 			}
 		}

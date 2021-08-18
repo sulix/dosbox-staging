@@ -62,8 +62,8 @@ using tracks_size_t    = vector<CDROM_Interface_Image::Track>::size_type;
 bool CDROM_Interface_Image::TrackFile::offsetInsideTrack(const uint32_t offset)
 {
 	if (static_cast<int>(offset) >= getLength()) {
-		LOG_MSG("CDROM: attempted to seek to byte %u, beyond the "
-		        "track's %d byte-length",
+		LOG_ERROR("CDROM: attempted to seek to byte {}, beyond the "
+		        "track's {} byte-length",
 		        offset, length_redbook_bytes);
 		return false;
 	}
@@ -80,15 +80,15 @@ uint32_t CDROM_Interface_Image::TrackFile::adjustOverRead(const uint32_t offset,
 	// If we seek beyond the end of the track, then we can't read any bytes...
 	if (static_cast<int>(offset) >= getLength()) {
 		adjusted_bytes = 0;
-		LOG_MSG("CDROM: can't read audio because requested offset %u "
-		        "is beyond the track length, %u",
+		LOG_ERROR("CDROM: can't read audio because requested offset {} "
+		        "is beyond the track length, {}",
 		        offset, getLength());
 	}
 	// Otherwise if our seek + requested bytes goes beyond, then prune back
 	// the request
 	else if (static_cast<int>(offset + requested_bytes) > getLength()) {
 		adjusted_bytes = static_cast<uint32_t>(getLength()) - offset;
-		LOG_MSG("CDROM: reducing read-length by %u bytes to avoid "
+		LOG_WARN("CDROM: reducing read-length by {} bytes to avoid "
 		        "reading beyond track.",
 		        requested_bytes - adjusted_bytes);
 	}
@@ -151,9 +151,7 @@ int CDROM_Interface_Image::BinaryFile::getLength()
 		        "Track length could not be determined");
 		assertm(static_cast<uint32_t>(length_redbook_bytes) <= MAX_REDBOOK_BYTES,
 		        "Track length exceeds the maximum CDROM size");
-#ifdef DEBUG
-		LOG_MSG("CDROM: Length of image is %d bytes", length_redbook_bytes);
-#endif
+		LOG_DEBUG("CDROM: Length of image is {} bytes", length_redbook_bytes);
 	}
 	return length_redbook_bytes;
 }
@@ -226,11 +224,11 @@ CDROM_Interface_Image::AudioFile::AudioFile(const char *filename, bool &error)
 	const std::string filename_only = get_basename(filename);
 	if (sample) {
 		error = false;
-		LOG_MSG("CDROM: Loaded %s [%d Hz, %d-channel, %2.1f minutes]",
+		LOG_INFO("CDROM: Loaded {} [{} Hz, {}-channel, {:2.1f} minutes]",
 		        filename_only.c_str(), getRate(), getChannels(),
 		        getLength() / static_cast<double>(REDBOOK_PCM_BYTES_PER_MIN));
 	} else {
-		LOG_MSG("CDROM: Failed adding '%s' as CDDA track!", filename_only.c_str());
+		LOG_ERROR("CDROM: Failed adding '{}' as CDDA track!", filename_only.c_str());
 		error = true;
 	}
 }
@@ -267,9 +265,7 @@ bool CDROM_Interface_Image::AudioFile::seek(const uint32_t requested_pos)
 		return false;
 
 	if (audio_pos == requested_pos) {
-#ifdef DEBUG
-		LOG_MSG("CDROM: seek to %u avoided with position-tracking", requested_pos);
-#endif
+		LOG_DEBUG("CDROM: seek to {} avoided with position-tracking", requested_pos);
 		return true;
 	}
 
@@ -299,7 +295,7 @@ bool CDROM_Interface_Image::AudioFile::seek(const uint32_t requested_pos)
 
 	// Report general seek diagnostics
 	const double pos_in_min = static_cast<double>(pos_in_ms) / 60000.0;
-	LOG_MSG("CDROM: seeked to byte %u (frame %u at %.2f min), and took %u ms",
+	LOG_DEBUG("CDROM: seeked to byte {} (frame {} at {:.2f} min), and took {} ms",
 	        requested_pos, pos_in_frames, pos_in_min, elapsed_ms);
 
 	/**
@@ -309,8 +305,8 @@ bool CDROM_Interface_Image::AudioFile::seek(const uint32_t requested_pos)
 	 */
 	const int32_t average_cdrom_seek_ms = 200;
 	if (elapsed_ms > average_cdrom_seek_ms)
-		LOG_MSG("CDROM: seek took %d ms, which is slower than an average "
-		        "physical CDROM drive's seek time of %d ms.",
+		LOG_DEBUG("CDROM: seek took {} ms, which is slower than an average "
+		        "physical CDROM drive's seek time of {} ms.",
 		        elapsed_ms, average_cdrom_seek_ms);
 #endif
 
@@ -413,7 +409,7 @@ bool CDROM_Interface_Image::AudioFile::read(uint8_t *buffer,
 		clock::time_point end = clock::now(); // stop the timer
 		const int32_t elapsed_us = static_cast<int32_t>
 		    (duration_cast<microseconds>(end - begin).count());
-		LOG_MSG("CDROM: converted %u mono to %u samples in %d us",
+		LOG_DEBUG("CDROM: converted {} mono to {} samples in {} us",
 		         mono_samples, mono_samples * REDBOOK_CHANNELS, elapsed_us);
 #endif
 		// Taken into account that we've now fill both (stereo) channels
@@ -495,9 +491,7 @@ CDROM_Interface_Image::CDROM_Interface_Image(uint8_t sub_unit)
 			player.channel = player.mixerChannel.Install(&CDAudioCallBack, 0, "CDAUDIO");
 			player.channel->Enable(false); // only enabled during playback periods
 		}
-#ifdef DEBUG
-		LOG_MSG("CDROM: Initialized the CDAUDIO mixer channel and mutex");
-#endif
+		LOG_DEBUG("CDROM: Initialized the CDAUDIO mixer channel and mutex");
 	}
 	refCount++;
 }
@@ -511,9 +505,7 @@ CDROM_Interface_Image::~CDROM_Interface_Image()
 		StopAudio();
 		SDL_DestroyMutex(player.mutex);
 		player.mutex = nullptr;
-#ifdef DEBUG
-		LOG_MSG("CDROM: Released CD Player resources");
-#endif
+		LOG_DEBUG("CDROM: Released CD Player resources");
 	}
 	if (player.cd == this) {
 		player.cd = nullptr;
@@ -537,9 +529,7 @@ bool CDROM_Interface_Image::GetUPC(unsigned char& attr, char* upc)
 {
 	attr = 0;
 	strcpy(upc, this->mcn.c_str());
-#ifdef DEBUG
-	LOG_MSG("CDROM: GetUPC => returned %s", upc);
-#endif
+	LOG_DEBUG("CDROM: GetUPC => returned {}", upc);
 	return true;
 }
 
@@ -552,25 +542,21 @@ bool CDROM_Interface_Image::GetAudioTracks(uint8_t& start_track_num,
 	 *  so bail out if we have fewer than 2 tracks
 	 */
 	if (tracks.size() < MIN_REDBOOK_TRACKS) {
-#ifdef DEBUG
-		LOG_MSG("CDROM: GetAudioTracks: game wanted to dump track "
-		        "metadata but our CD image has too few tracks: %u",
+		LOG_DEBUG("CDROM: GetAudioTracks: game wanted to dump track "
+		        "metadata but our CD image has too few tracks: {}",
 		        static_cast<unsigned int>(tracks.size()));
-#endif
 		return false;
 	}
 	start_track_num = tracks.front().number;
 	end_track_num = next(tracks.crbegin())->number; // next(crbegin) == [vec.size - 2]
 	lead_out_msf = frames_to_msf(tracks.back().start + REDBOOK_FRAME_PADDING);
-#ifdef DEBUG
-	LOG_MSG("CDROM: GetAudioTracks => start track is %2d, last playable track is %2d, "
-	        "and lead-out MSF is %02d:%02d:%02d",
+	LOG_DEBUG("CDROM: GetAudioTracks => start track is {:2d}, last playable track is {:2d}, "
+	        "and lead-out MSF is {:02d}:{:02d}:{:02d}",
 	        start_track_num,
 	        end_track_num,
 	        lead_out_msf.min,
 	        lead_out_msf.sec,
 	        lead_out_msf.fr);
-#endif
 	return true;
 }
 
@@ -582,12 +568,10 @@ bool CDROM_Interface_Image::GetAudioTrackInfo(uint8_t requested_track_num,
 	    || requested_track_num < 1
 	    || requested_track_num > 99
 	    || requested_track_num >= tracks.size()) {
-#ifdef DEBUG
-		LOG_MSG("CDROM: GetAudioTrackInfo for track %u => "
-		        "outside the CD's track range [1 to %" PRIuPTR ")",
+		LOG_DEBUG("CDROM: GetAudioTrackInfo for track {} => "
+		        "outside the CD's track range [1 to {})",
 		        requested_track_num,
 		        tracks.size());
-#endif
 		return false;
 	}
 
@@ -595,15 +579,13 @@ bool CDROM_Interface_Image::GetAudioTrackInfo(uint8_t requested_track_num,
 	track_const_iter track = tracks.begin() + requested_track_index;
 	start_msf = frames_to_msf(track->start + REDBOOK_FRAME_PADDING);
 	attr = track->attr;
-#ifdef DEBUG
-	LOG_MSG("CDROM: GetAudioTrackInfo for track %u => "
-	        "MSF %02d:%02d:%02d, which is sector %d",
+	LOG_DEBUG("CDROM: GetAudioTrackInfo for track {} => "
+	        "MSF {:02d}:{:02d}:{:02d}, which is sector {}",
 	        requested_track_num,
 	        start_msf.min,
 	        start_msf.sec,
 	        start_msf.fr,
 	        msf_to_frames(start_msf));
-#endif
 	return true;
 }
 
@@ -655,13 +637,11 @@ bool CDROM_Interface_Image::GetAudioSub(unsigned char& attr,
 	}
 	absolute_msf = frames_to_msf(absolute_sector + REDBOOK_FRAME_PADDING);
 	relative_msf = frames_to_msf(relative_sector);
-#ifdef DEBUG
-	LOG_MSG("CDROM: GetAudioSub => position at %02d:%02d:%02d (on sector %u) "
-	        "within track %u at %02d:%02d:%02d (at its sector %u)",
+	LOG_DEBUG("CDROM: GetAudioSub => position at {:02d}:{:02d}:{:02d} (on sector {}) "
+	        "within track {} at {:02d}:{:02d}:{:02d} (at its sector {})",
 	        absolute_msf.min, absolute_msf.sec, absolute_msf.fr,
 	        absolute_sector + REDBOOK_FRAME_PADDING, track_num, relative_msf.min,
 	        relative_msf.sec, relative_msf.fr, relative_sector);
-#endif
 	return true;
 }
 
@@ -669,11 +649,9 @@ bool CDROM_Interface_Image::GetAudioStatus(bool& playing, bool& pause)
 {
 	playing = player.isPlaying;
 	pause = player.isPaused;
-#ifdef DEBUG
-	LOG_MSG("CDROM: GetAudioStatus => %s and %s",
+	LOG_DEBUG("CDROM: GetAudioStatus => {} and {}",
 	        playing ? "is playing" : "stopped",
 	        pause ? "paused" : "not paused");
-#endif
 	return true;
 }
 
@@ -682,12 +660,10 @@ bool CDROM_Interface_Image::GetMediaTrayStatus(bool& mediaPresent, bool& mediaCh
 	mediaPresent = true;
 	mediaChanged = false;
 	trayOpen = false;
-#ifdef DEBUG
-	LOG_MSG("CDROM: GetMediaTrayStatus => media is %s, %s, and the tray is %s",
+	LOG_DEBUG("CDROM: GetMediaTrayStatus => media is {}, {}, and the tray is {}",
 	        mediaPresent ? "present" : "not present",
 	        mediaChanged ? "was changed" : "hasn't been changed",
 	        trayOpen ? "open" : "closed");
-#endif
 	return true;
 }
 
@@ -707,9 +683,7 @@ bool CDROM_Interface_Image::PlayAudioSector(uint32_t start, uint32_t len)
 	   || !player.channel
 	   || !player.mutex) {
 		StopAudio();
-#ifdef DEBUG
-		LOG_MSG("CDROM: PlayAudioSector => sanity check failed");
-#endif
+		LOG_DEBUG("CDROM: PlayAudioSector => sanity check failed");
 		return false;
 	}
 	// If the request falls into the pregap, which is prior to the track's
@@ -728,7 +702,7 @@ bool CDROM_Interface_Image::PlayAudioSector(uint32_t start, uint32_t len)
 
 	// Guard: Bail if our track could not be seeked
 	if (!track_file->seek(byte_offset)) {
-		LOG_MSG("CDROM: Track %d failed to seek to byte %u, so cancelling playback",
+		LOG_ERROR("CDROM: Track {} failed to seek to byte {}, so cancelling playback",
 		        track->number, byte_offset);
 		StopAudio();
 		return false;
@@ -747,7 +721,7 @@ bool CDROM_Interface_Image::PlayAudioSector(uint32_t start, uint32_t len)
 	 *  thread) from getting inconsistent or partial values.
 	 */
 	if (SDL_LockMutex(player.mutex) < 0) {
-		LOG_MSG("CDROM: PlayAudioSector couldn't lock our player for exclusive access");
+		LOG_ERROR("CDROM: PlayAudioSector couldn't lock our player for exclusive access");
 		StopAudio();
 		return false;
 	}
@@ -781,8 +755,8 @@ bool CDROM_Interface_Image::PlayAudioSector(uint32_t start, uint32_t len)
 
 #ifdef DEBUG
 	if (start < track->start) {
-		LOG_MSG("CDROM: Play sector %u to %u in the pregap of track %d [pregap %d,"
-		        " start %u, end %u] for %u PCM frames at rate %u",
+		LOG_DEBUG("CDROM: Play sector {} to {} in the pregap of track {} [pregap {},"
+		        " start {}, end {}] for {} PCM frames at rate {}",
 		        start,
 		        start + len,
 		        track->number,
@@ -792,8 +766,8 @@ bool CDROM_Interface_Image::PlayAudioSector(uint32_t start, uint32_t len)
 		        player.totalTrackFrames,
 		        track_rate);
 	} else {
-		LOG_MSG("CDROM: Play sector %u to %u in track %d [start %u, end %u],"
-		        " for %u PCM frames at rate %u",
+		LOG_DEBUG("CDROM: Play sector {} to {} in track {} [start {}, end {}],"
+		        " for {} PCM frames at rate {}",
 		        start,
 		        start + len,
 		        track->number,
@@ -810,7 +784,7 @@ bool CDROM_Interface_Image::PlayAudioSector(uint32_t start, uint32_t len)
 
 	// Guard: release the lock in this data
     if (SDL_UnlockMutex(player.mutex) < 0) {
-        LOG_MSG("CDROM: PlayAudioSector couldn't unlock this thread");
+        LOG_ERROR("CDROM: PlayAudioSector couldn't unlock this thread");
 		StopAudio();
 		return false;
     }
@@ -822,10 +796,8 @@ bool CDROM_Interface_Image::PauseAudio(bool resume)
 	player.isPaused = !resume;
 	if (player.channel)
 		player.channel->Enable(resume);
-#ifdef DEBUG
-	LOG_MSG("CDROM: PauseAudio => audio is now %s",
+	LOG_DEBUG("CDROM: PauseAudio => audio is now {}",
 	        resume ? "unpaused" : "paused");
-#endif
 	return true;
 }
 
@@ -835,9 +807,7 @@ bool CDROM_Interface_Image::StopAudio(void)
 	player.isPaused = false;
 	if (player.channel)
 		player.channel->Enable(false);
-#ifdef DEBUG
-	LOG_MSG("CDROM: StopAudio => stopped playback and halted the mixer");
-#endif
+	LOG_DEBUG("CDROM: StopAudio => stopped playback and halted the mixer");
 	return true;
 }
 
@@ -845,10 +815,8 @@ void CDROM_Interface_Image::ChannelControl(TCtrl ctrl)
 {
 	// Guard: Bail if our mixer channel hasn't been allocated
 	if (!player.channel) {
-#ifdef DEBUG
-		LOG_MSG("CDROM: ChannelControl => game tried applying channel controls "
+		LOG_DEBUG("CDROM: ChannelControl => game tried applying channel controls "
 		        "before playing audio");
-#endif
 		return;
 	}
 
@@ -860,14 +828,12 @@ void CDROM_Interface_Image::ChannelControl(TCtrl ctrl)
 	player.channel->MapChannels(ctrl.out[0],  // left map
 	                            ctrl.out[1]); // right map
 
-#ifdef DEBUG
-	LOG_MSG("CDROM: ChannelControl => volumes %d/255 and %d/255, "
-	        "and left-right map %d, %d",
+	LOG_DEBUG("CDROM: ChannelControl => volumes {}/255 and {}/255, "
+	        "and left-right map {}, {}",
 	        ctrl.vol[0],
 	        ctrl.vol[1],
 	        ctrl.out[0],
 	        ctrl.out[1]);
-#endif
 }
 
 bool CDROM_Interface_Image::ReadSectors(PhysPt buffer,
@@ -900,13 +866,11 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer,
 	}
 	// Write only the successfully read bytes
 	MEM_BlockWrite(buffer, readBuffer.data(), bytes_read);
-#ifdef DEBUG
-	LOG_MSG("CDROM: Read %u %s sectors at sector %u: "
-	        "%s after %u sectors (%u bytes)",
+	LOG_DEBUG("CDROM: Read {} {} sectors at sector {}: "
+	        "{} after {} sectors ({} bytes)",
 	        num, raw ? "raw" : "cooked", sector,
 	        success ? "Succeeded" : "Failed",
 	        ceil_udivide(bytes_read, sectorSize), bytes_read);
-#endif
 	return success;
 }
 
@@ -921,7 +885,7 @@ track_iter CDROM_Interface_Image::GetTrack(const uint32_t sector)
 	if (sector > MAX_REDBOOK_SECTOR ||
 	    tracks.size() < MIN_REDBOOK_TRACKS ||
 	    sector >= tracks.back().start) {
-		LOG_MSG("CDROM: GetTrack at sector %u is outside the"
+		LOG_ERROR("CDROM: GetTrack at sector {} is outside the"
 		        " playable range", sector);
 		return tracks.end();
 	}
@@ -944,15 +908,15 @@ track_iter CDROM_Interface_Image::GetTrack(const uint32_t sector)
 #ifdef DEBUG
 	if (track != tracks.end() && track->number != 1) {
 		if (sector < track->start) {
-			LOG_MSG("CDROM: GetTrack at sector %d => in the pregap of "
-			        "track %d [pregap %d, start %d, end %d]",
+			LOG_DEBUG("CDROM: GetTrack at sector {} => in the pregap of "
+			        "track {} [pregap {}, start {}, end {}]",
 			        sector,
 			        track->number,
 			        prev(track)->start - prev(track)->length,
 			        track->start,
 			        track->start + track->length);
 		} else {
-			LOG_MSG("CDROM: GetTrack at sector %d => track %d [start %d, end %d]",
+			LOG_DEBUG("CDROM: GetTrack at sector {} => track {} [start {}, end {}]",
 			        sector,
 			        track->number,
 			        track->start,
@@ -969,11 +933,9 @@ bool CDROM_Interface_Image::ReadSector(uint8_t *buffer, const bool raw, const ui
 
 	// Guard: Bail if the requested sector fell outside our tracks
 	if (track == tracks.end() || track->file == nullptr) {
-#ifdef DEBUG
-		LOG_MSG("CDROM: ReadSector at %u => resulted "
+		LOG_DEBUG("CDROM: ReadSector at {} => resulted "
 		        "in an invalid track or track->file",
 		        sector);
-#endif
 		return false;
 	}
 	uint32_t offset = track->skip + (sector - track->start) * track->sectorSize;
@@ -986,15 +948,11 @@ bool CDROM_Interface_Image::ReadSector(uint8_t *buffer, const bool raw, const ui
 	if (track->mode2 && !raw)
 		offset += 24;
 
-#if 0 // Excessively verbose.. only enable if needed
-#ifdef DEBUG
-	LOG_MSG("CDROM: ReadSector track %2d, desired raw %s, sector %ld, length=%d",
+	LOG_TRACE("CDROM: ReadSector track {:2d}, desired raw {}, sector {}, length={}",
 	        track->number,
 	        raw ? "true":"false",
 	        sector,
 	        length);
-#endif
-#endif
 	return track->file->read(buffer, offset, length);
 }
 
@@ -1013,17 +971,15 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu desired_track_frames)
 	   || !player.cd
 	   || !player.mutex
 	   || !track_file) {
-#ifdef DEBUG
-		LOG_MSG("CDROM: CDAudioCallBack called with one more empty dependencies:\n"
-		        "\t - frames to play (%" PRIuPTR ")\n"
-				"\t - pointer to the CD object (%p)\n"
-				"\t - pointer to the mutex object (%p)\n"
-				"\t - pointer to the track's file (%p)\n",
+		LOG_DEBUG("CDROM: CDAudioCallBack called with one more empty dependencies:\n"
+		        "\t - frames to play ({})\n"
+				"\t - pointer to the CD object ({})\n"
+				"\t - pointer to the mutex object ({})\n"
+				"\t - pointer to the track's file ({})\n",
 				desired_track_frames,
 				static_cast<void*>(player.cd),
 				static_cast<void*>(player.mutex),
 				static_cast<void*>(track_file.get()));
-#endif
 		if (player.cd)
 			player.cd->StopAudio();
 		return;
@@ -1031,7 +987,7 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu desired_track_frames)
 
 	// Ensure we have exclusive access to update our player members
 	if (SDL_LockMutex(player.mutex) < 0) {
-		LOG_MSG("CDROM: CDAudioCallBack couldn't lock this thread");
+		LOG_ERROR("CDROM: CDAudioCallBack couldn't lock this thread");
 		return;
 	}
 
@@ -1046,11 +1002,9 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu desired_track_frames)
 	(player.channel->*player.addFrames)(decoded_track_frames, player.buffer);
 
 	if (player.playedTrackFrames >= player.totalTrackFrames) {
-#ifdef DEBUG
-		LOG_MSG("CDROM: CDAudioCallBack stopping because "
-		"playedTrackFrames (%u) >= totalTrackFrames (%u)",
+		LOG_DEBUG("CDROM: CDAudioCallBack stopping because "
+		"playedTrackFrames ({}) >= totalTrackFrames ({})",
 		player.playedTrackFrames, player.totalTrackFrames);
-#endif
 		player.cd->StopAudio();
 
 	} else if (decoded_track_frames == 0) {
@@ -1066,14 +1020,14 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu desired_track_frames)
 		const Bit32u remaining_redbook_frames = player.totalRedbookFrames
 		                                        - played_redbook_frames;
 		if (SDL_UnlockMutex(player.mutex) < 0) {
-			LOG_MSG("CDROM: CDAudioCallBack couldn't unlock to move to next track");
+			LOG_ERROR("CDROM: CDAudioCallBack couldn't unlock to move to next track");
 			return;
 		}
 		player.cd->PlayAudioSector(new_redbook_start_frame, remaining_redbook_frames);
 		return;
 	}
 	if (SDL_UnlockMutex(player.mutex) < 0) {
-		LOG_MSG("CDROM: CDAudioCallBack couldn't unlock our player before returning");
+		LOG_ERROR("CDROM: CDAudioCallBack couldn't unlock our player before returning");
 	}
 }
 
@@ -1114,12 +1068,10 @@ bool CDROM_Interface_Image::LoadIsoFile(char* filename)
 
 	track.length = static_cast<uint32_t>(track_bytes) / track.sectorSize;
 
-#ifdef DEBUG
-	LOG_MSG("LoadIsoFile parsed %s => track 1, 0x40, sectorSize %d, mode2 is %s",
+	LOG_DEBUG("LoadIsoFile parsed {} => track 1, 0x40, sectorSize {}, mode2 is {}",
 	        filename,
 	        track.sectorSize,
 	        track.mode2 ? "true":"false");
-#endif
 
 	tracks.push_back(track);
 
@@ -1321,7 +1273,7 @@ bool CDROM_Interface_Image::AddTrack(Track &curr,
 	// frames between index 0(prestart) and 1(curr.start) must be skipped
 	if (prestart >= 0) {
 		if (prestart > static_cast<int>(curr.start)) {
-			LOG_MSG("CDROM: AddTrack => prestart %d cannot be > curr.start %u",
+			LOG_ERROR("CDROM: AddTrack => prestart {} cannot be > curr.start {}",
 			        prestart, curr.start);
 			return false;
 		}
@@ -1368,10 +1320,10 @@ bool CDROM_Interface_Image::AddTrack(Track &curr,
 	if (curr.number <= 1
 	    || prev.number + 1 != curr.number
 	    || curr.start < prev.start + prev.length) {
-		LOG_MSG("AddTrack: failed consistency checks\n"
-		"\tcurr.number (%d) <= 1\n"
-		"\tprev.number (%d) + 1 != curr.number (%d)\n"
-		"\tcurr.start (%d) < prev.start (%d) + prev.length (%d)\n",
+		LOG_ERROR("AddTrack: failed consistency checks\n"
+		"\tcurr.number ({}) <= 1\n"
+		"\tprev.number ({}) + 1 != curr.number ({})\n"
+		"\tcurr.start ({}) < prev.start ({}) + prev.length ({})\n",
 		curr.number, prev.number, curr.number,
 		curr.start, prev.start, prev.length);
 		return false;

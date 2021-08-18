@@ -584,12 +584,12 @@ public:
 
 		const int sdl_axes = SDL_JoystickNumAxes(sdl_joystick);
 		if (sdl_axes < 0)
-			LOG_MSG("SDL: Can't detect axes; %s", SDL_GetError());
+			LOG_WARN("SDL: Can't detect axes; {}", SDL_GetError());
 		axes = clamp(sdl_axes, 0, MAXAXIS);
 
 		const int sdl_hats = SDL_JoystickNumHats(sdl_joystick);
 		if (sdl_hats < 0)
-			LOG_MSG("SDL: Can't detect hats; %s", SDL_GetError());
+			LOG_WARN("SDL: Can't detect hats; {}", SDL_GetError());
 		hats = clamp(sdl_hats, 0, MAXHAT);
 
 		buttons = SDL_JoystickNumButtons(sdl_joystick); // TODO returns -1 on error
@@ -602,7 +602,7 @@ public:
 		if (button_wrap > MAXBUTTON)
 			button_wrap = MAXBUTTON;
 
-		LOG_MSG("MAPPER: Initialized %s with %d axes, %d buttons, and %d hat(s)",
+		LOG_INFO("MAPPER: Initialized {} with {} axes, {} buttons, and {} hat(s)",
 		        SDL_JoystickNameForIndex(stick), axes, buttons, hats);
 	}
 
@@ -1282,7 +1282,7 @@ class Typer {
 				*  For example, we don't wan't DEAL becoming DEL, or 'rem' becoming 'rm'
 				*/
 				if (!found) {
-					LOG_MSG("MAPPER: Couldn't find a button named '%s', stopping.",
+					LOG_ERROR("MAPPER: Couldn't find a button named '{}', stopping.",
 							button.c_str());
 					return;
 				}
@@ -2281,7 +2281,7 @@ static void CreateStringBind(char * line) {
 			goto foundevent;
 		}
 	}
-	LOG_MSG("MAPPER: Can't find key binding for %s event", eventname);
+	LOG_ERROR("MAPPER: Can't find key binding for {} event", eventname);
 	return ;
 foundevent:
 	CBind * bind = nullptr;
@@ -2483,7 +2483,7 @@ static void CreateDefaultBinds() {
 	sprintf(buffer,"jhat_0_0_1 \"stick_0 hat 0 2\" ");CreateStringBind(buffer);
 	sprintf(buffer,"jhat_0_0_2 \"stick_0 hat 0 4\" ");CreateStringBind(buffer);
 	sprintf(buffer,"jhat_0_0_3 \"stick_0 hat 0 8\" ");CreateStringBind(buffer);
-	LOG_MSG("MAPPER: Loaded default key bindings");
+	LOG_INFO("MAPPER: Loaded default key bindings");
 }
 
 void MAPPER_AddHandler(MAPPER_Handler *handler,
@@ -2509,7 +2509,7 @@ static void MAPPER_SaveBinds() {
 	const char *filename = mapper.filename.c_str();
 	FILE * savefile=fopen(filename,"wt+");
 	if (!savefile) {
-		LOG_MSG("MAPPER: Can't open %s for saving the key bindings", filename);
+		LOG_ERROR("MAPPER: Can't open {} for saving the key bindings", filename);
 		return;
 	}
 	char buf[128];
@@ -2526,7 +2526,7 @@ static void MAPPER_SaveBinds() {
 	}
 	fclose(savefile);
 	change_action_text("Mapper file saved.",CLR_WHITE);
-	LOG_MSG("MAPPER: Wrote key bindings to %s", filename);
+	LOG_INFO("MAPPER: Wrote key bindings to {}", filename);
 }
 
 static bool MAPPER_CreateBindsFromFile() {
@@ -2542,7 +2542,7 @@ static bool MAPPER_CreateBindsFromFile() {
 		++bind_tally;
 	}
 	fclose(loadfile);
-	LOG_MSG("MAPPER: Loaded %d key bindings from %s", bind_tally, filename);
+	LOG_INFO("MAPPER: Loaded {} key bindings from {}", bind_tally, filename);
 	return true;
 }
 
@@ -2670,7 +2670,7 @@ static void QueryJoysticks()
 
 	// The user doesn't want to use joysticks at all (not even for mapping)
 	if (joytype == JOY_DISABLED) {
-		DEBUG_LOG_MSG("MAPPER: joystick subsystem disabled");
+		LOG_DEBUG("MAPPER: joystick subsystem disabled");
 		return;
 	}
 
@@ -2709,16 +2709,16 @@ static void QueryJoysticks()
 	const bool second_usable = useable[1];
 	if (first_usable && second_usable) {
 		joytype = JOY_2AXIS;
-		LOG_MSG("MAPPER: Found two or more joysticks%s", setup_postfix.c_str());
+		LOG_INFO("MAPPER: Found two or more joysticks{}", setup_postfix.c_str());
 	} else if (first_usable) {
 		joytype = JOY_4AXIS;
-		LOG_MSG("MAPPER: Found one joystick%s", setup_postfix.c_str());
+		LOG_INFO("MAPPER: Found one joystick{}", setup_postfix.c_str());
 	} else if (second_usable) {
 		joytype = JOY_4AXIS_2;
-		LOG_MSG("MAPPER: Found second joystick is usable%s", setup_postfix.c_str());
+		LOG_INFO("MAPPER: Found second joystick is usable{}", setup_postfix.c_str());
 	} else {
 		joytype = JOY_NONE;
-		LOG_MSG("MAPPER: Found no joysticks");
+		LOG_INFO("MAPPER: Found no joysticks");
 	}
 }
 
