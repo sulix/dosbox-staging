@@ -1577,7 +1577,7 @@ void CPU_SET_CRX(Bitu cr,Bitu value) {
 					GFX_SetTitle(CPU_CyclePercUsed,-1,false);
 					if(!printed_cycles_auto_info) {
 						printed_cycles_auto_info = true;
-						LOG_INFO("DOSBox has switched to max cycles, because of the setting: cycles=auto.\nIf the game runs too fast, try a fixed cycles amount in DOSBox's options.");
+						LOG_INFO("CPU: DOSBox has switched to max cycles, because of the setting: cycles=auto.\nIf the game runs too fast, try a fixed cycles amount in DOSBox's options.");
 					}
 				} else {
 					GFX_SetTitle(-1,-1,false);
@@ -1596,7 +1596,7 @@ void CPU_SET_CRX(Bitu cr,Bitu value) {
 				CPU_AutoDetermineMode<<=CPU_AUTODETERMINE_SHIFT;
 			} else {
 				cpu.pmode=false;
-				if (value & CR0_PAGING) LOG_INFO("Paging requested without PE=1");
+				if (value & CR0_PAGING) LOG_WARN("CPU: Paging requested without PE=1");
 				PAGING_Enable(false);
 				LOG(LOG_CPU,LOG_NORMAL)("Real mode");
 			}
@@ -2108,7 +2108,7 @@ static void CPU_CycleIncrease(bool pressed) {
 	if (CPU_CycleAutoAdjust) {
 		CPU_CyclePercUsed+=5;
 		if (CPU_CyclePercUsed>105) CPU_CyclePercUsed=105;
-		LOG_INFO("CPU speed: max {} percent.",CPU_CyclePercUsed);
+		LOG_INFO("CPU: speed max {} percent.",CPU_CyclePercUsed);
 		GFX_SetTitle(CPU_CyclePercUsed,-1,false);
 	} else {
 		Bit32s old_cycles=CPU_CycleMax;
@@ -2121,9 +2121,9 @@ static void CPU_CycleIncrease(bool pressed) {
 		CPU_CycleLeft=0;CPU_Cycles=0;
 		if (CPU_CycleMax==old_cycles) CPU_CycleMax++;
 		if(CPU_CycleMax > 15000 ) 
-			LOG_INFO("CPU speed: fixed {} cycles. If you need more than 20000, try core=dynamic in DOSBox's options.",CPU_CycleMax);
+			LOG_INFO("CPU: speed fixed {} cycles. If you need more than 20000, try core=dynamic in DOSBox's options.",CPU_CycleMax);
 		else
-			LOG_INFO("CPU speed: fixed {} cycles.",CPU_CycleMax);
+			LOG_INFO("CPU: speed fixed {} cycles.",CPU_CycleMax);
 		GFX_SetTitle(CPU_CycleMax,-1,false);
 	}
 }
@@ -2134,9 +2134,9 @@ static void CPU_CycleDecrease(bool pressed) {
 		CPU_CyclePercUsed-=5;
 		if (CPU_CyclePercUsed<=0) CPU_CyclePercUsed=1;
 		if(CPU_CyclePercUsed <=70)
-			LOG_INFO("CPU speed: max {} percent. If the game runs too fast, try a fixed cycles amount in DOSBox's options.",CPU_CyclePercUsed);
+			LOG_INFO("CPU: speed max {} percent. If the game runs too fast, try a fixed cycles amount in DOSBox's options.",CPU_CyclePercUsed);
 		else
-			LOG_INFO("CPU speed: max {} percent.",CPU_CyclePercUsed);
+			LOG_INFO("CPU: speed max {} percent.",CPU_CyclePercUsed);
 		GFX_SetTitle(CPU_CyclePercUsed,-1,false);
 	} else {
 		if (CPU_CycleDown < 100) {
@@ -2146,7 +2146,7 @@ static void CPU_CycleDecrease(bool pressed) {
 		}
 		CPU_CycleLeft=0;CPU_Cycles=0;
 		if (CPU_CycleMax <= 0) CPU_CycleMax=1;
-		LOG_INFO("CPU speed: fixed {} cycles.",CPU_CycleMax);
+		LOG_INFO("CPU: speed fixed {} cycles.",CPU_CycleMax);
 		GFX_SetTitle(CPU_CycleMax,-1,false);
 	}
 }
