@@ -761,7 +761,8 @@ fatDrive::fatDrive(const char *sysFilename,
 			if(mbrData.pentry[m].partSize != 0x00) {
 				mbrData.pentry[m].absSectStart = host_to_le(mbrData.pentry[m].absSectStart);
 				mbrData.pentry[m].partSize     = host_to_le(mbrData.pentry[m].partSize);
-				LOG_INFO("Using partition {} on drive; skipping {} sectors", m, mbrData.pentry[m].absSectStart);
+				const auto skipped_sectors = mbrData.pentry[m].absSectStart;
+				LOG_INFO("Using partition {} on drive; skipping {} sectors", m, skipped_sectors);
 				startSector = mbrData.pentry[m].absSectStart;
 				break;
 			}
