@@ -28,7 +28,7 @@ endif
 # - fs_utils - depends on files in: tests/files/
 #
 example = executable('example', 'example_tests.cpp',
-                     dependencies : [gtest_dep, sdl2_dep, libmisc_dep, spdlog_dep],
+                     dependencies : [gtest_dep, sdl2_dep, libmisc_dep],
                      include_directories : incdir)
 test('gtest example', example, 
      should_fail : true)
@@ -43,11 +43,11 @@ test('gtest fs_utils', fs_utils,
 # other unit tests
 #
 unit_tests = [
-  {'name' : 'rwqueue',      'deps' : [libmisc_dep, spdlog_dep]},
-  {'name' : 'soft_limiter', 'deps' : [atomic_dep, sdl2_dep, libmisc_dep, spdlog_dep]},
-  {'name' : 'string_utils', 'deps' : [spdlog_dep]},
-  {'name' : 'setup',        'deps' : [sdl2_dep, libmisc_dep, spdlog_dep]},
-  {'name' : 'support',      'deps' : [sdl2_dep, libmisc_dep, spdlog_dep]},
+  {'name' : 'rwqueue',      'deps' : [libmisc_dep]},
+  {'name' : 'soft_limiter', 'deps' : [atomic_dep, sdl2_dep, libmisc_dep]},
+  {'name' : 'string_utils', 'deps' : []},
+  {'name' : 'setup',        'deps' : [sdl2_dep, libmisc_dep]},
+  {'name' : 'support',      'deps' : [sdl2_dep, libmisc_dep]},
 ]
 
 foreach ut : unit_tests

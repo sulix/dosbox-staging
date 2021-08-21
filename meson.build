@@ -186,7 +186,6 @@ atomic_dep    = cxx.find_library('atomic', required : false)
 opus_dep      = dependency('opusfile',
                            static : ('opusfile' in static_libs_list))
 threads_dep   = dependency('threads')
-spdlog_dep    = dependency('spdlog')
 sdl2_dep      = dependency('sdl2', version : '>= 2.0.5',
                            static : ('sdl2' in static_libs_list))
 sdl2_net_dep  = optional_dep
@@ -296,7 +295,7 @@ endif
 
 # include directories
 #
-incdir = include_directories('include', '.')
+incdir = include_directories('include', '.', 'submodules/spdlog/include')
 
 
 # bundled dependencies
@@ -345,7 +344,7 @@ subdir('tests')
 #
 version_file = vcs_tag(input : 'src/version.cpp.in', output : 'version.cpp')
 executable('dosbox', ['src/main.cpp', 'src/dosbox.cpp', version_file],
-           dependencies : [atomic_dep, threads_dep, sdl2_dep, spdlog_dep] + internal_deps,
+           dependencies : [atomic_dep, threads_dep, sdl2_dep] + internal_deps,
            include_directories : incdir,
            install : true)
 
