@@ -260,13 +260,13 @@ void CSerial::handleEvent(uint16_t type)
 		break;
 
 	case SERIAL_ERRMSG_EVENT:
-		LOG_MSG("SERIAL: Port %" PRIu8 " errors:\n"
-		        "  - framing %" PRIu32 "\n"
-		        "  - parity %" PRIu32 "\n"
-		        "  - RX overruns %" PRIu32 "\n"
-		        "  - IF0 overruns: %" PRIu32 "\n"
-		        "  - TX overruns: %" PRIu32 "\n"
-		        "  - break %" PRIu32,
+		LOG_ERROR("SERIAL: Port {} errors:\n"
+		        "  - framing {}\n"
+		        "  - parity {}\n"
+		        "  - RX overruns {}\n"
+		        "  - IF0 overruns: {}\n"
+		        "  - TX overruns: {}\n"
+		        "  - break {}",
 		        GetPortNumber(), framingErrors, parityErrors,
 		        overrunErrors, overrunIF0, txOverrunErrors, breakErrors);
 		errormsg_pending = false;
@@ -737,7 +737,7 @@ void CSerial::Write_MCR(uint8_t data)
 	// WARNING: At the time setRTSDTR is called rts and dsr members are
 	// still wrong.
 	if (data & FIFO_FLOWCONTROL)
-		LOG_MSG("SERIAL: Port %" PRIu8 " warning, tried to activate hardware "
+		LOG_WARN("SERIAL: Port {} warning, tried to activate hardware "
 		        "handshake.",
 		        GetPortNumber());
 	bool new_dtr = data & MCR_DTR_MASK? true:false;
@@ -1336,7 +1336,7 @@ public:
 				serialports[i] = NULL;
 			} else {
 				serialports[i] = NULL;
-				LOG_MSG("SERIAL: Port %" PRIu8 " invalid type \"%s\".",
+				LOG_WARN("SERIAL: Port {} invalid type \"{}\".",
 				        static_cast<uint8_t>(i + 1), type.c_str());
 			}
 			if(serialports[i]) biosParameter[i] = serial_baseaddr[i];

@@ -36,17 +36,14 @@ bool Pacer::CanRun()
 	return can_run;
 }
 
-static constexpr bool log_checkpoints = false;
-
 void Pacer::Checkpoint()
 {
 	if (can_run) {
 		const auto iteration_took = GetTicksUsSince(iteration_start);
 		can_run = iteration_took < skip_timeout;
 
-		if (log_checkpoints)
-			LOG_MSG("%s took %5dus, can_run = %s", pacer_name.c_str(),
-			        iteration_took, can_run ? "true" : "false");
+		LOG_TRACE("{} took {:5d}us, can_run = {}", pacer_name.c_str(),
+				iteration_took, can_run ? "true" : "false");
 	} else {
 		can_run = true;
 	}

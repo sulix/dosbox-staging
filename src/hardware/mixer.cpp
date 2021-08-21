@@ -129,10 +129,10 @@ MixerChannel * MIXER_AddChannel(MIXER_Handler handler, Bitu freq, const char * n
 	const auto mix_rate = mixer.freq;
 	const auto chan_rate = chan->GetSampleRate();
 	if (chan_rate == mix_rate)
-		LOG_MSG("MIXER: %s channel operating at %u Hz without resampling",
+		LOG_INFO("MIXER: {} channel operating at {} Hz without resampling",
 		        name, chan_rate);
 	else
-		LOG_MSG("MIXER: %s channel operating at %u Hz and %s to the output rate",
+		LOG_INFO("MIXER: {} channel operating at {} Hz and {} to the output rate",
 		        name, chan_rate,
 		        chan_rate > mix_rate ? "downsampling" : "upsampling");
 	return chan;
@@ -203,10 +203,8 @@ void MixerChannel::SetScale(float _left, float _right) {
 		scale[0] = _left;
 		scale[1] = _right;
 		UpdateVolume();
-#ifdef DEBUG
-		LOG_MSG("MIXER %-7s channel: application changed left and right volumes to %3.0f%% and %3.0f%%, respectively",
+		LOG_DEBUG("MIXER {:-7s} channel: application changed left and right volumes to {:3.0f}% and {:3.0f}%, respectively",
 		        name, scale[0] * 100, scale[1] * 100);
-#endif
 	}
 }
 
@@ -219,12 +217,10 @@ void MixerChannel::MapChannels(Bit8u _left, Bit8u _right) {
 	if (channel_map[0] != _left || channel_map[1] != _right) {
 		channel_map[0] = _left;
 		channel_map[1] = _right;
-#ifdef DEBUG
-		LOG_MSG("MIXER %-7s channel: application changed audio-channel mapping to left=>%s and right=>%s",
+		LOG_DEBUG("MIXER {:-7s} channel: application changed audio-channel mapping to left=>{} and right=>{}",
 		        name,
 		        channel_map[0] == 0 ? "left" : "right",
 		        channel_map[1] == 0 ? "left" : "right");
-#endif
 	}
 }
 
@@ -528,7 +524,7 @@ inline void MixerChannel::AddSamples(Bitu len, const Type* data) {
 
 void MixerChannel::AddStretched(Bitu len,Bit16s * data) {
 	if (done >= needed) {
-		LOG_MSG("Can't add, buffer full");
+		LOG_WARN("MIXER: Can't AddStretched, buffer full");
 		return;
 	}
 	//Target samples this inputs gets stretched into
@@ -734,7 +730,7 @@ static void MIXER_QueueAudio(const uint16_t len)
 	const uint32_t size = len * sizeof(MixerFrame);
 	const auto res = SDL_QueueAudio(mixer.sdldevice, queue_buffer.data(), size);
 	if (res != 0)
-		LOG_MSG("MIXER: SDL_QueueAudio error %s", SDL_GetError());
+		LOG_ERROR("MIXER: SDL_QueueAudio error {}", SDL_GetError());
 }
 
 static void MIXER_Stop(MAYBE_UNUSED Section *sec)
@@ -873,13 +869,13 @@ void MIXER_Init(Section* sec) {
 
 	mixer.tick_counter=0;
 	if (mixer.nosound) {
-		LOG_MSG("MIXER: No Sound Mode Selected.");
+		LOG_INFO("MIXER: No Sound Mode Selected.");
 		mixer.tick_add=calc_tickadd(mixer.freq);
 		TIMER_AddTickHandler(MIXER_Mix_NoSound);
 	} else if ((mixer.sdldevice = SDL_OpenAudioDevice(NULL, 0, &spec, &obtained,
 	                                                  sdl_allow_flags)) == 0) {
 		mixer.nosound = true;
-		LOG_MSG("MIXER: Can't open audio: %s , running in nosound mode.",SDL_GetError());
+		LOG_ERROR("MIXER: Can't open audio: {} , running in nosound mode.",SDL_GetError());
 		mixer.tick_add=calc_tickadd(mixer.freq);
 		TIMER_AddTickHandler(MIXER_Mix_NoSound);
 	} else {
@@ -893,7 +889,7 @@ void MIXER_Init(Section* sec) {
 		       static_cast<unsigned>(obtained.freq) < UINT32_MAX);
 		const auto obtained_freq = static_cast<uint32_t>(obtained.freq);
 		if (obtained_freq != mixer.freq) {
-			LOG_MSG("MIXER: SDL changed the playback rate from %u to %u Hz",
+			LOG_INFO("MIXER: SDL changed the playback rate from {} to {} Hz",
 			        mixer.freq, obtained_freq);
 			mixer.freq = obtained_freq;
 		}
@@ -901,7 +897,7 @@ void MIXER_Init(Section* sec) {
 		// Does SDL want a different blocksize?
 		const auto obtained_blocksize = obtained.samples;
 		if (obtained_blocksize != blocksize) {
-			LOG_MSG("MIXER: SDL changed the blocksize from %u to %u frames",
+			LOG_INFO("MIXER: SDL changed the blocksize from {} to {} frames",
 			        blocksize, obtained_blocksize);
 			blocksize = obtained_blocksize;
 		}
@@ -910,7 +906,7 @@ void MIXER_Init(Section* sec) {
 		SDL_PauseAudioDevice(mixer.sdldevice, 0);
 
 		const auto latency = blocksize / (mixer.freq / 1000);
-		LOG_MSG("MIXER: Negotiated %u-channel %u-Hz %ums-latency audio in %u-frame blocks",
+		LOG_INFO("MIXER: Negotiated {}-channel {}-Hz {}ms-latency audio in {}-frame blocks",
 		        obtained.channels, mixer.freq, latency, blocksize);
 	}
 

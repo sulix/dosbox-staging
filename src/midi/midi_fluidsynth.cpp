@@ -191,7 +191,7 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	fluid_settings_ptr_t fluid_settings(new_fluid_settings(),
 	                                    delete_fluid_settings);
 	if (!fluid_settings) {
-		LOG_MSG("MIDI: new_fluid_settings failed");
+		LOG_ERROR("MIDI: new_fluid_settings failed");
 		return false;
 	}
 
@@ -217,7 +217,7 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	fsynth_ptr_t fluid_synth(new_fluid_synth(fluid_settings.get()),
 	                         delete_fluid_synth);
 	if (!fluid_synth) {
-		LOG_MSG("MIDI: Failed to create the FluidSynth synthesizer");
+		LOG_ERROR("MIDI: Failed to create the FluidSynth synthesizer");
 		return false;
 	}
 
@@ -231,13 +231,13 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 		fluid_synth_sfload(fluid_synth.get(), soundfont.data(), true);
 	}
 	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		LOG_MSG("MIDI: FluidSynth failed to load '%s', check the path.",
+		LOG_ERROR("MIDI: FluidSynth failed to load '{}', check the path.",
 		        soundfont.c_str());
 		return false;
 	}
 
 	if (scale_by_percent < 1 || scale_by_percent > 500) {
-		LOG_MSG("MIDI: FluidSynth invalid scaling of %d%% provided; resetting to 100%%",
+		LOG_WARN("MIDI: FluidSynth invalid scaling of {}% provided; resetting to 100%",
 		        scale_by_percent);
 		scale_by_percent = 100;
 	}
@@ -246,9 +246,9 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 
 	// Let the user know that the SoundFont was loaded
 	if (scale_by_percent == 100)
-		LOG_MSG("MIDI: Using SoundFont '%s'", soundfont.c_str());
+		LOG_INFO("MIDI: Using SoundFont '{}'", soundfont.c_str());
 	else
-		LOG_MSG("MIDI: Using SoundFont '%s' with voices scaled by %d%%",
+		LOG_INFO("MIDI: Using SoundFont '{}' with voices scaled by {}%",
 		        soundfont.c_str(), scale_by_percent);
 
 	constexpr int fx_group = -1; // applies setting to all groups
@@ -379,7 +379,7 @@ void MidiHandlerFluidsynth::PlayMsg(const uint8_t *msg)
 	default: {
 		uint64_t tmp;
 		memcpy(&tmp, msg, sizeof(tmp));
-		LOG_MSG("MIDI: unknown MIDI command: %0" PRIx64, tmp);
+		LOG_WARN("MIDI: unknown MIDI command: {:0}", tmp);
 		break;
 	}
 	}

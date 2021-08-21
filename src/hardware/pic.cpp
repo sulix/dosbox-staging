@@ -294,7 +294,7 @@ static void write_data(Bitu port,Bitu val,Bitu /*iolen*/) {
 		if ((val & 0x01) == 0)
 			E_Exit("PIC:ICW4: %#" PRIxPTR ", 8085 mode not handled", val);
 		if ((val & 0x10) != 0)
-			LOG_MSG("PIC:ICW4: %#" PRIxPTR ", special fully-nested mode not handled",
+			LOG_WARN("PIC:ICW4: {:#}, special fully-nested mode not handled",
 			        val);
 
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;

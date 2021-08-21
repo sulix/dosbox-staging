@@ -122,11 +122,11 @@ void swapInDisks(unsigned int swap_position) {
 	const unsigned int pos_2 = (swap_position + 1) % boot_disks_num;
 
 	imageDiskList[0] = diskSwap[pos_1];
-	LOG_MSG("Loaded disk A from swaplist position %u - \"%s\"",
+	LOG_INFO("BIOSDISK: Loaded disk A from swaplist position {} - \"{}\"",
 	        pos_1, diskSwap[pos_1]->diskname);
 
 	imageDiskList[1] = diskSwap[pos_2];
-	LOG_MSG("Loaded disk B from swaplist position %u - \"%s\"",
+	LOG_INFO("BIOSDISK: Loaded disk B from swaplist position {} - \"{}\"",
 	        pos_2, diskSwap[pos_2]->diskname);
 }
 
@@ -141,7 +141,7 @@ void swapInNextDisk(bool pressed) {
 		return;
 	DriveManager::CycleAllDisks();
 	/* Hack/feature: rescan all disks as well */
-	LOG_MSG("Diskcaching reset for normal mounted drives.");
+	LOG_INFO("BIOSDISK: Diskcaching reset for normal mounted drives.");
 	for(Bitu i=0;i<DOS_DRIVES;i++) {
 		if (Drives[i]) Drives[i]->EmptyCache();
 	}
@@ -222,7 +222,7 @@ imageDisk::imageDisk(FILE *img_file, const char *img_name, uint32_t img_size_k, 
 			if ((DiskGeometryList[i].ksize == img_size_k) ||
 			    (DiskGeometryList[i].ksize + 1 == img_size_k)) {
 				if (DiskGeometryList[i].ksize != img_size_k)
-					LOG_MSG("ImageLoader: image file with additional data, might not load!");
+					LOG_WARN("ImageLoader: image file with additional data, might not load!");
 				founddisk = true;
 				active = true;
 				floppytype = i;
@@ -399,7 +399,7 @@ static Bitu INT13_DiskHandler(void) {
 		for (Bitu i = 0; i < reg_al; i++) {
 			last_status = imageDiskList[drivenum]->Read_Sector((Bit32u)reg_dh, (Bit32u)(reg_ch | ((reg_cl & 0xc0)<< 2)), (Bit32u)((reg_cl & 63)+i), sectbuf);
 			if((last_status != 0x00) || (killRead)) {
-				LOG_MSG("Error in disk read");
+				LOG_ERROR("BIOSDISK: Error in disk read");
 				killRead = false;
 				reg_ah = 0x04;
 				CALLBACK_SCF(true);

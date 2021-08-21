@@ -86,7 +86,7 @@ static struct {
 
 FILE * OpenCaptureFile(const char * type,const char * ext) {
 	if(capturedir.empty()) {
-		LOG_MSG("Please specify a capture directory");
+		LOG_ERROR("Please specify a capture directory");
 		return 0;
 	}
 
@@ -95,13 +95,13 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 	if (!dir) {
 		// Try creating it first
 		if (create_dir(capturedir.c_str(), 0700, OK_IF_EXISTS) != 0) {
-			LOG_MSG("ERROR: Can't create dir '%s': %s",
+			LOG_ERROR("ERROR: Can't create dir '{}': {}}",
 			        capturedir.c_str(), safe_strerror(errno).c_str());
 		}
 
 		dir = open_directory(capturedir.c_str());
 		if (!dir) {
-			LOG_MSG("ERROR: Can't open dir '%s' for capturing %s",
+			LOG_ERROR("ERROR: Can't open dir '{}' for capturing {}",
 			        capturedir.c_str(), type);
 			return 0;
 		}
@@ -132,9 +132,9 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 	/* Open the actual file */
 	FILE * handle=fopen(file_name,"wb");
 	if (handle) {
-		LOG_MSG("Capturing %s to %s",type,file_name);
+		LOG_INFO("Capturing {} to {}",type,file_name);
 	} else {
-		LOG_MSG("Failed to open %s for capturing %s",file_name,type);
+		LOG_ERROR("Failed to open {} for capturing {}",file_name,type);
 	}
 	return handle;
 }
@@ -176,7 +176,7 @@ static void CAPTURE_VideoEvent(bool pressed) {
 	if (CaptureState & CAPTURE_VIDEO) {
 		/* Close the video */
 		CaptureState &= ~CAPTURE_VIDEO;
-		LOG_MSG("Stopped capturing video.");	
+		LOG_INFO("Stopped capturing video.");	
 
 		Bit8u avi_header[AVI_HEADER_SIZE];
 		Bitu main_list;
@@ -311,12 +311,12 @@ static void CAPTURE_VideoEvent(bool pressed) {
 void CAPTURE_VideoStart() {
 #if (C_SSHOT)
 	if (CaptureState & CAPTURE_VIDEO) {
-		LOG_MSG("Already capturing video.");
+		LOG_WARN("Already capturing video.");
 	} else {
 		CAPTURE_VideoEvent(true);
 	}
 #else
-	LOG_MSG("Avi capturing has not been compiled in");
+	LOG_ERROR("Avi capturing has not been compiled in");
 #endif
 }
 
@@ -325,10 +325,10 @@ void CAPTURE_VideoStop() {
 	if (CaptureState & CAPTURE_VIDEO) {
 		CAPTURE_VideoEvent(true);
 	} else {
-		LOG_MSG("Not capturing video.");
+		LOG_WARN("Not capturing video.");
 	}
 #else 
-	LOG_MSG("Avi capturing has not been compiled in");
+	LOG_ERROR("Avi capturing has not been compiled in");
 #endif
 }
 
@@ -671,7 +671,7 @@ static void CAPTURE_WaveEvent(bool pressed) {
 		return;
 	/* Check for previously opened wave file */
 	if (capture.wave.handle) {
-		LOG_MSG("Stopped capturing wave output.");
+		LOG_INFO("Stopped capturing wave output.");
 		/* Write last piece of audio in buffer */
 		fwrite(capture.wave.buf,1,capture.wave.used*4,capture.wave.handle);
 		capture.wave.length+=capture.wave.used*4;
@@ -745,7 +745,7 @@ static void CAPTURE_MidiEvent(bool pressed) {
 		return;
 	/* Check for previously opened wave file */
 	if (capture.midi.handle) {
-		LOG_MSG("Stopping raw midi saving and finalizing file.");
+		LOG_INFO("Stopping raw midi saving and finalizing file.");
 		//Delta time
 		RawMidiAdd(0x00);
 		//End of track event
@@ -769,12 +769,12 @@ static void CAPTURE_MidiEvent(bool pressed) {
 	} 
 	CaptureState ^= CAPTURE_MIDI;
 	if (CaptureState & CAPTURE_MIDI) {
-		LOG_MSG("Preparing for raw midi capture, will start with first data.");
+		LOG_INFO("Preparing for raw midi capture, will start with first data.");
 		capture.midi.used=0;
 		capture.midi.done=0;
 		capture.midi.handle=0;
 	} else {
-		LOG_MSG("Stopped capturing raw midi before any data arrived.");
+		LOG_INFO("Stopped capturing raw midi before any data arrived.");
 	}
 }
 

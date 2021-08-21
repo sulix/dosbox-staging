@@ -618,7 +618,7 @@ static bool INT14_Wait(Bit16u port, Bit8u mask, Bit8u timeout, Bit8u* retval) {
 static Bitu INT14_Handler(void) {
 	if (reg_ah > 0x3 || reg_dx > 0x3) {	// 0-3 serial port functions
 										// and no more than 4 serial ports
-		LOG_MSG("BIOS INT14: Unhandled call AH=%2X DX=%4x",reg_ah,reg_dx);
+		LOG_ERROR("BIOS INT14: Unhandled call AH={:2X} DX={:4x}",reg_ah,reg_dx);
 		return CBRET_NONE;
 	}
 	
@@ -1072,7 +1072,7 @@ static Bitu Reboot_Handler(void) {
 		reg_al = static_cast<uint8_t>(c);
 		CALLBACK_RunRealInt(0x10);
 	}
-	LOG_MSG(text);
+	LOG_INFO("BIOS: {}", text);
 	const auto start = PIC_FullIndex();
 	while ((PIC_FullIndex() - start) < 3000.0)
 		CALLBACK_Idle();

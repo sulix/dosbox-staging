@@ -45,7 +45,7 @@ public:
 
 	virtual bool Open(MAYBE_UNUSED const char *conf)
 	{
-		LOG_MSG("MIDI: No working MIDI device found/selected.");
+		LOG_ERROR("MIDI: No working MIDI device found/selected.");
 		return true;
 	}
 

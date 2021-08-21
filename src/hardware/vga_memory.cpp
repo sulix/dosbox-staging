@@ -834,7 +834,7 @@ void VGA_SetupHandlers(void) {
 	case EGAVGA_ARCH_CASE:
 		break;
 	default:
-		LOG_MSG("Illegal machine type %d", machine );
+		LOG_ERROR("Illegal machine type {}", machine );
 		return;
 	}
 

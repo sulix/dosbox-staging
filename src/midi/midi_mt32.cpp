@@ -322,22 +322,22 @@ static mt32emu_report_handler_i get_report_handler_interface()
 		{
 			char msg[1024];
 			safe_sprintf(msg, fmt, list);
-			DEBUG_LOG_MSG("MT32: %s", msg);
+			LOG_DEBUG("MT32: {}", msg);
 		}
 
 		static void onErrorControlROM(void *)
 		{
-			LOG_MSG("MT32: Couldn't open Control ROM file");
+			LOG_ERROR("MT32: Couldn't open Control ROM file");
 		}
 
 		static void onErrorPCMROM(void *)
 		{
-			LOG_MSG("MT32: Couldn't open PCM ROM file");
+			LOG_ERROR("MT32: Couldn't open PCM ROM file");
 		}
 
 		static void showLCDMessage(void *, const char *message)
 		{
-			LOG_MSG("MT32: LCD-Message: %s", message);
+			LOG_INFO("MT32: LCD-Message: {}", message);
 		}
 	};
 
@@ -517,17 +517,17 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 	// Load the selected model and print info about it
 	const auto found_in = load_model(mt32_service, selected_model, rom_dirs);
 	if (found_in.empty()) {
-		LOG_MSG("MT32: Failed to find ROMs for model %s in:",
+		LOG_ERROR("MT32: Failed to find ROMs for model {} in:",
 		        selected_model.c_str());
 		for (const auto &dir : rom_dirs) {
 			const char div = (dir != rom_dirs.back() ? '|' : '`');
-			LOG_MSG("MT32:  %c- %s", div, dir.c_str());
+			LOG_INFO("MT32:  {}- {}", div, dir.c_str());
 		}
 		return false;
 	}
 	mt32emu_rom_info rom_info;
 	mt32_service->getROMInfo(&rom_info);
-	LOG_MSG("MT32: Initialized %s from %s",
+	LOG_INFO("MT32: Initialized {} from {}",
 	        rom_info.control_rom_description, found_in.c_str());
 
 	const auto mixer_callback = std::bind(&MidiHandler_mt32::MixerCallBack,
@@ -553,7 +553,7 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 
 	const auto rc = mt32_service->openSynth();
 	if (rc != MT32EMU_RC_OK) {
-		LOG_MSG("MT32: Error initialising emulation: %i", rc);
+		LOG_ERROR("MT32: Error initialising emulation: {}", rc);
 		return false;
 	}
 	service = std::move(mt32_service);

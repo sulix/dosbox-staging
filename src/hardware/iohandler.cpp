@@ -313,7 +313,7 @@ void log_io(Bitu width, bool write, io_port_t port, io_val_t val)
 		// case 0x3c5: // VGA seq
 			break;
 		default:
-			LOG_MSG("IOSBUS: iow%s % 4x % 4x, cs:ip %04x:%04x",
+			LOG_INFO("IOSBUS: iow{} {: 4x} {: 4x}, cs:ip {:04x}:{:04x}",
 			        len_type[width], static_cast<uint32_t>(port),
 			        val, SegValue(cs), reg_eip);
 			break;
@@ -332,7 +332,7 @@ void log_io(Bitu width, bool write, io_port_t port, io_val_t val)
 			// don't log for the above cases
 			break;
 		default:
-			LOG_MSG("IOBUS: ior%s % 4x % 4x,\t\tcs:ip %04x:%04x",
+			LOG_INFO("IOBUS: ior{} {: 4x} {: 4x},\t\tcs:ip {:04x}:{:04x}",
 			        len_type[width], static_cast<uint32_t>(port),
 			        val, SegValue(cs), reg_eip);
 			break;
@@ -595,7 +595,7 @@ public:
 		for (uint8_t i = 0; i < IO_SIZES; ++i) {
 			const size_t readers = io_readhandlers[i].size();
 			const size_t writers = io_writehandlers[i].size();
-			DEBUG_LOG_MSG("IOBUS: Releasing %lu read and %lu write %d-bit port handlers",
+			LOG_DEBUG("IOBUS: Releasing {} read and {} write {}-bit port handlers",
 			              readers, writers, 8 << i);
 			total_bytes += readers * sizeof(IO_ReadHandler) +
 			               sizeof(io_readhandlers[i]);
@@ -604,7 +604,7 @@ public:
 			io_readhandlers[i].clear();
 			io_writehandlers[i].clear();
 		}
-		DEBUG_LOG_MSG("IOBUS: Handlers consumed %lu total bytes", total_bytes);
+		LOG_DEBUG("IOBUS: Handlers consumed {} total bytes", total_bytes);
 	}
 };
 

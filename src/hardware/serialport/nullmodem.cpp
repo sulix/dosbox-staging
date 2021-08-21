@@ -88,26 +88,26 @@ CNullModem::CNullModem(const uint8_t port_idx, CommandLine *cmd)
 				if (control->cmdline->FindInt("-socket",sock,true)) {
 					dtrrespect=false;
 					transparent=true;
-					LOG_MSG("SERIAL: Port %" PRIu8 " inheritance "
-					        "socket handle: %d",
+					LOG_INFO("SERIAL: Port {} inheritance "
+					        "socket handle: {}",
 					        GetPortNumber(), sock);
 					if (!ClientConnect(new TCPClientSocket(sock)))
 						return;
 				} else {
-					LOG_MSG("SERIAL: Port %" PRIu8 " missing "
+					LOG_ERROR("SERIAL: Port {} missing "
 					        "\"-socket\" parameter.",
 					        GetPortNumber());
 					return;
 				}
 			}
 		} else {
-			LOG_MSG("SERIAL: Port %" PRIu8 " socket inheritance not "
+			LOG_ERROR("SERIAL: Port {} socket inheritance not "
 			        "supported on this platform.",
 			        GetPortNumber());
 			return;
 		}
 #else
-		LOG_MSG("SERIAL: Port %" PRIu8 " socket inheritance not available.",
+		LOG_ERROR("SERIAL: Port {} socket inheritance not available.",
 		        GetPortNumber());
 #endif
 	} else {
@@ -126,7 +126,7 @@ CNullModem::CNullModem(const uint8_t port_idx, CommandLine *cmd)
 			if (dtrrespect) {
 				// we connect as soon as DTR is switched on
 				setEvent(SERIAL_NULLMODEM_DTR_EVENT, 50);
-				LOG_MSG("SERIAL: Port %" PRIu8 " waiting for DTR ...",
+				LOG_INFO("SERIAL: Port {} waiting for DTR ...",
 				        GetPortNumber());
 			} else if (!ClientConnect(new TCPClientSocket((char *)hostnamebuffer,
 			                                              clientport))) {
@@ -197,7 +197,7 @@ bool CNullModem::ClientConnect(TCPClientSocket* newsocket) {
 	clientsocket = newsocket;
  
 	if (!clientsocket->isopen) {
-		LOG_MSG("SERIAL: Port %" PRIu8 " connection failed.", GetPortNumber());
+		LOG_ERROR("SERIAL: Port {} connection failed.", GetPortNumber());
 		delete clientsocket;
 		clientsocket=0;
 		setCD(false);
@@ -208,7 +208,7 @@ bool CNullModem::ClientConnect(TCPClientSocket* newsocket) {
 	// transmit the line status
 	if (!transparent) setRTSDTR(getRTS(), getDTR());
 	rx_state=N_RX_IDLE;
-	LOG_MSG("SERIAL: Port %" PRIu8 " connected to %s.", GetPortNumber(), peernamebuf);
+	LOG_INFO("SERIAL: Port {} connected to {}.", GetPortNumber(), peernamebuf);
 	setEvent(SERIAL_POLLING_EVENT, 1);
 	setCD(true);
 	return true;
@@ -218,8 +218,8 @@ bool CNullModem::ServerListen() {
 	// Start the server listen port.
 	serversocket = new TCPServerSocket(serverport);
 	if (!serversocket->isopen) return false;
-	LOG_MSG("SERIAL: Port %" PRIu8 " nullmodem server waiting for connection on "
-	        "TCP port %" PRIu16 " ...",
+	LOG_INFO("SERIAL: Port {} nullmodem server waiting for connection on "
+	        "TCP port {} ...",
 	        GetPortNumber(), serverport);
 	setEvent(SERIAL_SERVER_POLLING_EVENT, 50);
 	setCD(false);
@@ -233,7 +233,7 @@ bool CNullModem::ServerConnect() {
 
 	uint8_t peeripbuf[16];
 	clientsocket->GetRemoteAddressString(peeripbuf);
-	LOG_MSG("SERIAL: Port %" PRIu8 " a client (%s) has connected.",
+	LOG_INFO("SERIAL: Port {} a client ({}) has connected.",
 	        GetPortNumber(), peeripbuf);
 #if SERIAL_DEBUG
 	log_ser(dbg_aux, "SERIAL: Port %" PRIu8 " a client (%s) has connected.",
@@ -257,7 +257,7 @@ void CNullModem::Disconnect() {
 	removeEvent(SERIAL_POLLING_EVENT);
 	removeEvent(SERIAL_RX_EVENT);
 	// it was disconnected; free the socket and restart the server socket
-	LOG_MSG("SERIAL: Port %" PRIu8 " disconnected.", GetPortNumber());
+	LOG_INFO("SERIAL: Port {} disconnected.", GetPortNumber());
 	delete clientsocket;
 	clientsocket=0;
 	setDSR(false);
@@ -345,7 +345,7 @@ void CNullModem::handleUpperEvent(uint16_t type)
 		case SERIAL_RX_EVENT: {
 			switch(rx_state) {
 				case N_RX_IDLE:
-			                LOG_MSG("SERIAL: Port %" PRIu8 " internal "
+			                LOG_ERROR("SERIAL: Port {} internal "
 			                        "error in nullmodem.",
 			                        GetPortNumber());
 			                break;
@@ -475,8 +475,8 @@ SocketState CNullModem::TelnetEmulation(const uint8_t data)
 	if (telClient.inIAC) {
 		if (telClient.recCommand) {
 			if ((data != 0) && (data != 1) && (data != 3)) {
-				LOG_MSG("SERIAL: Port %" PRIu8 " unrecognized telnet "
-				        "option %" PRIu8 ".",
+				LOG_ERROR("SERIAL: Port {} unrecognized telnet "
+				        "option {}.",
 				        GetPortNumber(), data);
 				if (telClient.command > 250) {
 					/* Reject anything we don't recognize */
@@ -544,8 +544,8 @@ SocketState CNullModem::TelnetEmulation(const uint8_t data)
 					}
 					break;
 				default:
-				        LOG_MSG("SERIAL: Port %" PRIu8 " telnet client "
-				                "sent IAC %" PRIu8 ".",
+				        LOG_WARN("SERIAL: Port {} telnet client "
+				                "sent IAC {}.",
 				                GetPortNumber(), telClient.command);
 				        break;
 			}

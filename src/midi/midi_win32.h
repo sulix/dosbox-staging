@@ -73,7 +73,7 @@ public:
 			if (nummer < total) {
 				MIDIOUTCAPS mididev;
 				midiOutGetDevCaps(nummer, &mididev, sizeof(MIDIOUTCAPS));
-				LOG_MSG("MIDI: win32 selected %s",mididev.szPname);
+				LOG_INFO("MIDI: win32 selected {}",mididev.szPname);
 				res = midiOutOpen(&m_out, nummer, (DWORD_PTR)m_event, 0, CALLBACK_EVENT);
 			}
 		} else {

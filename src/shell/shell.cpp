@@ -262,7 +262,7 @@ void DOS_Shell::ParseLine(char * line) {
 	bool normalstdout = false;	/* Bug: Assumed is they are "con"      */
 
 	num = GetRedirection(line,&in, &out,&append);
-	if (num>1) LOG_MSG("SHELL: Multiple command on 1 line not supported");
+	if (num>1) LOG_ERROR("SHELL: Multiple command on 1 line not supported");
 	if (in || out) {
 		normalstdin  = (psp->GetFileHandle(0) != 0xff);
 		normalstdout = (psp->GetFileHandle(1) != 0xff);
@@ -270,13 +270,13 @@ void DOS_Shell::ParseLine(char * line) {
 	if (in) {
 		if(DOS_OpenFile(in,OPEN_READ,&dummy)) {	//Test if file exists
 			DOS_CloseFile(dummy);
-			LOG_MSG("SHELL: Redirect input from %s",in);
+			LOG_INFO("SHELL: Redirect input from {}",in);
 			if(normalstdin) DOS_CloseFile(0);	//Close stdin
 			DOS_OpenFile(in,OPEN_READ,&dummy);	//Open new stdin
 		}
 	}
 	if (out){
-		LOG_MSG("SHELL: Redirect output to %s",out);
+		LOG_INFO("SHELL: Redirect output to {}",out);
 		if(normalstdout) DOS_CloseFile(1);
 		if(!normalstdin && !in) DOS_OpenFile("con",OPEN_READWRITE,&dummy);
 		bool status = true;

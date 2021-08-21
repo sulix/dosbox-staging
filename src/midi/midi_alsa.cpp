@@ -45,7 +45,7 @@ static void for_each_alsa_seq_port(port_action_t action)
 	// be called before that sequencer is created.
 	snd_seq_t *seq = nullptr;
 	if (snd_seq_open(&seq, "default", SND_SEQ_OPEN_OUTPUT, 0) != 0) {
-		LOG_MSG("ALSA: Error: Can't open MIDI sequencer");
+		LOG_ERROR("ALSA: Error: Can't open MIDI sequencer");
 		return;
 	}
 	assert(seq);
@@ -260,7 +260,7 @@ bool MidiHandler_alsa::Open(const char *conf)
 	assert(conf != nullptr);
 	seq = {-1, -1};
 
-	DEBUG_LOG_MSG("ALSA: Attempting connection to: '%s'", conf);
+	LOG_DEBUG("ALSA: Attempting connection to: '{}'", conf);
 
 	// Try to use port specified in config; if port is not configured,
 	// then attempt to connect to the newest capable port.
@@ -276,12 +276,12 @@ bool MidiHandler_alsa::Open(const char *conf)
 	}
 
 	if (seq.client == -1) {
-		LOG_MSG("ALSA: No available MIDI devices found");
+		LOG_ERROR("ALSA: No available MIDI devices found");
 		return false;
 	}
 
 	if (snd_seq_open(&seq_handle, "default", SND_SEQ_OPEN_OUTPUT, 0) != 0) {
-		LOG_MSG("ALSA: Can't open sequencer");
+		LOG_ERROR("ALSA: Can't open sequencer");
 		return false;
 	}
 
@@ -297,7 +297,7 @@ bool MidiHandler_alsa::Open(const char *conf)
 
 	if (output_port < 0) {
 		snd_seq_close(seq_handle);
-		LOG_MSG("ALSA: Can't create ALSA port");
+		LOG_ERROR("ALSA: Can't create ALSA port");
 		return false;
 	}
 
@@ -308,7 +308,7 @@ bool MidiHandler_alsa::Open(const char *conf)
 			snd_seq_client_info_malloc(&info);
 			assert(info);
 			snd_seq_get_any_client_info(seq_handle, seq.client, info);
-			LOG_MSG("ALSA: Connected to MIDI port %d:%d - %s", seq.client,
+			LOG_INFO("ALSA: Connected to MIDI port {}:{} - {}", seq.client,
 			        seq.port, snd_seq_client_info_get_name(info));
 			snd_seq_client_info_free(info);
 			return true;
@@ -316,7 +316,7 @@ bool MidiHandler_alsa::Open(const char *conf)
 	}
 
 	snd_seq_close(seq_handle);
-	LOG_MSG("ALSA: Can't connect to MIDI port %d:%d", seq.client, seq.port);
+	LOG_ERROR("ALSA: Can't connect to MIDI port {}:{}", seq.client, seq.port);
 	return false;
 }
 

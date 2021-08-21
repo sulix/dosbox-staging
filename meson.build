@@ -26,9 +26,6 @@ if cxx.has_argument('-Wextra-semi')
     add_project_arguments('-Wextra-semi', language : 'cpp')
 endif
 
-spdlog_proj = subproject('spdlog')
-spdlog_dep = spdlog_proj.get_variable('spdlog_dep')
-
 # gather data for config file
 #
 # Actual config.h file will be generated after all interpreting build files 
@@ -189,6 +186,7 @@ atomic_dep    = cxx.find_library('atomic', required : false)
 opus_dep      = dependency('opusfile',
                            static : ('opusfile' in static_libs_list))
 threads_dep   = dependency('threads')
+spdlog_dep    = dependency('spdlog')
 sdl2_dep      = dependency('sdl2', version : '>= 2.0.5',
                            static : ('sdl2' in static_libs_list))
 sdl2_net_dep  = optional_dep

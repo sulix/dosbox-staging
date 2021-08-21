@@ -108,10 +108,10 @@ void Innovation::Open(const std::string &model_choice,
 	play_buffer = playable.Dequeue(); // populate the first play buffer
 
 	if (filter_strength == 0)
-		LOG_MSG("INNOVATION: Running on port %xh with a SID %s at %0.3f MHz",
+		LOG_INFO("INNOVATION: Running on port {}h with a SID {} at {:0.3f} MHz",
 		        base_port, model_name.c_str(), chip_clock / 1000000.0);
 	else
-		LOG_MSG("INNOVATION: Running on port %xh with a SID %s at %0.3f MHz filtering at %d%%",
+		LOG_INFO("INNOVATION: Running on port {}h with a SID {} at {:0.3f} MHz filtering at {}%",
 		        base_port, model_name.c_str(), chip_clock / 1000000.0,
 		        filter_strength);
 
@@ -123,7 +123,7 @@ void Innovation::Close()
 	if (!is_open)
 		return;
 
-	DEBUG_LOG_MSG("INNOVATION: Shutting down the SSI-2001 on port %xh", base_port);
+	LOG_DEBUG("INNOVATION: Shutting down the SSI-2001 on port {}h", base_port);
 
 	// Stop playback
 	if (channel)

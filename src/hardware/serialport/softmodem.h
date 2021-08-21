@@ -79,7 +79,7 @@ public:
 			static uint16_t lcount = 0;
 			if (lcount < 1000) {
 				lcount++;
-				LOG_MSG("MODEM: FIFO Overflow! (addb)");
+				LOG_WARN("MODEM: FIFO Overflow! (addb)");
 			}
 			return;
 		}
@@ -98,7 +98,7 @@ public:
 			static uint16_t lcount = 0;
 			if (lcount < 1000) {
 				lcount++;
-				LOG_MSG("MODEM: FIFO Overflow! (adds len %u)",
+				LOG_WARN("MODEM: FIFO Overflow! (adds len {})",
 				        static_cast<unsigned>(len));
 			}
 			return;
@@ -121,7 +121,7 @@ public:
 			static uint16_t lcount = 0;
 			if (lcount < 1000) {
 				lcount++;
-				LOG_MSG("MODEM: FIFO UNDERFLOW! (getb)");
+				LOG_WARN("MODEM: FIFO UNDERFLOW! (getb)");
 			}
 			return data[pos];
 		}
@@ -139,7 +139,7 @@ public:
 			static uint16_t lcount = 0;
 			if (lcount < 1000) {
 				lcount++;
-				LOG_MSG("MODEM: FIFO UNDERFLOW! (gets len %u)",
+				LOG_WARN("MODEM: FIFO UNDERFLOW! (gets len {})",
 				        static_cast<unsigned>(len));
 			}
 			return;

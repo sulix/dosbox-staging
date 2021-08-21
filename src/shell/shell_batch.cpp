@@ -106,7 +106,7 @@ emptyline:
 					*cmd_write++ = val;
 				}
 			} else if (val != LINE_FEED && val != CARRIAGE_RETURN) {
-				DEBUG_LOG_MSG("Encountered non-standard character: Dec %03u and Hex %#04x",
+				LOG_DEBUG("Encountered non-standard character: Dec {:03u} and Hex {:#04x}",
 				              val, val);
 			}
 		}
@@ -242,7 +242,7 @@ again:
 				}
 			} else if (val != BACKSPACE && val != CARRIAGE_RETURN &&
 			           val != ESC && val != LINE_FEED && val != TAB) {
-				DEBUG_LOG_MSG("Encountered non-standard character: Dec %03u and Hex %#04x",
+				LOG_DEBUG("Encountered non-standard character: Dec {:03u} and Hex {:#04x}",
 				              val, val);
 			}
 		}

@@ -67,14 +67,14 @@ static bool LoadMessageFile(std::string filename)
 
 	// Was the file not found?
 	if (filename.empty()) {
-		LOG_MSG("LANG: Language file %s not found, skipping",
+		LOG_ERROR("LANG: Language file {} not found, skipping",
 		        filename.c_str());
 		return false;
 	}
 
 	FILE *mfile = fopen(filename.c_str(), "rt");
 	if (!mfile) {
-		LOG_MSG("LANG: Failed opening language file: %s, skipping",
+		LOG_ERROR("LANG: Failed opening language file: {}, skipping",
 		        filename.c_str());
 		return false;
 	}
@@ -117,7 +117,7 @@ static bool LoadMessageFile(std::string filename)
 		}
 	}
 	fclose(mfile);
-	LOG_MSG("LANG: Loaded language file: %s", filename.c_str());
+	LOG_INFO("LANG: Loaded language file: {}", filename.c_str());
 	return true;
 }
 
@@ -193,7 +193,7 @@ void MSG_Init(Section_prop *section)
 
 		// the last element is the filename without the path
 		lang = path_elements.back();
-		LOG_MSG("LANG: Searching config path for: %s", lang.c_str());
+		LOG_INFO("LANG: Searching config path for: {}", lang.c_str());
 
 		// Construct a full path by prepending the config/translations path
 		lang = CROSS_GetPlatformConfigDir() + "translations" + CROSS_FILESPLIT + lang;

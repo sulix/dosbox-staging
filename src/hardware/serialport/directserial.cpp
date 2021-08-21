@@ -42,11 +42,11 @@ CDirectSerial::CDirectSerial(const uint8_t port_idx, CommandLine *cmd)
 	std::string tmpstring;
 	if(!cmd->FindStringBegin("realport:",tmpstring,false)) return;
 
-	LOG_MSG("SERIAL: Port %" PRIu8 " opening %s.", GetPortNumber(), tmpstring.c_str());
+	LOG_INFO("SERIAL: Port {} opening {}.", GetPortNumber(), tmpstring.c_str());
 	if(!SERIAL_open(tmpstring.c_str(), &comport)) {
 		char errorbuffer[256];
 		SERIAL_getErrorString(errorbuffer, sizeof(errorbuffer));
-		LOG_MSG("SERIAL: Port %" PRIu8 " could not open \"%s\" due to: %s.",
+		LOG_ERROR("SERIAL: Port {} could not open \"{}\" due to: {}.",
 		        GetPortNumber(), tmpstring.c_str(), errorbuffer);
 		return;
 	}
@@ -166,7 +166,7 @@ void CDirectSerial::handleUpperEvent(uint16_t type)
 		case SERIAL_RX_EVENT: {
 			switch(rx_state) {
 				case D_RX_IDLE:
-			                LOG_MSG("SERIAL: Port %" PRIu8 " internal "
+			                LOG_INFO("SERIAL: Port {} internal "
 			                        "error in directserial.",
 			                        GetPortNumber());
 			                break;
@@ -275,8 +275,8 @@ void CDirectSerial::updatePortConfig(uint16_t divider, uint8_t lcr)
 #if SERIAL_DEBUG
 		log_ser(dbg_aux,"Serial port settings not supported by host." );
 #endif
-		LOG_MSG("SERIAL: Port %" PRIu8 " desired mode not supported "
-		        "(%" PRIu32 ", %" PRIu8 ", %c, %" PRIu8 ".",
+		LOG_ERROR("SERIAL: Port {} desired mode not supported "
+		        "({}, {}, {}, {}.",
 		        GetPortNumber(), baudrate, bytelength, parity, stopbits);
 	}
 	CDirectSerial::setRTSDTR(getRTS(), getDTR());
@@ -294,7 +294,7 @@ void CDirectSerial::updateMSR () {
 void CDirectSerial::transmitByte(uint8_t val, bool first)
 {
 	if (!SERIAL_sendchar(comport, val))
-		LOG_MSG("SERIAL: Port %" PRIu8 " write failed!", GetPortNumber());
+		LOG_ERROR("SERIAL: Port {} write failed!", GetPortNumber());
 	if(first) setEvent(SERIAL_THR_EVENT, bytetime/8);
 	else setEvent(SERIAL_TX_EVENT, bytetime);
 }

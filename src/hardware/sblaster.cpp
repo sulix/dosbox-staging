@@ -278,7 +278,7 @@ static void DSP_SetSpeaker(bool requested_state) {
 	}
 	sb.chan->Enable(requested_state);
 	sb.speaker = requested_state;
-	LOG_MSG("%s: Speaker-output has been toggled %s",
+	LOG_INFO("{}: Speaker-output has been toggled {}",
 	        CardType(), requested_state ? "on" : "off");
 }
 
@@ -578,7 +578,7 @@ static void PlayDMATransfer(uint32_t size)
 		if (sb.dma.mode==DSP_DMA_16_ALIASED) read=read<<1;
 		break;
 	default:
-		LOG_MSG("%s: Unhandled dma mode %d", CardType(), sb.dma.mode);
+		LOG_WARN("{}: Unhandled dma mode {}", CardType(), sb.dma.mode);
 		sb.mode=MODE_NONE;
 		return;
 	}
@@ -628,7 +628,7 @@ static void SuppressInitialDMATransfer(uint32_t size)
 	                                                   : sizeof(uint8_t);
 	if (size <= size_limit) {
 		SuppressDMATransfer(size);
-		LOG_MSG("%s: Suppressed initial %u-byte %s transfer",
+		LOG_WARN("{}: Suppressed initial {}-byte {} transfer",
 		        CardType(), size, DmaModeName());
 	} else {
 		PlayDMATransfer(size);
@@ -855,7 +855,7 @@ static void DSP_DoReset(Bit8u val) {
 		sb.dsp.state=DSP_S_RESET_WAIT;
 		PIC_RemoveEvents(DSP_FinishReset);
 		PIC_AddEvent(DSP_FinishReset, 20.0 / 1000.0, 0); // 20 microseconds
-		LOG_MSG("%s: DSP was reset", CardType());
+		LOG_INFO("SB: {} DSP was reset", CardType());
 	}
 }
 

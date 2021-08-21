@@ -244,7 +244,7 @@ bool Property::CheckValue(Value const& in, bool warn){
 			return true;
 		}
 	}
-	if (warn) LOG_MSG("\"%s\" is not a valid value for variable: %s.\nIt might now be reset to the default value: %s",in.ToString().c_str(),propname.c_str(),default_value.ToString().c_str());
+	if (warn) LOG_WARN("\"{}\" is not a valid value for variable: {}.\nIt might now be reset to the default value: {}",in.ToString().c_str(),propname.c_str(),default_value.ToString().c_str());
 	return false;
 }
 
@@ -289,8 +289,8 @@ bool Prop_int::SetVal(Value const& in, bool forced, bool warn) {
 		if (va > ma ) va = ma; else va = mi;
 
 		if (warn) {
-			LOG_MSG("%s is outside the allowed range %s-%s for variable: %s.\n"
-			        "It has been set to the closest boundary: %d.",
+			LOG_WARN("{} is outside the allowed range {}-{} for variable: {}.\n"
+			        "It has been set to the closest boundary: {}.",
 			        in.ToString().c_str(),
 			        min_value.ToString().c_str(),
 			        max_value.ToString().c_str(),
@@ -314,8 +314,8 @@ bool Prop_int::CheckValue(Value const& in, bool warn) {
 	if (va >= mi && va <= ma) return true;
 
 	if (warn) {
-		LOG_MSG("%s lies outside the range %s-%s for variable: %s.\n"
-		        "It might now be reset to the default value: %s",
+		LOG_WARN("{} lies outside the range {}-{} for variable: {}.\n"
+		        "It might now be reset to the default value: {}",
 		        in.ToString().c_str(),
 		        min_value.ToString().c_str(),
 		        max_value.ToString().c_str(),
@@ -363,7 +363,7 @@ bool Prop_string::CheckValue(Value const& in, bool warn) {
 			}
 		}
 	}
-	if (warn) LOG_MSG("\"%s\" is not a valid value for variable: %s.\nIt might now be reset to the default value: %s",in.ToString().c_str(),propname.c_str(),default_value.ToString().c_str());
+	if (warn) LOG_WARN("\"{}\" is not a valid value for variable: {}.\nIt might now be reset to the default value: {}",in.ToString().c_str(),propname.c_str(),default_value.ToString().c_str());
 	return false;
 }
 
@@ -696,14 +696,14 @@ bool Section_prop::HandleInputline(string const& gegevens){
 			continue;
 
 		if (p->IsDeprecated()) {
-			LOG_MSG("CONFIG: Deprecated option '%s'", name.c_str());
-			LOG_MSG("CONFIG: %s", p->GetHelp());
+			LOG_WARN("CONFIG: Deprecated option '{}'", name.c_str());
+			LOG_WARN("CONFIG: {}", p->GetHelp());
 			return false;
 		}
 
 		return p->SetValue(val);
 	}
-	LOG_MSG("CONFIG: Unknown option %s", name.c_str());
+	LOG_ERROR("CONFIG: Unknown option {}", name.c_str());
 	return false;
 }
 
@@ -957,7 +957,7 @@ bool Config::ParseConfigFile(char const * const configfilename) {
 	if (!in) return false;
 	configfiles.push_back(configfilename);
 
-	LOG_MSG("CONFIG: Loading %s file %s",
+	LOG_INFO("CONFIG: Loading {} file {}",
 	        configfiles.size() == 1 ? "primary" : "additional",
 	        configfilename);
 
@@ -1329,7 +1329,7 @@ Bit16u CommandLine::Get_arglength() {
 		total_length += cmd.size() + 1;
 
 	if (total_length > UINT16_MAX) {
-		LOG_MSG("SETUP: Command line length too long, truncating");
+		LOG_WARN("SETUP: Command line length too long, truncating");
 		total_length = UINT16_MAX;
 	}
 	return static_cast<uint16_t>(total_length);

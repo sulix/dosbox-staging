@@ -1044,8 +1044,8 @@ static Bitu INT67_Handler(void) {
 				/* Load tables and initialize segment registers */
 				CPU_LGDT(new_gdt_limit, new_gdt_base);
 				CPU_LIDT(new_idt_limit, new_idt_base);
-				if (CPU_LLDT(new_ldt)) LOG_MSG("VCPI: Could not load LDT with %x",new_ldt);
-				if (CPU_LTR(new_tr)) LOG_MSG("VCPI: Could not load TR with %x",new_tr);
+				if (CPU_LLDT(new_ldt)) LOG_ERROR("VCPI: Could not load LDT with {:x}",new_ldt);
+				if (CPU_LTR(new_tr)) LOG_ERROR("VCPI: Could not load TR with {:x}",new_tr);
 
 				CPU_SetSegGeneral(ds,0);
 				CPU_SetSegGeneral(es,0);
@@ -1113,8 +1113,8 @@ static Bitu VCPI_PM_Handler() {
 		/* Load descriptor table registers */
 		CPU_LGDT(0xff, vcpi.private_area+0x0000);
 		CPU_LIDT(0x7ff, vcpi.private_area+0x2000);
-		if (CPU_LLDT(0x08)) LOG_MSG("VCPI: Could not load LDT");
-		if (CPU_LTR(0x10)) LOG_MSG("VCPI: Could not load TR");
+		if (CPU_LLDT(0x08)) LOG_ERROR("VCPI: Could not load LDT");
+		if (CPU_LTR(0x10)) LOG_ERROR("VCPI: Could not load TR");
 
 		reg_flags&=(~FLAG_NT);
 		reg_esp+=8;		// skip interrupt return information
@@ -1395,7 +1395,7 @@ public:
 
 		if (machine==MCH_PCJR) {
 			ems_type=0;
-			LOG_MSG("EMS disabled for PCJr machine");
+			LOG_INFO("EMS: EMS disabled for PCJr machine");
 			return;
 		}
 		BIOS_ZeroExtendedSize(true);
@@ -1466,8 +1466,8 @@ public:
 				CPU_SET_CRX(0, 1);
 				CPU_LGDT(0xff, vcpi.private_area+0x0000);
 				CPU_LIDT(0x7ff, vcpi.private_area+0x2000);
-				if (CPU_LLDT(0x08)) LOG_MSG("VCPI: Could not load LDT");
-				if (CPU_LTR(0x10)) LOG_MSG("VCPI: Could not load TR");
+				if (CPU_LLDT(0x08)) LOG_ERROR("VCPI: Could not load LDT");
+				if (CPU_LTR(0x10)) LOG_ERROR("VCPI: Could not load TR");
 
 				CPU_Push32(SegValue(gs));
 				CPU_Push32(SegValue(fs));

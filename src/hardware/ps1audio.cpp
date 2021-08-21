@@ -428,7 +428,7 @@ static std::unique_ptr<Ps1Synth> ps1_synth = {};
 
 static void PS1AUDIO_ShutDown(MAYBE_UNUSED Section *sec)
 {
-	LOG_MSG("PS/1: Shutting down IBM PS/1 Audio card");
+	LOG_INFO("PS/1: Shutting down IBM PS/1 Audio card");
 	ps1_dac.reset();
 	ps1_synth.reset();
 }
@@ -449,6 +449,6 @@ void PS1AUDIO_Init(MAYBE_UNUSED Section *sec)
 	ps1_dac = std::make_unique<Ps1Dac>();
 	ps1_synth = std::make_unique<Ps1Synth>();
 
-	LOG_MSG("PS/1: Initialized IBM PS/1 Audio card");
+	LOG_INFO("PS/1: Initialized IBM PS/1 Audio card");
 	sec->AddDestroyFunction(&PS1AUDIO_ShutDown, true);
 }

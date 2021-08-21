@@ -70,7 +70,7 @@ public:
 		static Bits lcount=0;
 		if (lcount<1000) {
 			lcount++;
-			LOG_MSG("Illegal read from %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
+			LOG_ERROR("MEMORY: Illegal read from {:x}, CS:IP {:8x}:{:8x}",addr,SegValue(cs),reg_eip);
 		}
 #endif
 		return 0xff;
@@ -82,7 +82,7 @@ public:
 		static Bits lcount=0;
 		if (lcount<1000) {
 			lcount++;
-			LOG_MSG("Illegal write to %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
+			LOG_ERROR("MEMORY: Illegal write to {:x}, CS:IP {:8x}:{:8x}",addr,SegValue(cs),reg_eip);
 		}
 #endif
 	}
@@ -561,12 +561,12 @@ public:
 		if (memsize < 1) memsize = 1;
 		/* max 63 to solve problems with certain xms handlers */
 		if (memsize > MAX_MEMORY - 1) {
-			LOG_MSG("Maximum memory size is %d MB",MAX_MEMORY - 1);
+			LOG_WARN("Maximum memory size is {} MB",MAX_MEMORY - 1);
 			memsize = MAX_MEMORY - 1;
 		}
 		if (memsize > SAFE_MEMORY - 1) {
-			LOG_MSG("Memory sizes above %d MB are NOT recommended.",SAFE_MEMORY - 1);
-			LOG_MSG("Stick with the default values unless you are absolutely certain.");
+			LOG_WARN("Memory sizes above {} MB are NOT recommended.",SAFE_MEMORY - 1);
+			LOG_WARN("Stick with the default values unless you are absolutely certain.");
 		}
 		MemBase = new (std::nothrow) Bit8u[memsize * 1024 * 1024];
 		if (!MemBase) {
@@ -574,8 +574,8 @@ public:
 		}
 		memset((void*)MemBase, 0, memsize * 1024 * 1024);
 		memory.pages = (memsize * 1024 * 1024) / 4096;
-		LOG_MSG("MEMORY: Base address: %p", static_cast<void *>(MemBase));
-		LOG_MSG("MEMORY: Using %d DOS memory pages (%u MiB)",
+		LOG_INFO("MEMORY: Base address: {}", static_cast<void *>(MemBase));
+		LOG_INFO("MEMORY: Using {} DOS memory pages ({} MiB)",
 		        static_cast<int>(memory.pages), memsize);
 
 		/* Allocate the data for the different page information blocks */

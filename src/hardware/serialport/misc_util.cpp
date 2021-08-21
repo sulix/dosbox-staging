@@ -35,7 +35,7 @@ TCPClientSocket::TCPClientSocket(int platformsocket)
 	mysock = (TCPsocket)nativetcpstruct;
 	if (!SDLNetInited) {
 		if (SDLNet_Init() == -1) {
-			LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
+			LOG_ERROR("SDLNet_Init failed: {}", SDLNet_GetError());
 			return;
 		}
 		SDLNetInited = true;
@@ -79,7 +79,7 @@ TCPClientSocket::TCPClientSocket(TCPsocket source)
 {
 	if (!SDLNetInited) {
 		if (SDLNet_Init() == -1) {
-			LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
+			LOG_ERROR("SDLNet_Init failed: {}", SDLNet_GetError());
 			return;
 		}
 		SDLNetInited = true;
@@ -99,7 +99,7 @@ TCPClientSocket::TCPClientSocket(const char *destination, uint16_t port)
 {
 	if (!SDLNetInited) {
 		if (SDLNet_Init() == -1) {
-			LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
+			LOG_ERROR("SDLNet_Init failed: {}", SDLNet_GetError());
 			return;
 		}
 		SDLNetInited = true;
@@ -244,7 +244,7 @@ TCPServerSocket::TCPServerSocket(const uint16_t port)
 	mysock = nullptr;
 	if(!SDLNetInited) {
         if(SDLNet_Init()==-1) {
-			LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
+			LOG_ERROR("SDLNet_Init failed: {}", SDLNet_GetError());
 			return;
 		}
 		SDLNetInited = true;

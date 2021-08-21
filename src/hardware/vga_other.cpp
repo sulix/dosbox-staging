@@ -518,23 +518,23 @@ static void log_crt_knob_value()
 {
 	switch (crt_knob) {
 	case CRT_KNOB::ERA:
-		LOG_MSG("COMPOSITE: %s-era CGA selected",
+		LOG_INFO("COMPOSITE: {}-era CGA selected",
 		        is_composite_new_era ? "New" : "Old");
 		break;
 	case CRT_KNOB::HUE:
-		LOG_MSG("COMPOSITE: Hue is %d", hue_offset);
+		LOG_INFO("COMPOSITE: Hue is {}", hue_offset);
 		break;
 	case CRT_KNOB::SATURATION:
-		LOG_MSG("COMPOSITE: Saturation at %d", saturation);
+		LOG_INFO("COMPOSITE: Saturation at {}", saturation);
 		break;
 	case CRT_KNOB::CONTRAST:
-		LOG_MSG("COMPOSITE: Contrast at %d", contrast);
+		LOG_INFO("COMPOSITE: Contrast at {}", contrast);
 		break;
 	case CRT_KNOB::BRIGHTNESS:
-		LOG_MSG("COMPOSITE: Brightness at %d", brightness);
+		LOG_INFO("COMPOSITE: Brightness at {}", brightness);
 		break;
 	case CRT_KNOB::SHARPNESS:
-		LOG_MSG("COMPOSITE: Sharpness at %d", sharpness);
+		LOG_INFO("COMPOSITE: Sharpness at {}", sharpness);
 		break;
 	case CRT_KNOB::ENUM_END:
 		assertm(false, "Should not reach CRT knob end marker");
@@ -662,7 +662,7 @@ static void PCJr_FindMode();
 static void Composite(bool pressed) {
 	if (!pressed) return;
 	if (++cga_comp>2) cga_comp=0;
-	LOG_MSG("Composite output: %s",(cga_comp==0)?"auto":((cga_comp==1)?"on":"off"));
+	LOG_INFO("Composite output: {}",(cga_comp==0)?"auto":((cga_comp==1)?"on":"off"));
 	// switch RGB and Composite if in graphics mode
 	if (vga.tandy.mode_control & 0x2 && machine == MCH_PCJR)
 		PCJr_FindMode();

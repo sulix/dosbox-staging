@@ -19,19 +19,6 @@
 #ifndef DOSBOX_IPX_H
 #define DOSBOX_IPX_H
 
-// Uncomment this for a lot of debug messages:
-//#define IPX_DEBUGMSG 
-
-#ifdef IPX_DEBUGMSG
-#define LOG_IPX LOG_MSG
-#else
-#if defined (_MSC_VER)
-#define LOG_IPX
-#else
-#define LOG_IPX(...)
-#endif
-#endif
-
 #ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
 #endif
@@ -117,9 +104,7 @@ public:
 	Bit8u* databuffer;	// received data is stored here until we get called
 	Bitu buflen;		// by Interrupt
 
-#ifdef IPX_DEBUGMSG 
 	Bitu SerialNumber;
-#endif
 
 	ECBClass(uint16_t segment, uint16_t offset);
 	ECBClass(const ECBClass &) = delete;            // prevent copying

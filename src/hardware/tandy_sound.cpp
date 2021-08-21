@@ -179,7 +179,7 @@ static void TandyDAC_DMA_CallBack(DmaChannel * /*chan*/, DMAEvent event) {
 static void TandyDACModeChanged()
 {
 	if (!tandy.dac.chan) {
-		DEBUG_LOG_MSG("TANDY: Skipping mode change until the DAC is "
+		LOG_DEBUG("TANDY: Skipping mode change until the DAC is "
 		              "initialized");
 		return;
 	}
@@ -292,14 +292,14 @@ static Bitu TandyDACRead(Bitu port,Bitu /*iolen*/) {
 	case 0xc7:
 		return (Bit8u)(((tandy.dac.frequency>>8)&0xf) | (tandy.dac.amplitude<<5));
 	}
-	LOG_MSG("Tandy DAC: Read from unknown %#" PRIxPTR, port);
+	LOG_INFO("Tandy DAC: Read from unknown {:#}", port);
 	return 0xff;
 }
 
 static void TandyDACUpdate(size_t requested)
 {
 	if (!tandy.dac.chan || !tandy.dac.dma.chan) {
-		DEBUG_LOG_MSG(
+		LOG_DEBUG(
 		        "TANDY: Skipping update until the DAC is initialized");
 		return;
 	}

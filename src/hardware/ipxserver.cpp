@@ -54,7 +54,7 @@ static void closeSocket(Bit16u sockidx) {
 	Bit32u host;
 
 	host = ipconn[sockidx].host;
-	LOG_MSG("IPXSERVER: %d.%d.%d.%d disconnected", CONVIP(host));
+	LOG_INFO("IPXSERVER: {}.{}.{}.{} disconnected", CONVIP(host));
 
 	SDLNet_TCP_DelSocket(serverSocketSet,tcpconn[sockidx]);
 	SDLNet_TCP_Close(tcpconn[sockidx]);
@@ -89,10 +89,9 @@ static void sendIPXPacket(Bit8u *buffer, Bit16s bufSize) {
 				                                   UDP_UNICAST,
 				                                   &outPacket);
 				if (result == 0) {
-					LOG_MSG("IPXSERVER: %s", SDLNet_GetError());
+					LOG_ERROR("IPXSERVER: Send error: packet of {} bytes from {}.{}.{}.{} to {}.{}.{}.{} (BROADCAST) ({:x} CRC)", bufSize, CONVIP(srchost), CONVIP(ipconn[i].host), packetCRC(&buffer[30], bufSize-30));
 					continue;
 				}
-				//LOG_MSG("IPXSERVER: Packet of %d bytes sent from %d.%d.%d.%d to %d.%d.%d.%d (BROADCAST) (%x CRC)", bufSize, CONVIP(srchost), CONVIP(ipconn[i].host), packetCRC(&buffer[30], bufSize-30));
 			}
 		}
 	} else {
@@ -104,10 +103,9 @@ static void sendIPXPacket(Bit8u *buffer, Bit16s bufSize) {
 				                                   UDP_UNICAST,
 				                                   &outPacket);
 				if (result == 0) {
-					LOG_MSG("IPXSERVER: %s", SDLNet_GetError());
+					LOG_ERROR("IPXSERVER: Send error: packet from {}.{}.{}.{} to {}.{}.{}.{}", CONVIP(srchost), CONVIP(desthost));
 					continue;
 				}
-				//LOG_MSG("IPXSERVER: Packet sent from %d.%d.%d.%d to %d.%d.%d.%d", CONVIP(srchost), CONVIP(desthost));
 			}
 		}
 	}
@@ -142,7 +140,7 @@ static void ackClient(IPaddress clientAddr) {
 	// Send registration string to client.  If client doesn't get this, client will not be registered
 	const int result = SDLNet_UDP_Send(ipxServerSocket, UDP_UNICAST, &regPacket);
 	if (result == 0)
-		LOG_MSG("IPXSERVER: Connection response not sent: %s",
+		LOG_ERROR("IPXSERVER: Connection response not sent: {}",
 		        SDLNet_GetError());
 }
 
@@ -178,13 +176,13 @@ static void IPX_ServerLoop() {
 
 						connBuffer[i].connected = true;
 						host = ipconn[i].host;
-						LOG_MSG("IPXSERVER: Connect from %d.%d.%d.%d", CONVIP(host));
+						LOG_INFO("IPXSERVER: Connect from {}.{}.{}.{}", CONVIP(host));
 						ackClient(inPacket.address);
 						return;
 					} else {
 						if((ipconn[i].host == tmpAddr.host) && (ipconn[i].port == tmpAddr.port)) {
 
-							LOG_MSG("IPXSERVER: Reconnect from %d.%d.%d.%d", CONVIP(tmpAddr.host));
+							LOG_INFO("IPXSERVER: Reconnect from {}.{}.{}.{}", CONVIP(tmpAddr.host));
 							// Update anonymous port number if changed
 							ipconn[i].port = inPacket.address.port;
 							ackClient(inPacket.address);

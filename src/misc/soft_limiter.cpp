@@ -270,7 +270,7 @@ void SoftLimiter::PrintStats() const
 		return;
 
 	// Inform the user what percent of the dynamic-range was reached
-	LOG_MSG("%s: Peak amplitude reached %.0f%% of max",
+	LOG_INFO("{}: Peak amplitude reached {:.0f}% of max",
 	        channel_name.c_str(), 100 * static_cast<double>(peak_ratio));
 
 	// Inform when the stream fell short of using the full dynamic-range
@@ -279,7 +279,7 @@ void SoftLimiter::PrintStats() const
 	constexpr auto well_below_3db = 0.6f;
 	if (peak_ratio < well_below_3db) {
 		const auto suggested_mix_val = 100 * scale / peak_ratio;
-		LOG_MSG("%s: If it should be louder, use: mixer %s %.0f",
+		LOG_INFO("{}: If it should be louder, use: mixer {} {:.0f}",
 		        channel_name.c_str(), channel_name.c_str(),
 		        static_cast<double>(suggested_mix_val));
 	}
@@ -290,8 +290,8 @@ void SoftLimiter::PrintStats() const
 	if (limited_ratio > 0.2) {
 		const auto suggested_mix_pct = 100 * (1 - limited_ratio) *
 		                               static_cast<double>(scale);
-		LOG_MSG("%s: %.1f%% of the audio needed limiting, consider: mixer %s %.0f",
-		        channel_name.c_str(), 100 * limited_ratio,
+		LOG_INFO("{}: {:.1f}% of the audio needed limiting, consider: mixer {} {:.0f}",
+		        channel_name.c_str(), 100.0 * limited_ratio,
 		        channel_name.c_str(), suggested_mix_pct);
 	}
 }

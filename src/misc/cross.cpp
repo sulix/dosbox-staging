@@ -94,14 +94,14 @@ static std::string DetermineConfigPath()
 	}
 
 	if (path_exists(old_conf_path + "/" + GetConfigName())) {
-		LOG_MSG("WARNING: Config file found in deprecated path! (~/.dosbox)\n"
+		LOG_WARN("WARNING: Config file found in deprecated path! (~/.dosbox)\n"
 		        "Backup/remove this dir and restart to generate updated config file.\n"
 		        "---");
 		return old_conf_path;
 	}
 
 	if (!CreateDirectories(conf_path)) {
-		LOG_MSG("ERROR: Directory '%s' cannot be created",
+		LOG_ERROR("ERROR: Directory '{}' cannot be created",
 		        conf_path.c_str());
 		return old_conf_path;
 	}
@@ -186,7 +186,7 @@ void Cross::CreatePlatformConfigDir(std::string &in)
 		in += CROSS_FILESPLIT;
 
 	if (create_dir(in.c_str(), 0700, OK_IF_EXISTS) != 0) {
-		LOG_MSG("ERROR: Creation of config directory '%s' failed: %s",
+		LOG_ERROR("ERROR: Creation of config directory '{}' failed: {}",
 		        in.c_str(), safe_strerror(errno).c_str());
 	}
 }

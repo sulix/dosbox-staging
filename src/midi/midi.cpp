@@ -225,7 +225,7 @@ public:
 		if (fullconf.find("delaysysex") != std::string::npos) {
 			midi.sysex.start = GetTicks();
 			fullconf.erase(fullconf.find("delaysysex"));
-			LOG_MSG("MIDI: Using delayed SysEx processing");
+			LOG_INFO("MIDI: Using delayed SysEx processing");
 		}
 		trim(fullconf);
 		const char * conf = fullconf.c_str();
@@ -240,19 +240,19 @@ public:
 		while (handler) {
 			if (dev == handler->GetName()) {
 				if (!handler->Open(conf)) {
-					LOG_MSG("MIDI: Can't open device: %s with config: '%s'",
+					LOG_ERROR("MIDI: Can't open device: {} with config: '{}'",
 					        dev.c_str(), conf);
 					goto getdefault;
 				}
 				midi.handler=handler;
 				midi.available=true;
-				LOG_MSG("MIDI: Opened device: %s",
+				LOG_INFO("MIDI: Opened device: {}",
 				        handler->GetName());
 				return;
 			}
 			handler=handler->next;
 		}
-		LOG_MSG("MIDI: Can't find device: %s, using default handler.",
+		LOG_ERROR("MIDI: Can't find device: {}, using default handler.",
 		        dev.c_str());
 getdefault:
 		for (handler = handler_list; handler; handler = handler->next) {
@@ -272,7 +272,7 @@ getdefault:
 			if (handler->Open(conf)) {
 				midi.available=true;
 				midi.handler=handler;
-				LOG_MSG("MIDI: Opened device: %s", name.c_str());
+				LOG_INFO("MIDI: Opened device: {}", name.c_str());
 				return;
 			}
 		}
