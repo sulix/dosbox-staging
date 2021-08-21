@@ -28,6 +28,9 @@ jobs:
         if:    steps.cache-pvs.outputs.cache-hit != 'true'
         run:   wget "https://files.viva64.com/${debfile}" -O "pvs-package/pvs.deb"
 
+      - name: Fetch submodules
+        run:  git submodule update --init --recursive
+
       - name: Install dependencies
         run: |
           set -xeu
