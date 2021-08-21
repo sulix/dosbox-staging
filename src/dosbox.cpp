@@ -477,7 +477,13 @@ void DOSBOX_Init(void) {
 	        "splash_only |  yes   |   no    |    no\n"
 	        "auto        | 'low' if exec or dir is passed, otherwise 'high'");
 
-	secprop=control->AddSection_prop("render",&RENDER_Init,true);
+	const char *loglevel_choices[] = {"info", "debug", "trace", 0};
+	Pstring = secprop->Add_string("log_level", only_at_start, "info");
+	Pstring->Set_values(loglevel_choices);
+	Pstring->Set_help(
+	        "Controls levels for display of logging info. Choices: info, debug, trace.\n");
+
+	secprop = control->AddSection_prop("render", &RENDER_Init, true);
 	Pint = secprop->Add_int("frameskip",Property::Changeable::Always,0);
 	Pint->SetMinMax(0,10);
 	Pint->Set_help("How many frames DOSBox skips before drawing one.");

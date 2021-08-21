@@ -3624,6 +3624,23 @@ int sdl_main(int argc, char *argv[])
 		}
 	}
 
+	// Configure logging levels right away
+	const auto dosbox_sec = static_cast<Section_prop *>(
+		control->GetSection("dosbox"));
+	const std::string logLevel = dosbox_sec->Get_string("log_level");
+
+	if (logLevel == "info") {
+		spdlog::set_level(spdlog::level::info);
+	} else if (logLevel == "debug") {
+		spdlog::set_level(spdlog::level::debug);
+	} else if (logLevel == "trace") {
+		spdlog::set_level(spdlog::level::trace);
+	} else {
+		spdlog::set_level(spdlog::level::info);
+	}
+
+	LOG_INFO("CONFIG: Logging level set to {}", logLevel);
+
 #if C_OPENGL
 	const std::string glshaders_dir = config_path + "glshaders";
 	if (create_dir(glshaders_dir.c_str(), 0700, OK_IF_EXISTS) != 0)
