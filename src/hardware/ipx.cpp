@@ -93,9 +93,9 @@ ECBClass::ECBClass(uint16_t segment, uint16_t offset)
           iuflag(0),
           mysocket(0),
           databuffer(nullptr),
-          buflen(0)
+          buflen(0),
+		  SerialNumber(ECBSerialNumber)
 {
-	SerialNumber = ECBSerialNumber;
 	ECBSerialNumber++;
 	ECBAmount++;
 
