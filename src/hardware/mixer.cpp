@@ -24,12 +24,10 @@
 #include "mixer.h"
 
 #include <cstdint>
-#include <cstring>
+#include <string.h>
 #include <sys/types.h>
-#include <cmath>
+#include <math.h>
 #include <algorithm>
-#include <array>
-#include <map>
 
 #if defined (WIN32)
 //Midi listing
@@ -54,9 +52,7 @@
 #include "programs.h"
 #include "midi.h"
 
-// The max frames allowed to send to SDL, based on
-// limits for 'rate' and 'latency' in dosbox.conf
-static constexpr int MIXER_QUEUE_MAX_FRAMES = 8192;
+#define MIXER_SSIZE 4
 
 //#define MIXER_SHIFT 14
 //#define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
@@ -79,7 +75,7 @@ static constexpr int MIXER_QUEUE_MAX_FRAMES = 8192;
 // should the envelope monitor the initial signal? (recommended > 5s)
 #define ENVELOPE_EXPIRES_AFTER_S 10u
 
-static constexpr int16_t MIXER_CLIP(int32_t SAMP)
+static inline int16_t MIXER_CLIP(Bits SAMP)
 {
 	if (SAMP < MAX_AUDIO) {
 		if (SAMP > MIN_AUDIO)
@@ -94,6 +90,8 @@ static struct {
 	Bitu pos = 0;
 	Bitu done = 0;
 	Bitu needed = 0;
+	Bitu min_needed = 0;
+	Bitu max_needed = 0;
 	// For every millisecond tick how many samples need to be generated
 	uint32_t tick_add = 0;
 	uint32_t tick_counter = 0;
@@ -101,7 +99,7 @@ static struct {
 	MixerChannel *channels = nullptr;
 	bool nosound = false;
 	uint32_t freq = 0;
-	uint8_t latency = 0;
+	uint16_t blocksize = 0; // matches SDL AudioSpec.samples type
 	// Note: As stated earlier, all sdl code shall rather be in sdlmain
 	SDL_AudioDeviceID sdldevice = {};
 } mixer;
@@ -159,6 +157,16 @@ void MIXER_DelChannel(MixerChannel* delchan) {
 		where=&chan->next;
 		chan=chan->next;
 	}
+}
+
+static void MIXER_LockAudioDevice()
+{
+	SDL_LockAudioDevice(mixer.sdldevice);
+}
+
+static void MIXER_UnlockAudioDevice()
+{
+	SDL_UnlockAudioDevice(mixer.sdldevice);
 }
 
 void MixerChannel::RegisterLevelCallBack(apply_level_callback_f cb)
@@ -234,6 +242,9 @@ void MixerChannel::Enable(const bool should_enable)
 	if (is_enabled == should_enable)
 		return;
 
+	// Lock the channel before changing states
+	MIXER_LockAudioDevice();
+
 	// Prepare the channel to accept samples
 	if (should_enable) {
 		freq_counter = 0u;
@@ -255,6 +266,7 @@ void MixerChannel::Enable(const bool should_enable)
 		next_sample[1] = 0;
 	}
 	is_enabled = should_enable;
+	MIXER_UnlockAudioDevice();
 }
 
 void MixerChannel::SetFreq(Bitu freq)
@@ -612,7 +624,9 @@ void MixerChannel::FillUp()
 	if (!is_enabled || done < mixer.done)
 		return;
 	const auto index = PIC_TickIndex();
+	MIXER_LockAudioDevice();
 	Mix((Bitu)(index * static_cast<double>(mixer.needed)));
+	MIXER_UnlockAudioDevice();
 }
 
 extern bool ticksLocked;
@@ -662,17 +676,14 @@ static void MIXER_MixData(Bitu needed) {
 	mixer.done = needed;
 }
 
-static std::array<MixerFrame, MIXER_QUEUE_MAX_FRAMES> queue_buffer;
-static void MIXER_QueueAudio(uint16_t);
-
 static void MIXER_Mix()
 {
+	MIXER_LockAudioDevice();
 	MIXER_MixData(mixer.needed);
 	mixer.tick_counter += mixer.tick_add;
 	mixer.needed+=(mixer.tick_counter >> TICK_SHIFT);
 	mixer.tick_counter &= TICK_MASK;
-	assert(mixer.done <= queue_buffer.size());
-	MIXER_QueueAudio(static_cast<uint16_t>(mixer.done));
+	MIXER_UnlockAudioDevice();
 }
 
 static void MIXER_Mix_NoSound()
@@ -696,12 +707,85 @@ static void MIXER_Mix_NoSound()
 	mixer.done=0;
 }
 
-static void MIXER_QueueAudio(const uint16_t len)
+#define INDEX_SHIFT_LOCAL 14
+
+static void SDLCALL MIXER_CallBack(MAYBE_UNUSED void *userdata, Uint8 *stream, int len)
 {
-	assert(len <= queue_buffer.size());
+	memset(stream, 0, len);
+	Bitu need = (Bitu)len / MIXER_SSIZE;
+	Bit16s *output = (Bit16s *)stream;
+	Bitu reduce;
+	Bitu pos;
+	// Local resampling counter to manipulate the data when sending it off
+	// to the callback
+	Bitu index_add = (1 << INDEX_SHIFT_LOCAL);
+	Bitu index = (index_add % need) ? need : 0;
 
-	auto reduce = len;
+	Bits sample;
+	/* Enough room in the buffer ? */
+	if (mixer.done < need) {
+		//LOG_WARNING("Full underrun need %d, have %d, min %d", need, mixer.done, mixer.min_needed);
+		if ((need - mixer.done) > (need >> 7)) // Max 1 percent stretch.
+			return;
+		reduce = mixer.done;
+		index_add = (reduce << INDEX_SHIFT_LOCAL) / need;
+		mixer.tick_add = calc_tickadd(mixer.freq + mixer.min_needed);
+	} else if (mixer.done < mixer.max_needed) {
+		Bitu left = mixer.done - need;
+		if (left < mixer.min_needed) {
+			if (!Mixer_irq_important()) {
+				Bitu needed = mixer.needed - need;
+				Bitu diff = (mixer.min_needed > needed ? mixer.min_needed
+				                                       : needed) -
+				            left;
+				mixer.tick_add = calc_tickadd(mixer.freq +
+				                              (diff * 3));
+				left = 0; // No stretching as we compensate with
+				          // the tick_add value
+			} else {
+				left = (mixer.min_needed - left);
+				left = 1 + (2 * left) / mixer.min_needed; // left=1,2,3
+			}
+			//LOG_WARNING("needed underrun need %d, have %d, min %d, left %d", need, mixer.done, mixer.min_needed, left);
+			reduce = need - left;
+			index_add = (reduce << INDEX_SHIFT_LOCAL) / need;
+		} else {
+			reduce = need;
+			index_add = (1 << INDEX_SHIFT_LOCAL);
+			//			LOG_MSG("regular run need %d, have
+			//%d, min %d, left %d", need, mixer.done,
+			//mixer.min_needed, left);
 
+			/* Mixer tick value being updated:
+			 * 3 cases:
+			 * 1) A lot too high. >division by 5. but maxed by 2*
+			 * min to prevent too fast drops. 2) A little too high >
+			 * division by 8 3) A little to nothing above the
+			 * min_needed buffer > go to default value
+			 */
+			Bitu diff = left - mixer.min_needed;
+			if (diff > (mixer.min_needed << 1))
+				diff = mixer.min_needed << 1;
+			if (diff > (mixer.min_needed >> 1))
+				mixer.tick_add = calc_tickadd(mixer.freq -
+				                              (diff / 5));
+			else if (diff > (mixer.min_needed >> 2))
+				mixer.tick_add = calc_tickadd(mixer.freq -
+				                              (diff >> 3));
+			else
+				mixer.tick_add = calc_tickadd(mixer.freq);
+		}
+	} else {
+		/* There is way too much data in the buffer */
+		//LOG_WARNING("overflow run need %d, have %d, min %d", need, mixer.done, mixer.min_needed);
+		if (mixer.done > MIXER_BUFSIZE)
+			index_add = MIXER_BUFSIZE - 2 * mixer.min_needed;
+		else
+			index_add = mixer.done - 2 * mixer.min_needed;
+		index_add = (index_add << INDEX_SHIFT_LOCAL) / need;
+		reduce = mixer.done - 2 * mixer.min_needed;
+		mixer.tick_add = calc_tickadd(mixer.freq - (mixer.min_needed / 5));
+	}
 	/* Reduce done count in all channels */
 	for (MixerChannel * chan=mixer.channels;chan;chan=chan->next) {
 		if (chan->done>reduce) chan->done-=reduce;
@@ -714,28 +798,39 @@ static void MIXER_QueueAudio(const uint16_t len)
 
 	mixer.done -= reduce;
 	mixer.needed -= reduce;
-	auto pos = mixer.pos;
+	pos = mixer.pos;
 	mixer.pos = (mixer.pos + reduce) & MIXER_BUFMASK;
-
-	int idx = 0;
-
-	while (reduce--) {
-		pos &= MIXER_BUFMASK;
-		const MixerFrame frame = {
-		        MIXER_CLIP(mixer.work[pos][0] >> MIXER_VOLSHIFT),
-		        MIXER_CLIP(mixer.work[pos][1] >> MIXER_VOLSHIFT)};
-		queue_buffer[idx++] = frame;
-
-		mixer.work[pos][0] = 0;
-		mixer.work[pos][1] = 0;
-		pos++;
+	if (need != reduce) {
+		while (need--) {
+			Bitu i = (pos + (index >> INDEX_SHIFT_LOCAL)) & MIXER_BUFMASK;
+			index += index_add;
+			sample = mixer.work[i][0] >> MIXER_VOLSHIFT;
+			*output++ = MIXER_CLIP(sample);
+			sample = mixer.work[i][1] >> MIXER_VOLSHIFT;
+			*output++ = MIXER_CLIP(sample);
+		}
+		/* Clean the used buffer */
+		while (reduce--) {
+			pos &= MIXER_BUFMASK;
+			mixer.work[pos][0] = 0;
+			mixer.work[pos][1] = 0;
+			pos++;
+		}
+	} else {
+		while (reduce--) {
+			pos &= MIXER_BUFMASK;
+			sample = mixer.work[pos][0] >> MIXER_VOLSHIFT;
+			*output++ = MIXER_CLIP(sample);
+			sample = mixer.work[pos][1] >> MIXER_VOLSHIFT;
+			*output++ = MIXER_CLIP(sample);
+			mixer.work[pos][0] = 0;
+			mixer.work[pos][1] = 0;
+			pos++;
+		}
 	}
-
-	const uint32_t size = len * sizeof(MixerFrame);
-	const auto res = SDL_QueueAudio(mixer.sdldevice, queue_buffer.data(), size);
-	if (res != 0)
-		LOG_MSG("MIXER: SDL_QueueAudio error %s", SDL_GetError());
 }
+
+#undef INDEX_SHIFT_LOCAL
 
 static void MIXER_Stop(MAYBE_UNUSED Section *sec)
 {}
@@ -836,9 +931,10 @@ void MIXER_Init(Section* sec) {
 
 	mixer.nosound=section->Get_bool("nosound");
 	mixer.freq = static_cast<uint32_t>(section->Get_int("rate"));
-	mixer.latency = static_cast<uint8_t>(section->Get_int("latency"));
+	auto latency = static_cast<uint8_t>(section->Get_int("latency"));
 	assert(mixer.latency <= 100);
 	const bool negotiate = section->Get_bool("negotiate");
+	mixer.blocksize = static_cast<uint16_t>(mixer.freq * latency / 1000);
 
 	/* Initialize the internal stuff */
 	mixer.channels=0;
@@ -848,9 +944,6 @@ void MIXER_Init(Section* sec) {
 	mixer.mastervol[0]=1.0f;
 	mixer.mastervol[1]=1.0f;
 
-	/* Calculate blocksize from requested latency to nearest power of 2 */
-	auto blocksize = static_cast<uint16_t>(mixer.freq * mixer.latency / 1000);
-
 	/* Start the Mixer using SDL Sound at 22 khz */
 	SDL_AudioSpec spec;
 	SDL_AudioSpec obtained;
@@ -858,9 +951,9 @@ void MIXER_Init(Section* sec) {
 	spec.freq = static_cast<int>(mixer.freq);
 	spec.format=AUDIO_S16SYS;
 	spec.channels=2;
-	spec.callback = nullptr;
+	spec.callback = MIXER_CallBack;
 	spec.userdata = nullptr;
-	spec.samples = blocksize;
+	spec.samples = mixer.blocksize;
 
 	int sdl_allow_flags = 0;
 
@@ -900,25 +993,27 @@ void MIXER_Init(Section* sec) {
 
 		// Does SDL want a different blocksize?
 		const auto obtained_blocksize = obtained.samples;
-		if (obtained_blocksize != blocksize) {
+		if (obtained_blocksize != mixer.blocksize) {
 			LOG_MSG("MIXER: SDL changed the blocksize from %u to %u frames",
-			        blocksize, obtained_blocksize);
-			blocksize = obtained_blocksize;
+			        mixer.blocksize, obtained_blocksize);
+			mixer.blocksize = obtained_blocksize;
 		}
 		mixer.tick_add = calc_tickadd(mixer.freq);
 		TIMER_AddTickHandler(MIXER_Mix);
 		SDL_PauseAudioDevice(mixer.sdldevice, 0);
 
-		const auto latency = blocksize / (mixer.freq / 1000);
+		latency = mixer.blocksize / (mixer.freq / 1000);
+
 		LOG_MSG("MIXER: Negotiated %u-channel %u-Hz %ums-latency audio in %u-frame blocks",
-		        obtained.channels, mixer.freq, latency, blocksize);
+		        obtained.channels, mixer.freq, latency, mixer.blocksize);
 	}
 
 	//1000 = 8 *125
 	mixer.tick_counter = (mixer.freq%125)?TICK_NEXT:0;
-
-	// calculate here in case SDL changed the freq
-	mixer.needed = mixer.freq / 1000;
+	mixer.min_needed = latency;
+	mixer.min_needed = (mixer.freq * mixer.min_needed) / 1000;
+	mixer.max_needed = mixer.blocksize * 2 + 2 * mixer.min_needed;
+	mixer.needed = mixer.min_needed + 1;
 
 	// Initialize the 8-bit to 16-bit lookup table
 	fill_8to16_lut();
