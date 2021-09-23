@@ -932,7 +932,7 @@ void MIXER_Init(Section* sec) {
 	mixer.nosound=section->Get_bool("nosound");
 	mixer.freq = static_cast<uint32_t>(section->Get_int("rate"));
 	auto latency = static_cast<uint8_t>(section->Get_int("latency"));
-	assert(mixer.latency <= 100);
+	assert(latency <= 100);
 	const bool negotiate = section->Get_bool("negotiate");
 	mixer.blocksize = static_cast<uint16_t>(mixer.freq * latency / 1000);
 
