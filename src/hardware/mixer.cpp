@@ -53,6 +53,8 @@
 #include "midi.h"
 
 #define MIXER_SSIZE 4
+#define MIXER_MIN_NEEDED 2
+#define MIXER_QUEUE_OUTPUT_BUFFER_SIZE (1024 * 32)
 
 //#define MIXER_SHIFT 14
 //#define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
@@ -99,6 +101,7 @@ static struct {
 	MixerChannel *channels = nullptr;
 	bool nosound = false;
 	uint32_t freq = 0;
+	uint8_t latency = 0;
 	uint16_t blocksize = 0; // matches SDL AudioSpec.samples type
 	// Note: As stated earlier, all sdl code shall rather be in sdlmain
 	SDL_AudioDeviceID sdldevice = {};
@@ -157,16 +160,6 @@ void MIXER_DelChannel(MixerChannel* delchan) {
 		where=&chan->next;
 		chan=chan->next;
 	}
-}
-
-static void MIXER_LockAudioDevice()
-{
-	SDL_LockAudioDevice(mixer.sdldevice);
-}
-
-static void MIXER_UnlockAudioDevice()
-{
-	SDL_UnlockAudioDevice(mixer.sdldevice);
 }
 
 void MixerChannel::RegisterLevelCallBack(apply_level_callback_f cb)
@@ -242,9 +235,6 @@ void MixerChannel::Enable(const bool should_enable)
 	if (is_enabled == should_enable)
 		return;
 
-	// Lock the channel before changing states
-	MIXER_LockAudioDevice();
-
 	// Prepare the channel to accept samples
 	if (should_enable) {
 		freq_counter = 0u;
@@ -266,7 +256,6 @@ void MixerChannel::Enable(const bool should_enable)
 		next_sample[1] = 0;
 	}
 	is_enabled = should_enable;
-	MIXER_UnlockAudioDevice();
 }
 
 void MixerChannel::SetFreq(Bitu freq)
@@ -624,9 +613,7 @@ void MixerChannel::FillUp()
 	if (!is_enabled || done < mixer.done)
 		return;
 	const auto index = PIC_TickIndex();
-	MIXER_LockAudioDevice();
 	Mix((Bitu)(index * static_cast<double>(mixer.needed)));
-	MIXER_UnlockAudioDevice();
 }
 
 extern bool ticksLocked;
@@ -647,6 +634,8 @@ static Bit32u calc_tickadd(Bit32u freq) {
 	return (freq<<TICK_SHIFT)/1000;
 #endif
 }
+
+static void MIXER_SendAudio(int);
 
 /* Mix a certain amount of new samples */
 static void MIXER_MixData(Bitu needed) {
@@ -676,14 +665,22 @@ static void MIXER_MixData(Bitu needed) {
 	mixer.done = needed;
 }
 
+static auto lastMixTicks = GetTicks();
+
 static void MIXER_Mix()
 {
-	MIXER_LockAudioDevice();
 	MIXER_MixData(mixer.needed);
 	mixer.tick_counter += mixer.tick_add;
 	mixer.needed+=(mixer.tick_counter >> TICK_SHIFT);
 	mixer.tick_counter &= TICK_MASK;
-	MIXER_UnlockAudioDevice();
+
+	const auto now = GetTicks();
+
+	if (GetTicksDiff(now, lastMixTicks) >= mixer.latency - MIXER_MIN_NEEDED) {
+		const auto len = mixer.blocksize * MIXER_SSIZE;
+		MIXER_SendAudio(len);
+		lastMixTicks = now;
+	}
 }
 
 static void MIXER_Mix_NoSound()
@@ -707,11 +704,12 @@ static void MIXER_Mix_NoSound()
 	mixer.done=0;
 }
 
+static uint8_t stream[MIXER_QUEUE_OUTPUT_BUFFER_SIZE] = { 0 };
+
 #define INDEX_SHIFT_LOCAL 14
 
-static void SDLCALL MIXER_CallBack(MAYBE_UNUSED void *userdata, Uint8 *stream, int len)
+static void MIXER_SendAudio(int len)
 {
-	memset(stream, 0, len);
 	Bitu need = (Bitu)len / MIXER_SSIZE;
 	Bit16s *output = (Bit16s *)stream;
 	Bitu reduce;
@@ -828,6 +826,14 @@ static void SDLCALL MIXER_CallBack(MAYBE_UNUSED void *userdata, Uint8 *stream, i
 			pos++;
 		}
 	}
+
+	//LOG_INFO("MIXER: len: %d, mixer.done: %lu, index: %lu", len, mixer.done, index);
+	//LOG_INFO("MIXER: output difference: %lu", (uintptr_t)output - (uintptr_t)stream);
+	//const int doneSize = mixer.done * 4;
+	const uint32_t size = len;
+	const auto res = SDL_QueueAudio(mixer.sdldevice, stream, size);
+	if (res != 0)
+		LOG_ERR("MIXER: SDL_QueueAudio error %s", SDL_GetError());
 }
 
 #undef INDEX_SHIFT_LOCAL
@@ -931,10 +937,9 @@ void MIXER_Init(Section* sec) {
 
 	mixer.nosound=section->Get_bool("nosound");
 	mixer.freq = static_cast<uint32_t>(section->Get_int("rate"));
-	auto latency = static_cast<uint8_t>(section->Get_int("latency"));
-	assert(latency <= 100);
+	mixer.latency = static_cast<uint8_t>(section->Get_int("latency"));
 	const bool negotiate = section->Get_bool("negotiate");
-	mixer.blocksize = static_cast<uint16_t>(mixer.freq * latency / 1000);
+	mixer.blocksize = static_cast<uint16_t>(mixer.freq * mixer.latency / 1000);
 
 	/* Initialize the internal stuff */
 	mixer.channels=0;
@@ -951,7 +956,7 @@ void MIXER_Init(Section* sec) {
 	spec.freq = static_cast<int>(mixer.freq);
 	spec.format=AUDIO_S16SYS;
 	spec.channels=2;
-	spec.callback = MIXER_CallBack;
+	spec.callback = nullptr;
 	spec.userdata = nullptr;
 	spec.samples = mixer.blocksize;
 
@@ -1002,18 +1007,20 @@ void MIXER_Init(Section* sec) {
 		TIMER_AddTickHandler(MIXER_Mix);
 		SDL_PauseAudioDevice(mixer.sdldevice, 0);
 
-		latency = mixer.blocksize / (mixer.freq / 1000);
+		mixer.latency = mixer.blocksize / (mixer.freq / 1000);
 
 		LOG_MSG("MIXER: Negotiated %u-channel %u-Hz %ums-latency audio in %u-frame blocks",
-		        obtained.channels, mixer.freq, latency, mixer.blocksize);
+		        obtained.channels, mixer.freq, mixer.latency,
+		        mixer.blocksize);
 	}
 
 	//1000 = 8 *125
 	mixer.tick_counter = (mixer.freq%125)?TICK_NEXT:0;
-	mixer.min_needed = latency;
+	mixer.min_needed = MIXER_MIN_NEEDED;
 	mixer.min_needed = (mixer.freq * mixer.min_needed) / 1000;
 	mixer.max_needed = mixer.blocksize * 2 + 2 * mixer.min_needed;
 	mixer.needed = mixer.min_needed + 1;
+	lastMixTicks = GetTicks();
 
 	// Initialize the 8-bit to 16-bit lookup table
 	fill_8to16_lut();
