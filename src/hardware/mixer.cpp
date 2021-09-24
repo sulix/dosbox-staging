@@ -89,11 +89,11 @@ static inline int16_t MIXER_CLIP(Bits SAMP)
 static struct {
 	int32_t work[MIXER_BUFSIZE][2] = {{0}};
 	//Write/Read pointers for the buffer
-	Bitu pos = 0;
-	Bitu done = 0;
-	Bitu needed = 0;
-	Bitu min_needed = 0;
-	Bitu max_needed = 0;
+	Bit32u pos = 0;
+	Bit32u done = 0;
+	Bit32u needed = 0;
+	Bit32u min_needed = 0;
+	Bit32u max_needed = 0;
 	// For every millisecond tick how many samples need to be generated
 	uint32_t tick_add = 0;
 	uint32_t tick_counter = 0;
@@ -712,14 +712,14 @@ static uint8_t stream[MIXER_QUEUE_OUTPUT_BUFFER_SIZE] = { 0 };
 
 static void MIXER_SendAudio(uint32_t len)
 {
-	Bitu need = (Bitu)len / MIXER_SSIZE;
+	auto need = len / MIXER_SSIZE;
 	Bit16s *output = (Bit16s *)stream;
-	Bitu reduce;
-	Bitu pos;
+	Bit32u reduce;
+	Bit32u pos;
 	// Local resampling counter to manipulate the data when sending it off
 	// to the callback
-	Bitu index_add = (1 << INDEX_SHIFT_LOCAL);
-	Bitu index = (index_add % need) ? need : 0;
+	Bit32u index_add = (1 << INDEX_SHIFT_LOCAL);
+	auto index = (index_add % need) ? need : 0;
 
 	Bits sample;
 	/* Enough room in the buffer ? */
@@ -731,11 +731,11 @@ static void MIXER_SendAudio(uint32_t len)
 		index_add = (reduce << INDEX_SHIFT_LOCAL) / need;
 		mixer.tick_add = calc_tickadd(mixer.freq + mixer.min_needed);
 	} else if (mixer.done < mixer.max_needed) {
-		Bitu left = mixer.done - need;
+		auto left = mixer.done - need;
 		if (left < mixer.min_needed) {
 			if (!Mixer_irq_important()) {
-				Bitu needed = mixer.needed - need;
-				Bitu diff = (mixer.min_needed > needed ? mixer.min_needed
+				auto needed = mixer.needed - need;
+				auto diff = (mixer.min_needed > needed ? mixer.min_needed
 				                                       : needed) -
 				            left;
 				mixer.tick_add = calc_tickadd(mixer.freq +
@@ -763,7 +763,7 @@ static void MIXER_SendAudio(uint32_t len)
 			 * division by 8 3) A little to nothing above the
 			 * min_needed buffer > go to default value
 			 */
-			Bitu diff = left - mixer.min_needed;
+			auto diff = left - mixer.min_needed;
 			if (diff > (mixer.min_needed << 1))
 				diff = mixer.min_needed << 1;
 			if (diff > (mixer.min_needed >> 1))
@@ -802,7 +802,7 @@ static void MIXER_SendAudio(uint32_t len)
 	mixer.pos = (mixer.pos + reduce) & MIXER_BUFMASK;
 	if (need != reduce) {
 		while (need--) {
-			Bitu i = (pos + (index >> INDEX_SHIFT_LOCAL)) & MIXER_BUFMASK;
+			auto i = (pos + (index >> INDEX_SHIFT_LOCAL)) & MIXER_BUFMASK;
 			index += index_add;
 			sample = mixer.work[i][0] >> MIXER_VOLSHIFT;
 			*output++ = MIXER_CLIP(sample);
