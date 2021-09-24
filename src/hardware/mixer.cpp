@@ -54,7 +54,7 @@
 
 #define MIXER_SSIZE 4
 #define MIXER_MIN_NEEDED 0
-#define MIXER_QUEUE_OUTPUT_BUFFER_SIZE (1024 * 32)
+#define MIXER_QUEUE_OUTPUT_BUFFER_SIZE ((1024 * 32) / sizeof(int16_t))
 
 //#define MIXER_SHIFT 14
 //#define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
@@ -706,7 +706,7 @@ static void MIXER_Mix_NoSound()
 	mixer.done=0;
 }
 
-static uint8_t stream[MIXER_QUEUE_OUTPUT_BUFFER_SIZE] = { 0 };
+static int16_t stream[MIXER_QUEUE_OUTPUT_BUFFER_SIZE] = { 0 };
 
 #define INDEX_SHIFT_LOCAL 14
 
