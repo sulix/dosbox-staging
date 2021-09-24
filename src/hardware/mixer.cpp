@@ -53,7 +53,7 @@
 #include "midi.h"
 
 #define MIXER_SSIZE 4
-#define MIXER_MIN_NEEDED 2
+#define MIXER_MIN_NEEDED 0
 #define MIXER_QUEUE_OUTPUT_BUFFER_SIZE (1024 * 32)
 
 //#define MIXER_SHIFT 14
@@ -635,7 +635,7 @@ static Bit32u calc_tickadd(Bit32u freq) {
 #endif
 }
 
-static void MIXER_SendAudio(int);
+static void MIXER_SendAudio(uint32_t);
 
 /* Mix a certain amount of new samples */
 static void MIXER_MixData(Bitu needed) {
@@ -665,8 +665,6 @@ static void MIXER_MixData(Bitu needed) {
 	mixer.done = needed;
 }
 
-static auto lastMixTicks = GetTicks();
-
 static void MIXER_Mix()
 {
 	MIXER_MixData(mixer.needed);
@@ -678,7 +676,7 @@ static void MIXER_Mix()
 
 	//if (GetTicksDiff(now, lastMixTicks) >= mixer.latency - MIXER_MIN_NEEDED) {
 	const auto queueLeft = SDL_GetQueuedAudioSize(mixer.sdldevice);
-	const auto len = mixer.blocksize * MIXER_SSIZE;
+	const uint32_t len = mixer.blocksize * MIXER_SSIZE;
 
 	if (queueLeft < len * 2) {
 		MIXER_SendAudio(len);
@@ -712,7 +710,7 @@ static uint8_t stream[MIXER_QUEUE_OUTPUT_BUFFER_SIZE] = { 0 };
 
 #define INDEX_SHIFT_LOCAL 14
 
-static void MIXER_SendAudio(int len)
+static void MIXER_SendAudio(uint32_t len)
 {
 	Bitu need = (Bitu)len / MIXER_SSIZE;
 	Bit16s *output = (Bit16s *)stream;
@@ -1028,7 +1026,6 @@ void MIXER_Init(Section* sec) {
 	mixer.min_needed = (mixer.freq * mixer.min_needed) / 1000;
 	mixer.max_needed = mixer.blocksize * 2 + 2 * mixer.min_needed;
 	mixer.needed = mixer.min_needed + 1;
-	lastMixTicks = GetTicks();
 
 	// Initialize the 8-bit to 16-bit lookup table
 	fill_8to16_lut();
