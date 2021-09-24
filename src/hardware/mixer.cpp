@@ -77,7 +77,7 @@
 // should the envelope monitor the initial signal? (recommended > 5s)
 #define ENVELOPE_EXPIRES_AFTER_S 10u
 
-static inline int16_t MIXER_CLIP(Bits SAMP)
+static constexpr int16_t MIXER_CLIP(Bit16s SAMP)
 {
 	if (SAMP < MAX_AUDIO) {
 		if (SAMP > MIN_AUDIO)
@@ -296,7 +296,7 @@ void MixerChannel::Mix(Bitu _needed) {
 		Bitu left = (needed - done);
 		left *= freq_add;
 		left  = (left >> FREQ_SHIFT) + ((left & FREQ_MASK)!=0);
-		handler(left);
+		handler(static_cast<uint32_t>(left));
 	}
 }
 
@@ -326,8 +326,8 @@ void MixerChannel::AddSilence()
 				mixpos &= MIXER_BUFMASK;
 				Bit32s* write = mixer.work[mixpos];
 
-				write[0] += prev_sample[0] * volmul[0];
-				write[1] += (stereo ? prev_sample[1] : prev_sample[0]) * volmul[1];
+				write[0] += static_cast<int32_t>(prev_sample[0]) * volmul[0];
+				write[1] += static_cast<int32_t>(stereo ? prev_sample[1] : prev_sample[0]) * volmul[1];
 
 				prev_sample[0] = next_sample[0];
 				prev_sample[1] = next_sample[1];
@@ -508,8 +508,8 @@ inline void MixerChannel::AddSamples(Bitu len, const Type* data) {
 		mixpos &= MIXER_BUFMASK;
 		Bit32s* write = mixer.work[mixpos];
 		if (!interpolate) {
-			write[0] += prev_sample[left_map] * volmul[0];
-			write[1] += (stereo ? prev_sample[right_map] : prev_sample[left_map]) * volmul[1];
+			write[0] += static_cast<int32_t>(prev_sample[left_map]) * volmul[0];
+			write[1] += static_cast<int32_t>(stereo ? prev_sample[right_map] : prev_sample[left_map]) * volmul[1];
 		}
 		else {
 			Bits diff_mul = freq_counter & FREQ_MASK;
@@ -553,8 +553,8 @@ void MixerChannel::AddStretched(Bitu len,Bit16s * data) {
 		index += index_add;
 		mixpos &= MIXER_BUFMASK;
 		Bits sample = prev_sample[0] + ((diff * diff_mul) >> FREQ_SHIFT);
-		mixer.work[mixpos][0] += sample * volmul[0];
-		mixer.work[mixpos][1] += sample * volmul[1];
+		mixer.work[mixpos][0] += static_cast<int32_t>(sample) * volmul[0];
+		mixer.work[mixpos][1] += static_cast<int32_t>(sample) * volmul[1];
 		mixpos++;
 	}
 }
@@ -638,7 +638,7 @@ static Bit32u calc_tickadd(Bit32u freq) {
 static void MIXER_SendAudio(uint32_t);
 
 /* Mix a certain amount of new samples */
-static void MIXER_MixData(Bitu needed) {
+static void MIXER_MixData(Bit32u needed) {
 	MixerChannel * chan=mixer.channels;
 	while (chan) {
 		chan->Mix(needed);
@@ -646,7 +646,7 @@ static void MIXER_MixData(Bitu needed) {
 	}
 	if (CaptureState & (CAPTURE_WAVE|CAPTURE_VIDEO)) {
 		int16_t convert[1024][2];
-		const size_t added = std::min<size_t>(needed - mixer.done, 1024);
+		const auto added = std::min<uint32_t>(needed - mixer.done, 1024);
 		size_t readpos = (mixer.pos + mixer.done) & MIXER_BUFMASK;
 		for (size_t i = 0; i < added; i++) {
 			const int32_t sample_1 = mixer.work[readpos][0] >> MIXER_VOLSHIFT;
