@@ -23,11 +23,14 @@
 
 #include "mixer.h"
 
-#include <cstdint>
-#include <string.h>
 #include <sys/types.h>
-#include <math.h>
+
+#include <cstdint>
+#include <cstring>
+#include <cmath>
+
 #include <algorithm>
+#include <array>
 
 #if defined (WIN32)
 //Midi listing
@@ -52,9 +55,12 @@
 #include "programs.h"
 #include "midi.h"
 
-#define MIXER_SSIZE 4
-#define MIXER_MIN_NEEDED 0
-#define MIXER_QUEUE_OUTPUT_BUFFER_SIZE ((1024 * 32) / sizeof(int16_t))
+static constexpr int MIXER_SSIZE = sizeof(MixerFrame);
+static constexpr int MIXER_MIN_NEEDED = 0;
+static constexpr int MIXER_MAX_LATENCY_MS = 100;
+static constexpr int MIXER_MAX_SAMPLE_RATE = 49716;
+static constexpr int MIXER_MAX_OUTPUT_BYTES = (MIXER_MAX_SAMPLE_RATE / 1000) * MIXER_MAX_LATENCY_MS * MIXER_SSIZE;
+static constexpr int MIXER_QUEUE_OUTPUT_BUFFER_FRAMES = (MIXER_MAX_OUTPUT_BYTES / MIXER_SSIZE);
 
 //#define MIXER_SHIFT 14
 //#define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
@@ -706,14 +712,13 @@ static void MIXER_Mix_NoSound()
 	mixer.done=0;
 }
 
-static int16_t stream[MIXER_QUEUE_OUTPUT_BUFFER_SIZE] = { 0 };
-
-#define INDEX_SHIFT_LOCAL 14
+static std::array<MixerFrame, MIXER_QUEUE_OUTPUT_BUFFER_FRAMES> queue_buffer;
 
 static void MIXER_SendAudio(uint32_t len)
 {
+	constexpr uint32_t INDEX_SHIFT_LOCAL = 14;
+
 	auto need = len / MIXER_SSIZE;
-	Bit16s *output = (Bit16s *)stream;
 	Bit32u reduce;
 	Bit32u pos;
 	// Local resampling counter to manipulate the data when sending it off
@@ -721,7 +726,6 @@ static void MIXER_SendAudio(uint32_t len)
 	Bit32u index_add = (1 << INDEX_SHIFT_LOCAL);
 	auto index = (index_add % need) ? need : 0;
 
-	Bits sample;
 	/* Enough room in the buffer ? */
 	if (mixer.done < need) {
 		//LOG_WARNING("Full underrun need %d, have %d, min %d", need, mixer.done, mixer.min_needed);
@@ -800,14 +804,16 @@ static void MIXER_SendAudio(uint32_t len)
 	mixer.needed -= reduce;
 	pos = mixer.pos;
 	mixer.pos = (mixer.pos + reduce) & MIXER_BUFMASK;
+	int idx = 0;
+
 	if (need != reduce) {
 		while (need--) {
 			auto i = (pos + (index >> INDEX_SHIFT_LOCAL)) & MIXER_BUFMASK;
 			index += index_add;
-			sample = mixer.work[i][0] >> MIXER_VOLSHIFT;
-			*output++ = MIXER_CLIP(sample);
-			sample = mixer.work[i][1] >> MIXER_VOLSHIFT;
-			*output++ = MIXER_CLIP(sample);
+			const MixerFrame frame = {
+						MIXER_CLIP(mixer.work[i][0] >> MIXER_VOLSHIFT),
+						MIXER_CLIP(mixer.work[i][1] >> MIXER_VOLSHIFT)};
+			queue_buffer[idx++] = frame;
 		}
 		/* Clean the used buffer */
 		while (reduce--) {
@@ -819,10 +825,10 @@ static void MIXER_SendAudio(uint32_t len)
 	} else {
 		while (reduce--) {
 			pos &= MIXER_BUFMASK;
-			sample = mixer.work[pos][0] >> MIXER_VOLSHIFT;
-			*output++ = MIXER_CLIP(sample);
-			sample = mixer.work[pos][1] >> MIXER_VOLSHIFT;
-			*output++ = MIXER_CLIP(sample);
+			const MixerFrame frame = {
+		        MIXER_CLIP(mixer.work[pos][0] >> MIXER_VOLSHIFT),
+		        MIXER_CLIP(mixer.work[pos][1] >> MIXER_VOLSHIFT)};
+			queue_buffer[idx++] = frame;
 			mixer.work[pos][0] = 0;
 			mixer.work[pos][1] = 0;
 			pos++;
@@ -837,12 +843,10 @@ static void MIXER_SendAudio(uint32_t len)
 	//LOG_INFO("MIXER: SDL_GetQueuedAudioSize() = %u", queueLeft);
 
 	const uint32_t size = len;
-	const auto res = SDL_QueueAudio(mixer.sdldevice, stream, size);
+	const auto res = SDL_QueueAudio(mixer.sdldevice, queue_buffer.data(), size);
 	if (res != 0)
 		LOG_ERR("MIXER: SDL_QueueAudio error %s", SDL_GetError());
 }
-
-#undef INDEX_SHIFT_LOCAL
 
 static void MIXER_Stop(MAYBE_UNUSED Section *sec)
 {}
