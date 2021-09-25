@@ -683,7 +683,7 @@ static void MIXER_Mix()
 	const auto queueLeft = SDL_GetQueuedAudioSize(mixer.sdldevice);
 	const uint32_t len = mixer.blocksize * MIXER_SSIZE;
 
-	if (queueLeft < len) {
+	if (queueLeft <= len) {
 		MIXER_SendAudio(len);
 	}
 }
