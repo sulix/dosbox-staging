@@ -680,17 +680,12 @@ static void MIXER_Mix()
 	mixer.needed+=(mixer.tick_counter >> TICK_SHIFT);
 	mixer.tick_counter &= TICK_MASK;
 
-	//const auto now = GetTicks();
-
-	//if (GetTicksDiff(now, lastMixTicks) >= mixer.latency - MIXER_MIN_NEEDED) {
 	const auto queueLeft = SDL_GetQueuedAudioSize(mixer.sdldevice);
 	const uint32_t len = mixer.blocksize * MIXER_SSIZE;
 
 	if (queueLeft < len * 2) {
 		MIXER_SendAudio(len);
 	}
-	//	lastMixTicks = now;
-	//}
 }
 
 static void MIXER_Mix_NoSound()
@@ -836,13 +831,6 @@ static void MIXER_SendAudio(uint32_t len)
 			pos++;
 		}
 	}
-
-	//LOG_INFO("MIXER: len: %d, mixer.done: %lu, index: %lu", len, mixer.done, index);
-	//LOG_INFO("MIXER: output difference: %lu", (uintptr_t)output - (uintptr_t)stream);
-	//const int doneSize = mixer.done * 4;
-
-	//const auto queueLeft = SDL_GetQueuedAudioSize(mixer.sdldevice);
-	//LOG_INFO("MIXER: SDL_GetQueuedAudioSize() = %u", queueLeft);
 
 	const uint32_t size = len;
 	const auto res = SDL_QueueAudio(mixer.sdldevice, queue_buffer.data(), size);
