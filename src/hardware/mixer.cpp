@@ -56,7 +56,7 @@
 #include "midi.h"
 
 static constexpr int MIXER_SSIZE = sizeof(MixerFrame);
-static constexpr int MIXER_MIN_NEEDED = 0;
+static constexpr int MIXER_MIN_NEEDED = 1;
 static constexpr int MIXER_MAX_LATENCY_MS = 100;
 static constexpr int MIXER_MAX_SAMPLE_RATE = 49716;
 static constexpr int MIXER_MAX_OUTPUT_BYTES =
@@ -683,7 +683,7 @@ static void MIXER_Mix()
 	const auto queueLeft = SDL_GetQueuedAudioSize(mixer.sdldevice);
 	const uint32_t len = mixer.blocksize * MIXER_SSIZE;
 
-	if (queueLeft < len * 2) {
+	if (queueLeft < len) {
 		MIXER_SendAudio(len);
 	}
 }
