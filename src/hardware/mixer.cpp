@@ -56,7 +56,7 @@
 #include "midi.h"
 
 static constexpr int MIXER_SSIZE = sizeof(MixerFrame);
-static constexpr int MIXER_MIN_NEEDED = 1;
+static constexpr int MIXER_MIN_NEEDED = 2;
 static constexpr int MIXER_MAX_LATENCY_MS = 100;
 static constexpr int MIXER_MAX_SAMPLE_RATE = 49716;
 static constexpr int MIXER_MAX_OUTPUT_BYTES =
@@ -753,9 +753,7 @@ static void MIXER_SendAudio(uint32_t len)
 		} else {
 			reduce = need;
 			index_add = (1 << INDEX_SHIFT_LOCAL);
-			//			LOG_MSG("regular run need %d, have
-			//%d, min %d, left %d", need, mixer.done,
-			//mixer.min_needed, left);
+			//LOG_INFO("regular run need %d, have %d, min %d, left %d", need, mixer.done, mixer.min_needed, left);
 
 			/* Mixer tick value being updated:
 			 * 3 cases:
