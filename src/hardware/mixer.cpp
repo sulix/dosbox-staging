@@ -56,7 +56,7 @@
 #include "midi.h"
 
 static constexpr int MIXER_SSIZE = sizeof(MixerFrame);
-static constexpr int MIXER_MIN_NEEDED = 0;
+static constexpr int MIXER_MIN_NEEDED = 2;
 static constexpr int MIXER_SEND_QUEUE_THRESHOLD_MS = 10;
 static constexpr int MIXER_MAX_LATENCY_MS = 100;
 static constexpr int MIXER_MAX_SAMPLE_RATE = 49716;
@@ -728,7 +728,7 @@ static void MIXER_SendAudio(uint32_t len)
 
 	/* Enough room in the buffer ? */
 	if (mixer.done < need) {
-		//LOG_WARNING("Full underrun need %d, have %d, min %d", need, mixer.done, mixer.min_needed);
+		LOG_WARNING("Full underrun need %d, have %d, min %d", need, mixer.done, mixer.min_needed);
 		if ((need - mixer.done) > (need >> 7)) // Max 1 percent stretch.
 			return;
 		reduce = mixer.done;
@@ -750,7 +750,7 @@ static void MIXER_SendAudio(uint32_t len)
 				left = (mixer.min_needed - left);
 				left = 1 + (2 * left) / mixer.min_needed; // left=1,2,3
 			}
-			//LOG_WARNING("needed underrun need %d, have %d, min %d, left %d", need, mixer.done, mixer.min_needed, left);
+			LOG_WARNING("needed underrun need %d, have %d, min %d, left %d", need, mixer.done, mixer.min_needed, left);
 			reduce = need - left;
 			index_add = (reduce << INDEX_SHIFT_LOCAL) / need;
 		} else {
@@ -779,7 +779,7 @@ static void MIXER_SendAudio(uint32_t len)
 		}
 	} else {
 		/* There is way too much data in the buffer */
-		//LOG_WARNING("overflow run need %d, have %d, min %d", need, mixer.done, mixer.min_needed);
+		LOG_WARNING("overflow run need %d, have %d, min %d", need, mixer.done, mixer.min_needed);
 		if (mixer.done > MIXER_BUFSIZE)
 			index_add = MIXER_BUFSIZE - 2 * mixer.min_needed;
 		else
