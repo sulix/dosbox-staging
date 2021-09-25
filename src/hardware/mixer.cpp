@@ -59,8 +59,10 @@ static constexpr int MIXER_SSIZE = sizeof(MixerFrame);
 static constexpr int MIXER_MIN_NEEDED = 0;
 static constexpr int MIXER_MAX_LATENCY_MS = 100;
 static constexpr int MIXER_MAX_SAMPLE_RATE = 49716;
-static constexpr int MIXER_MAX_OUTPUT_BYTES = (MIXER_MAX_SAMPLE_RATE / 1000) * MIXER_MAX_LATENCY_MS * MIXER_SSIZE;
-static constexpr int MIXER_QUEUE_OUTPUT_BUFFER_FRAMES = (MIXER_MAX_OUTPUT_BYTES / MIXER_SSIZE);
+static constexpr int MIXER_MAX_OUTPUT_BYTES = (MIXER_MAX_SAMPLE_RATE / 1000) *
+                                              MIXER_MAX_LATENCY_MS * MIXER_SSIZE;
+static constexpr int MIXER_QUEUE_OUTPUT_BUFFER_FRAMES = (MIXER_MAX_OUTPUT_BYTES /
+                                                         MIXER_SSIZE);
 
 //#define MIXER_SHIFT 14
 //#define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
@@ -83,11 +85,11 @@ static constexpr int MIXER_QUEUE_OUTPUT_BUFFER_FRAMES = (MIXER_MAX_OUTPUT_BYTES 
 // should the envelope monitor the initial signal? (recommended > 5s)
 #define ENVELOPE_EXPIRES_AFTER_S 10u
 
-static constexpr int16_t MIXER_CLIP(Bit16s SAMP)
+static constexpr int16_t MIXER_CLIP(Bits SAMP)
 {
 	if (SAMP < MAX_AUDIO) {
 		if (SAMP > MIN_AUDIO)
-			return SAMP;
+			return static_cast<int16_t>(SAMP);
 		else return MIN_AUDIO;
 	} else return MAX_AUDIO;
 }
@@ -811,8 +813,8 @@ static void MIXER_SendAudio(uint32_t len)
 			auto i = (pos + (index >> INDEX_SHIFT_LOCAL)) & MIXER_BUFMASK;
 			index += index_add;
 			const MixerFrame frame = {
-						MIXER_CLIP(mixer.work[i][0] >> MIXER_VOLSHIFT),
-						MIXER_CLIP(mixer.work[i][1] >> MIXER_VOLSHIFT)};
+			        MIXER_CLIP(mixer.work[i][0] >> MIXER_VOLSHIFT),
+			        MIXER_CLIP(mixer.work[i][1] >> MIXER_VOLSHIFT)};
 			queue_buffer[idx++] = frame;
 		}
 		/* Clean the used buffer */
@@ -826,8 +828,8 @@ static void MIXER_SendAudio(uint32_t len)
 		while (reduce--) {
 			pos &= MIXER_BUFMASK;
 			const MixerFrame frame = {
-		        MIXER_CLIP(mixer.work[pos][0] >> MIXER_VOLSHIFT),
-		        MIXER_CLIP(mixer.work[pos][1] >> MIXER_VOLSHIFT)};
+			        MIXER_CLIP(mixer.work[pos][0] >> MIXER_VOLSHIFT),
+			        MIXER_CLIP(mixer.work[pos][1] >> MIXER_VOLSHIFT)};
 			queue_buffer[idx++] = frame;
 			mixer.work[pos][0] = 0;
 			mixer.work[pos][1] = 0;
