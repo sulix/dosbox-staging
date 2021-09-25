@@ -56,13 +56,16 @@
 #include "midi.h"
 
 static constexpr int MIXER_SSIZE = sizeof(MixerFrame);
-static constexpr int MIXER_MIN_NEEDED = 2;
+static constexpr int MIXER_MIN_NEEDED = 0;
+static constexpr int MIXER_SEND_QUEUE_THRESHOLD_MS = 10;
 static constexpr int MIXER_MAX_LATENCY_MS = 100;
 static constexpr int MIXER_MAX_SAMPLE_RATE = 49716;
 static constexpr int MIXER_MAX_OUTPUT_BYTES =
         ((MIXER_MAX_SAMPLE_RATE * MIXER_MAX_LATENCY_MS * MIXER_SSIZE) / 1000) + 1;
 static constexpr int MIXER_QUEUE_OUTPUT_BUFFER_FRAMES = (MIXER_MAX_OUTPUT_BYTES /
                                                          MIXER_SSIZE) + 1;
+
+static uint32_t queue_send_threshold = 0;
 
 //#define MIXER_SHIFT 14
 //#define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
@@ -680,10 +683,10 @@ static void MIXER_Mix()
 	mixer.needed+=(mixer.tick_counter >> TICK_SHIFT);
 	mixer.tick_counter &= TICK_MASK;
 
-	const auto queueLeft = SDL_GetQueuedAudioSize(mixer.sdldevice);
+	const auto queue_left = SDL_GetQueuedAudioSize(mixer.sdldevice);
 	const uint32_t len = mixer.blocksize * MIXER_SSIZE;
 
-	if (queueLeft <= len) {
+	if (queue_left <= queue_send_threshold) {
 		MIXER_SendAudio(len);
 	}
 }
@@ -1018,6 +1021,8 @@ void MIXER_Init(Section* sec) {
 	mixer.min_needed = (mixer.freq * mixer.min_needed) / 1000;
 	mixer.max_needed = mixer.blocksize * 2 + 2 * mixer.min_needed;
 	mixer.needed = mixer.min_needed + 1;
+
+	queue_send_threshold = (mixer.freq / 1000) * MIXER_SEND_QUEUE_THRESHOLD_MS * MIXER_SSIZE;
 
 	// Initialize the 8-bit to 16-bit lookup table
 	fill_8to16_lut();
