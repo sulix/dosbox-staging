@@ -740,10 +740,8 @@ static void MIXER_SendAudio(uint32_t len)
 			if (!Mixer_irq_important()) {
 				auto needed = mixer.needed - need;
 				auto diff = (mixer.min_needed > needed ? mixer.min_needed
-				                                       : needed) -
-				            left;
-				mixer.tick_add = calc_tickadd(mixer.freq +
-				                              (diff * 3));
+				                                       : needed) - left;
+				mixer.tick_add = calc_tickadd(mixer.freq + (diff * 3));
 				left = 0; // No stretching as we compensate with
 				          // the tick_add value
 			} else {
@@ -769,11 +767,9 @@ static void MIXER_SendAudio(uint32_t len)
 			if (diff > (mixer.min_needed << 1))
 				diff = mixer.min_needed << 1;
 			if (diff > (mixer.min_needed >> 1))
-				mixer.tick_add = calc_tickadd(mixer.freq -
-				                              (diff / 5));
+				mixer.tick_add = calc_tickadd(mixer.freq - (diff / 5));
 			else if (diff > (mixer.min_needed >> 2))
-				mixer.tick_add = calc_tickadd(mixer.freq -
-				                              (diff >> 3));
+				mixer.tick_add = calc_tickadd(mixer.freq - (diff >> 3));
 			else
 				mixer.tick_add = calc_tickadd(mixer.freq);
 		}
@@ -806,7 +802,7 @@ static void MIXER_SendAudio(uint32_t len)
 
 	if (need != reduce) {
 		while (need--) {
-			auto i = (pos + (index >> INDEX_SHIFT_LOCAL)) & MIXER_BUFMASK;
+			const auto i = (pos + (index >> INDEX_SHIFT_LOCAL)) & MIXER_BUFMASK;
 			index += index_add;
 			const MixerFrame frame = {
 			        MIXER_CLIP(mixer.work[i][0] >> MIXER_VOLSHIFT),
