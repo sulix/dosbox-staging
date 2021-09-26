@@ -1018,7 +1018,7 @@ void MIXER_Init(Section* sec) {
 	mixer.max_needed = mixer.blocksize * 2 + 2 * mixer.min_needed;
 	mixer.needed = mixer.min_needed + 1;
 
-	queue_send_threshold = (mixer.freq / 1000) * MIXER_SEND_QUEUE_THRESHOLD_MS * MIXER_SSIZE;
+	queue_send_threshold = ((mixer.freq / 1000) + 1) * MIXER_SEND_QUEUE_THRESHOLD_MS * MIXER_SSIZE;
 
 	// Initialize the 8-bit to 16-bit lookup table
 	fill_8to16_lut();
