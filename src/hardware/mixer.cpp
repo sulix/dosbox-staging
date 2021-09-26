@@ -56,7 +56,7 @@
 #include "midi.h"
 
 static constexpr int MIXER_SSIZE = sizeof(MixerFrame);
-static constexpr int MIXER_MIN_NEEDED = 2;
+static constexpr int MIXER_MIN_NEEDED = 0;
 static constexpr int MIXER_SEND_QUEUE_THRESHOLD_MS = 10;
 static constexpr int MIXER_MAX_LATENCY_MS = 100;
 static constexpr int MIXER_MAX_SAMPLE_RATE = 49716;
@@ -686,7 +686,7 @@ static void MIXER_Mix()
 	const auto queue_left = SDL_GetQueuedAudioSize(mixer.sdldevice);
 	const uint32_t len = mixer.blocksize * MIXER_SSIZE;
 
-	if (queue_left <= queue_send_threshold) {
+	if (queue_left <= queue_send_threshold && mixer.done >= mixer.blocksize) {
 		MIXER_SendAudio(len);
 	}
 }
@@ -727,52 +727,28 @@ static void MIXER_SendAudio(uint32_t len)
 	auto index = (index_add % need) ? need : 0;
 
 	/* Enough room in the buffer ? */
-	if (mixer.done < need) {
-		LOG_WARNING("Full underrun need %d, have %d, min %d", need, mixer.done, mixer.min_needed);
-		if ((need - mixer.done) > (need >> 7)) // Max 1 percent stretch.
-			return;
-		reduce = mixer.done;
-		index_add = (reduce << INDEX_SHIFT_LOCAL) / need;
-		mixer.tick_add = calc_tickadd(mixer.freq + mixer.min_needed);
-	} else if (mixer.done < mixer.max_needed) {
+	if (mixer.done < mixer.max_needed) {
 		auto left = mixer.done - need;
-		if (left < mixer.min_needed) {
-			if (!Mixer_irq_important()) {
-				auto needed = mixer.needed - need;
-				auto diff = (mixer.min_needed > needed ? mixer.min_needed
-				                                       : needed) - left;
-				mixer.tick_add = calc_tickadd(mixer.freq + (diff * 3));
-				left = 0; // No stretching as we compensate with
-				          // the tick_add value
-			} else {
-				left = (mixer.min_needed - left);
-				left = 1 + (2 * left) / mixer.min_needed; // left=1,2,3
-			}
-			LOG_WARNING("needed underrun need %d, have %d, min %d, left %d", need, mixer.done, mixer.min_needed, left);
-			reduce = need - left;
-			index_add = (reduce << INDEX_SHIFT_LOCAL) / need;
-		} else {
-			reduce = need;
-			index_add = (1 << INDEX_SHIFT_LOCAL);
-			//LOG_INFO("regular run need %d, have %d, min %d, left %d", need, mixer.done, mixer.min_needed, left);
+		reduce = need;
+		index_add = (1 << INDEX_SHIFT_LOCAL);
+		//LOG_INFO("regular run need %d, have %d, min %d, left %d", need, mixer.done, mixer.min_needed, left);
 
-			/* Mixer tick value being updated:
-			 * 3 cases:
-			 * 1) A lot too high. >division by 5. but maxed by 2*
-			 * min to prevent too fast drops. 2) A little too high >
-			 * division by 8 3) A little to nothing above the
-			 * min_needed buffer > go to default value
-			 */
-			auto diff = left - mixer.min_needed;
-			if (diff > (mixer.min_needed << 1))
-				diff = mixer.min_needed << 1;
-			if (diff > (mixer.min_needed >> 1))
-				mixer.tick_add = calc_tickadd(mixer.freq - (diff / 5));
-			else if (diff > (mixer.min_needed >> 2))
-				mixer.tick_add = calc_tickadd(mixer.freq - (diff >> 3));
-			else
-				mixer.tick_add = calc_tickadd(mixer.freq);
-		}
+		/* Mixer tick value being updated:
+			* 3 cases:
+			* 1) A lot too high. >division by 5. but maxed by 2*
+			* min to prevent too fast drops. 2) A little too high >
+			* division by 8 3) A little to nothing above the
+			* min_needed buffer > go to default value
+			*/
+		auto diff = left - mixer.min_needed;
+		if (diff > (mixer.min_needed << 1))
+			diff = mixer.min_needed << 1;
+		if (diff > (mixer.min_needed >> 1))
+			mixer.tick_add = calc_tickadd(mixer.freq - (diff / 5));
+		else if (diff > (mixer.min_needed >> 2))
+			mixer.tick_add = calc_tickadd(mixer.freq - (diff >> 3));
+		else
+			mixer.tick_add = calc_tickadd(mixer.freq);
 	} else {
 		/* There is way too much data in the buffer */
 		LOG_WARNING("overflow run need %d, have %d, min %d", need, mixer.done, mixer.min_needed);
