@@ -63,6 +63,8 @@ static constexpr int MIXER_MAX_OUTPUT_BYTES =
         ((MIXER_MAX_SAMPLE_RATE * MIXER_MAX_LATENCY_MS * MIXER_SSIZE) / 1000) + 1;
 static constexpr int MIXER_QUEUE_OUTPUT_BUFFER_FRAMES = (MIXER_MAX_OUTPUT_BYTES /
                                                          MIXER_SSIZE) + 1;
+static uint32_t queue_clear_threshold = 0;
+static uint32_t queue_send_bytes = 0;
 
 //#define MIXER_SHIFT 14
 //#define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
@@ -682,14 +684,13 @@ static void MIXER_Mix()
 
 	const auto queue_left = SDL_GetQueuedAudioSize(mixer.sdldevice);
 
-	if (queue_left > mixer.max_needed * 8) {
+	if (queue_left > queue_clear_threshold) {
 		LOG_WARNING("MIXER: clearing audio queue");
 		SDL_ClearQueuedAudio(mixer.sdldevice);
 	}
 
 	if (mixer.done >= mixer.blocksize) {
-		const uint32_t len = mixer.blocksize * MIXER_SSIZE;
-		MIXER_SendAudio(len);
+		MIXER_SendAudio(queue_send_bytes);
 	}
 }
 
@@ -953,6 +954,9 @@ void MIXER_Init(Section* sec) {
 		        obtained.channels, mixer.freq, mixer.latency,
 		        mixer.blocksize);
 	}
+
+	queue_send_bytes = mixer.blocksize * MIXER_SSIZE;
+	queue_clear_threshold = std::max(static_cast<uint32_t>(MIXER_BUFSIZE), queue_send_bytes);
 
 	//1000 = 8 *125
 	mixer.tick_counter = (mixer.freq%125)?TICK_NEXT:0;
