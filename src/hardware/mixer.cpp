@@ -991,7 +991,7 @@ void MIXER_Init(Section* sec) {
 	mixer.tick_counter = (mixer.freq%125)?TICK_NEXT:0;
 	mixer.min_needed = MIXER_MIN_NEEDED;
 	mixer.min_needed = (mixer.freq * mixer.min_needed) / 1000;
-	mixer.max_needed = mixer.blocksize * 2 + 2 * mixer.min_needed;
+	mixer.max_needed = mixer.blocksize * 4 + 2 * mixer.min_needed;
 	mixer.needed = mixer.min_needed + 1;
 
 	queue_send_threshold = ((mixer.freq / 1000) + 1) * MIXER_SEND_QUEUE_THRESHOLD_MS * MIXER_SSIZE;
