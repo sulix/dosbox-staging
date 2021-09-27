@@ -57,7 +57,7 @@
 
 static constexpr int MIXER_SSIZE = sizeof(MixerFrame);
 static constexpr int MIXER_MIN_NEEDED = 0;
-static constexpr int MIXER_SEND_QUEUE_THRESHOLD_MS = 10;
+static constexpr int MIXER_SEND_QUEUE_THRESHOLD_MS = 50;
 static constexpr int MIXER_MAX_LATENCY_MS = 100;
 static constexpr int MIXER_MAX_SAMPLE_RATE = 49716;
 static constexpr int MIXER_MAX_OUTPUT_BYTES =
