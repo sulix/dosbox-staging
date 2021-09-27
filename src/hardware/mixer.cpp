@@ -57,15 +57,12 @@
 
 static constexpr int MIXER_SSIZE = sizeof(MixerFrame);
 static constexpr int MIXER_MIN_NEEDED = 0;
-static constexpr int MIXER_SEND_QUEUE_THRESHOLD_MS = 50;
 static constexpr int MIXER_MAX_LATENCY_MS = 100;
 static constexpr int MIXER_MAX_SAMPLE_RATE = 49716;
 static constexpr int MIXER_MAX_OUTPUT_BYTES =
         ((MIXER_MAX_SAMPLE_RATE * MIXER_MAX_LATENCY_MS * MIXER_SSIZE) / 1000) + 1;
 static constexpr int MIXER_QUEUE_OUTPUT_BUFFER_FRAMES = (MIXER_MAX_OUTPUT_BYTES /
                                                          MIXER_SSIZE) + 1;
-
-static uint32_t queue_send_threshold = 0;
 
 //#define MIXER_SHIFT 14
 //#define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
@@ -684,9 +681,14 @@ static void MIXER_Mix()
 	mixer.tick_counter &= TICK_MASK;
 
 	const auto queue_left = SDL_GetQueuedAudioSize(mixer.sdldevice);
-	const uint32_t len = mixer.blocksize * MIXER_SSIZE;
 
-	if (queue_left <= queue_send_threshold && mixer.done >= mixer.blocksize) {
+	if (queue_left > mixer.max_needed * 8) {
+		LOG_WARNING("MIXER: clearing audio queue");
+		SDL_ClearQueuedAudio(mixer.sdldevice);
+	}
+
+	if (mixer.done >= mixer.blocksize) {
+		const uint32_t len = mixer.blocksize * MIXER_SSIZE;
 		MIXER_SendAudio(len);
 	}
 }
@@ -716,50 +718,31 @@ static std::array<MixerFrame, MIXER_QUEUE_OUTPUT_BUFFER_FRAMES> queue_buffer;
 
 static void MIXER_SendAudio(uint32_t len)
 {
-	constexpr uint32_t INDEX_SHIFT_LOCAL = 14;
-
 	auto need = len / MIXER_SSIZE;
 	Bit32u reduce;
 	Bit32u pos;
-	// Local resampling counter to manipulate the data when sending it off
-	// to the callback
-	Bit32u index_add = (1 << INDEX_SHIFT_LOCAL);
-	auto index = (index_add % need) ? need : 0;
 
-	/* Enough room in the buffer ? */
-	if (mixer.done < mixer.max_needed) {
-		auto left = mixer.done - need;
-		reduce = need;
-		index_add = (1 << INDEX_SHIFT_LOCAL);
-		//LOG_INFO("regular run need %d, have %d, min %d, left %d", need, mixer.done, mixer.min_needed, left);
+	auto left = mixer.done - need;
+	reduce = need;
+	//LOG_INFO("regular run need %d, have %d, min %d, left %d", need, mixer.done, mixer.min_needed, left);
 
-		/* Mixer tick value being updated:
-			* 3 cases:
-			* 1) A lot too high. >division by 5. but maxed by 2*
-			* min to prevent too fast drops. 2) A little too high >
-			* division by 8 3) A little to nothing above the
-			* min_needed buffer > go to default value
-			*/
-		auto diff = left - mixer.min_needed;
-		if (diff > (mixer.min_needed << 1))
-			diff = mixer.min_needed << 1;
-		if (diff > (mixer.min_needed >> 1))
-			mixer.tick_add = calc_tickadd(mixer.freq - (diff / 5));
-		else if (diff > (mixer.min_needed >> 2))
-			mixer.tick_add = calc_tickadd(mixer.freq - (diff >> 3));
-		else
-			mixer.tick_add = calc_tickadd(mixer.freq);
-	} else {
-		/* There is way too much data in the buffer */
-		LOG_WARNING("overflow run need %d, have %d, min %d", need, mixer.done, mixer.min_needed);
-		if (mixer.done > MIXER_BUFSIZE)
-			index_add = MIXER_BUFSIZE - 2 * mixer.min_needed;
-		else
-			index_add = mixer.done - 2 * mixer.min_needed;
-		index_add = (index_add << INDEX_SHIFT_LOCAL) / need;
-		reduce = mixer.done - 2 * mixer.min_needed;
-		mixer.tick_add = calc_tickadd(mixer.freq - (mixer.min_needed / 5));
-	}
+	/* Mixer tick value being updated:
+		* 3 cases:
+		* 1) A lot too high. >division by 5. but maxed by 2*
+		* min to prevent too fast drops. 2) A little too high >
+		* division by 8 3) A little to nothing above the
+		* min_needed buffer > go to default value
+		*/
+	auto diff = left - mixer.min_needed;
+	if (diff > (mixer.min_needed << 1))
+		diff = mixer.min_needed << 1;
+	if (diff > (mixer.min_needed >> 1))
+		mixer.tick_add = calc_tickadd(mixer.freq - (diff / 5));
+	else if (diff > (mixer.min_needed >> 2))
+		mixer.tick_add = calc_tickadd(mixer.freq - (diff >> 3));
+	else
+		mixer.tick_add = calc_tickadd(mixer.freq);
+
 	/* Reduce done count in all channels */
 	for (MixerChannel * chan=mixer.channels;chan;chan=chan->next) {
 		if (chan->done>reduce) chan->done-=reduce;
@@ -776,33 +759,17 @@ static void MIXER_SendAudio(uint32_t len)
 	mixer.pos = (mixer.pos + reduce) & MIXER_BUFMASK;
 	int idx = 0;
 
-	if (need != reduce) {
-		while (need--) {
-			const auto i = (pos + (index >> INDEX_SHIFT_LOCAL)) & MIXER_BUFMASK;
-			index += index_add;
-			const MixerFrame frame = {
-			        MIXER_CLIP(mixer.work[i][0] >> MIXER_VOLSHIFT),
-			        MIXER_CLIP(mixer.work[i][1] >> MIXER_VOLSHIFT)};
-			queue_buffer[idx++] = frame;
-		}
-		/* Clean the used buffer */
-		while (reduce--) {
-			pos &= MIXER_BUFMASK;
-			mixer.work[pos][0] = 0;
-			mixer.work[pos][1] = 0;
-			pos++;
-		}
-	} else {
-		while (reduce--) {
-			pos &= MIXER_BUFMASK;
-			const MixerFrame frame = {
-			        MIXER_CLIP(mixer.work[pos][0] >> MIXER_VOLSHIFT),
-			        MIXER_CLIP(mixer.work[pos][1] >> MIXER_VOLSHIFT)};
-			queue_buffer[idx++] = frame;
-			mixer.work[pos][0] = 0;
-			mixer.work[pos][1] = 0;
-			pos++;
-		}
+	assert (need == reduce);
+
+	while (reduce--) {
+		pos &= MIXER_BUFMASK;
+		const MixerFrame frame = {
+				MIXER_CLIP(mixer.work[pos][0] >> MIXER_VOLSHIFT),
+				MIXER_CLIP(mixer.work[pos][1] >> MIXER_VOLSHIFT)};
+		queue_buffer[idx++] = frame;
+		mixer.work[pos][0] = 0;
+		mixer.work[pos][1] = 0;
+		pos++;
 	}
 
 	const uint32_t size = len;
@@ -993,8 +960,6 @@ void MIXER_Init(Section* sec) {
 	mixer.min_needed = (mixer.freq * mixer.min_needed) / 1000;
 	mixer.max_needed = mixer.blocksize * 4 + 2 * mixer.min_needed;
 	mixer.needed = mixer.min_needed + 1;
-
-	queue_send_threshold = ((mixer.freq / 1000) + 1) * MIXER_SEND_QUEUE_THRESHOLD_MS * MIXER_SSIZE;
 
 	// Initialize the 8-bit to 16-bit lookup table
 	fill_8to16_lut();
