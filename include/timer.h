@@ -25,8 +25,8 @@
 #include <limits>
 #include <thread>
 
-using std::chrono_literals::operator""ms;
-using std::chrono_literals::operator""us;
+using std::literals::chrono_literals::operator""ms;
+using std::literals::chrono_literals::operator""us;
 
 typedef std::chrono::milliseconds system_tick_t;
 
