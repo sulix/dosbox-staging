@@ -56,7 +56,7 @@ struct Disney {
 	// the D/A channels
 	dac_channel da[2] = {};
 
-	Bitu last_used = 0;
+	system_tick_t last_used = 0ms;
 	mixer_channel_ptr_t chan{nullptr, MIXER_DelChannel};
 	bool stereo = false;
 
@@ -80,7 +80,7 @@ static void DISNEY_disable(uint32_t)
 		disney.chan->AddSilence();
 		disney.chan->Enable(false);
 	}
-	disney.last_used = 0;
+	disney.last_used = 0ms;
 	disney.state = DISNEY_STATE::IDLE;
 	disney.interface_det = 0;
 	disney.interface_det_ext = 0;
@@ -360,7 +360,7 @@ static void DISNEY_CallBack(uint16_t len) {
 
 		//LOG_MSG("disney underflow %d",len - real_used);
 	}
-	if (disney.last_used+100<PIC_Ticks) {
+	if (disney.last_used+100ms<PIC_Ticks) {
 		// disable sound output
 		PIC_AddEvent(DISNEY_disable, 0.0001); // I think we shouldn't delete the
 		                                      // mixer while we are inside it
@@ -406,7 +406,7 @@ void DISNEY_Init(Section* sec) {
 	// Initialize the Disney states
 	disney.status = DISNEY_INIT_STATUS;
 	disney.control = 0;
-	disney.last_used = 0;
+	disney.last_used = 0ms;
 	DISNEY_disable(0);
 
 	sec->AddDestroyFunction(&DISNEY_ShutDown, true);

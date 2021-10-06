@@ -26,6 +26,7 @@
 #include "inout.h"
 #include "pic.h"
 #include "support.h"
+#include "timer.h"
 
 //TODO: higher axis can't be mapped. Find out why again
 
@@ -33,7 +34,7 @@
 #define SUPPORT_MAP_AUTO 0
 
 constexpr int RANGE = 64;
-constexpr int TIMEOUT = 10;
+constexpr auto TIMEOUT = 10ms;
 
 enum MovementType {
 	JOYMAP_SQUARE,
@@ -159,7 +160,7 @@ struct JoyStick {
 JoystickType joytype = JOY_UNSET;
 static JoyStick stick[2];
 
-static uint32_t last_write = 0;
+static system_tick_t last_write = 0ms;
 static bool write_active = false;
 static bool swap34 = false;
 bool button_wrapping_enabled = true;

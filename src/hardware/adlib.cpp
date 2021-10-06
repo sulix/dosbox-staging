@@ -23,11 +23,14 @@
 #include <math.h>
 #include <sys/types.h>
 
+#include <chrono>
+
 #include "cpu.h"
 #include "setup.h"
 #include "support.h"
 #include "mapper.h"
 #include "mem.h"
+#include "timer.h"
 #include "dbopl.h"
 #include "../libs/nuked/opl3.h"
 
@@ -232,7 +235,7 @@ struct RawHeader {
 	Bit16u versionHigh;			/* 0x08, size of the data following the m */
 	Bit16u versionLow;			/* 0x0a, size of the data following the m */
 	Bit32u commands;			/* 0x0c, Bit32u amount of command/data pairs */
-	Bit32u milliseconds;		/* 0x10, Bit32u Total milliseconds of data in this chunk */
+	std::chrono::milliseconds milliseconds;		/* 0x10, Bit32u Total milliseconds of data in this chunk */
 	Bit8u hardware;				/* 0x14, Bit8u Hardware Type 0=opl2,1=dual-opl2,2=opl3 */
 	Bit8u format;				/* 0x15, Bit8u Format 0=cmd/data interleaved, 1 maybe all cdms, followed by all data */
 	Bit8u compression;			/* 0x16, Bit8u Compression Type, 0 = No Compression */
@@ -259,8 +262,8 @@ class Capture {
 	RawHeader header;
 
 	FILE*  handle = nullptr;  // File used for writing
-	Bit32u startTicks = 0;    // Start used to check total raw length on end
-	Bit32u lastTicks = 0;     // Last ticks when last last cmd was added
+	system_tick_t startTicks = 0ms;    // Start used to check total raw length on end
+	system_tick_t lastTicks = 0ms;     // Last ticks when last last cmd was added
 	Bit8u  buf[1024];         // 16 added for delay commands and what not
 	Bit32u bufUsed = 0;
 
@@ -380,7 +383,7 @@ class Capture {
 			header.versionHigh  = host_to_le(header.versionHigh);
 			header.versionLow   = host_to_le(header.versionLow);
 			header.commands     = host_to_le(header.commands);
-			header.milliseconds = host_to_le(header.milliseconds);
+			header.milliseconds = static_cast<std::chrono::milliseconds>(host_to_le(static_cast<uint64_t>(header.milliseconds.count())));
 			fseek( handle, 0, SEEK_SET );
 			fwrite( &header, 1, sizeof( header ), handle );
 			fclose( handle );
@@ -405,25 +408,25 @@ public:
 			if ( (*cache)[ regFull ] == val )
 				return true;
 			/* Check how much time has passed */
-			uint32_t passed = PIC_Ticks - lastTicks;
+			auto passed = PIC_Ticks - lastTicks;
 			lastTicks = PIC_Ticks;
 			header.milliseconds += passed;
 
 			//if ( passed > 0 ) LOG_MSG( "Delay %d", passed ) ;
 			
 			// If we passed more than 30 seconds since the last command, we'll restart the the capture
-			if ( passed > 30000 ) {
+			if ( passed > 30000ms ) {
 				CloseFile();
 				goto skipWrite; 
 			}
-			while (passed > 0) {
-				if (passed < 257) {			//1-256 millisecond delay
-					AddBuf( delay256, passed - 1 );
-					passed = 0;
+			while (passed > 0ms) {
+				if (passed < 257ms) {			//1-256 millisecond delay
+					AddBuf( delay256, passed.count() - 1 );
+					passed = 0ms;
 				} else {
-					const auto shift = (passed >> 8);
-					passed -= shift << 8;
-					AddBuf( delayShift8, shift - 1 );
+					const auto shift = (passed / 256);
+					passed -= shift * 256;
+					AddBuf( delayShift8, shift.count() - 1 );
 				}
 			}
 			AddWrite( regFull, val );
@@ -744,7 +747,7 @@ static void OPL_CallBack(uint16_t len)
 {
 	module->handler->Generate(module->mixerChan, len);
 	// Disable the sound generation after 30 seconds of silence
-	if ((PIC_Ticks - module->lastUsed) > 30000) {
+	if ((PIC_Ticks - module->lastUsed) > 30000ms) {
 		uint8_t i;
 		for (i=0xb0;i<0xb9;i++) if (module->cache[i]&0x20||module->cache[i+0x100]&0x20) break;
 		if (i==0xb9) module->mixerChan->Enable(false);

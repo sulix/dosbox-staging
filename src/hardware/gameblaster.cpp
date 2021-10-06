@@ -37,7 +37,7 @@ constexpr uint32_t GAMEBLASTER_CLOCK_HZ = 7159090;
 //My mixer channel
 static MixerChannel * cms_chan;
 //Timer to disable the channel after a while
-static Bit32u lastWriteTicks;
+static system_tick_t lastWriteTicks;
 static uint16_t cmsBase;
 static saa1099_device* device[2];
 
@@ -73,7 +73,7 @@ static void CMS_CallBack(Bitu len) {
 	if ( cms_chan ) {
 
 		//Have there been 10 seconds of no commands, disable channel
-		if ( lastWriteTicks + 10000 < PIC_Ticks ) {
+		if ( lastWriteTicks + 10000ms < PIC_Ticks ) {
 			cms_chan->Enable( false );
 			return;
 		}

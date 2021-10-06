@@ -98,7 +98,7 @@ void Innovation::Open(const std::string &model_choice,
 	channel = std::move(mixer_channel);
 
 	// Ready state-values for rendering
-	last_used = 0;
+	last_used = 0ms;
 	play_buffer_pos = 0;
 	keep_rendering = true;
 
@@ -165,7 +165,7 @@ void Innovation::WriteToPort(io_port_t port, uint8_t data, io_width_t)
 		service->write(sid_port, data);
 	}
 	// Turn on the channel after the data's written
-	if (!last_used) {
+	if (last_used > 0ms) {
 		channel->Enable(true);
 	}
 	last_used = PIC_Ticks;
@@ -215,8 +215,8 @@ void Innovation::MixerCallBack(uint16_t requested_samples)
 		play_buffer_pos += n;
 	}
 	// Stop the channel after 5 seconds of idle-time.
-	if (last_used + 5000 < PIC_Ticks) {
-		last_used = 0;
+	if (last_used + 5000ms < PIC_Ticks) {
+		last_used = 0ms;
 		channel->Enable(false);
 	}
 }

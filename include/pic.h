@@ -23,6 +23,8 @@
 #include <cmath>
 #include <cstdint>
 
+#include "timer.h"
+
 /* CPU Cycle Timing */
 extern int32_t CPU_Cycles;
 extern int32_t CPU_CycleLeft;
@@ -35,7 +37,7 @@ extern uint32_t PIC_IRQCheck;
 
 // Elapsed milliseconds since starting DOSBox
 // Holds ~4.2 B milliseconds or ~48 days before rolling over
-extern uint32_t PIC_Ticks;
+extern system_tick_t PIC_Ticks;
 
 // The number of cycles not done yet (ND)
 static inline int32_t PIC_TickIndexND()
@@ -59,7 +61,7 @@ static inline int32_t PIC_MakeCycles(double amount)
 
 static inline double PIC_FullIndex()
 {
-	return static_cast<double>(PIC_Ticks) + PIC_TickIndex();
+	return static_cast<double>(PIC_Ticks.count()) + PIC_TickIndex();
 }
 
 void PIC_ActivateIRQ(uint8_t irq);

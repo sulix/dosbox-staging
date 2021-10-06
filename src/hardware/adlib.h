@@ -179,7 +179,7 @@ class Module: public Module_base {
 public:
 	static OPL_Mode oplmode;
 	MixerChannel* mixerChan;
-	Bit32u lastUsed;				//Ticks when adlib was last used to turn of mixing after a few second
+	system_tick_t lastUsed;				//Ticks when adlib was last used to turn of mixing after a few second
 
 	Handler* handler;				//Handler that will generate the sound
 	RegisterCache cache;

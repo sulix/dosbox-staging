@@ -33,6 +33,7 @@
 #include "mixer.h"
 #include "inout.h"
 #include "rwqueue.h"
+#include "timer.h"
 #include "../libs/residfp/SID.h"
 
 class Innovation {
@@ -75,7 +76,7 @@ private:
 	uint16_t base_port = 0;
 	double chip_clock = 0;
 	double sid_sample_rate = 0;
-	size_t last_used = 0;
+	system_tick_t last_used = 0ms;
 	uint16_t play_buffer_pos = 0;
 	bool is_open = false;
 };

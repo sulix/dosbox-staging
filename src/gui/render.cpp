@@ -37,6 +37,7 @@
 #include "support.h"
 #include "shell.h"
 #include "string_utils.h"
+#include "timer.h"
 #include "vga.h"
 
 #include "render_crt_glsl.h"
@@ -210,7 +211,7 @@ static void RENDER_Halt( void ) {
 	render.active=false;
 }
 
-extern uint32_t PIC_Ticks;
+extern system_tick_t PIC_Ticks;
 void RENDER_EndUpdate( bool abort ) {
 	if (GCC_UNLIKELY(!render.updating))
 		return;

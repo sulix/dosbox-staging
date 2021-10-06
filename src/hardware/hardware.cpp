@@ -60,7 +60,7 @@ static struct {
 		FILE * handle;
 		Bit8u buffer[MIDI_BUF];
 		Bitu used,done;
-		Bit32u last;
+		system_tick_t last;
 	} midi;
 	struct {
 		Bitu rowlen;
@@ -771,9 +771,9 @@ void CAPTURE_AddMidi(bool sysex, Bitu len, Bit8u * data) {
 		fwrite(midi_header,1,sizeof(midi_header),capture.midi.handle);
 		capture.midi.last=PIC_Ticks;
 	}
-	Bit32u delta=PIC_Ticks-capture.midi.last;
+	const auto delta=PIC_Ticks-capture.midi.last;
 	capture.midi.last=PIC_Ticks;
-	RawMidiAddNumber(delta);
+	RawMidiAddNumber(delta.count());
 	if (sysex) {
 		RawMidiAdd( 0xf0 );
 		RawMidiAddNumber( len );

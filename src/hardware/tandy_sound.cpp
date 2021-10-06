@@ -95,7 +95,7 @@ constexpr uint16_t TDAC_DMA_BUFSIZE = 1024;
 static struct {
 	MixerChannel *chan = nullptr;
 	bool enabled = false;
-	Bitu last_write = 0u;
+	system_tick_t last_write = 0ms;
 	struct {
 		MixerChannel *chan = nullptr;
 		bool enabled = false;
@@ -143,7 +143,7 @@ static void SN76496Update(uint16_t length)
 		return;
 
 	// Disable the channel if it's been quiet for a while
-	if ((tandy.last_write + 5000) < PIC_Ticks) {
+	if ((tandy.last_write + 5000ms) < PIC_Ticks) {
 		tandy.enabled=false;
 		tandy.chan->Enable(false);
 		return;

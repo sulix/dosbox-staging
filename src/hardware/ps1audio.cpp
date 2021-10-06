@@ -88,7 +88,7 @@ private:
 	uint8_t fifo[fifo_size] = {};
 
 	// Counters
-	size_t last_write = 0;
+	system_tick_t last_write = 0ms;
 	uint32_t adder = 0;
 	uint32_t bytes_pending = 0;
 	uint32_t read_index_high = 0;
@@ -103,16 +103,16 @@ private:
 	bool can_trigger_irq = false;
 };
 
-static void keep_alive_channel(size_t &last_used_on, mixer_channel_t &channel)
+static void keep_alive_channel(system_tick_t &last_used_on, mixer_channel_t &channel)
 {
 	last_used_on = PIC_Ticks;
 	if (!channel->is_enabled)
 		channel->Enable(true);
 }
 
-static void maybe_suspend_channel(const size_t last_used_on, mixer_channel_t &channel)
+static void maybe_suspend_channel(const system_tick_t last_used_on, mixer_channel_t &channel)
 {
-	const bool last_used_five_seconds_ago = PIC_Ticks > last_used_on + 5000;
+	const bool last_used_five_seconds_ago = PIC_Ticks > last_used_on + 5000ms;
 	if (last_used_five_seconds_ago)
 		channel->Enable(false);
 }
@@ -141,7 +141,7 @@ Ps1Dac::Ps1Dac()
 
 	// Operate at native sampling rates
 	sample_rate = channel->GetSampleRate();
-	last_write = 0;
+	last_write = 0ms;
 	Reset(true);
 }
 
@@ -354,7 +354,7 @@ private:
 	sn76496_device device;
 	static constexpr auto max_samples_expected = 64;
 	int16_t buffer[1][max_samples_expected];
-	size_t last_write = 0;
+	system_tick_t last_write = 0ms;
 };
 
 Ps1Synth::Ps1Synth() : device(machine_config(), 0, 0, clock_rate_hz)
@@ -370,7 +370,7 @@ Ps1Synth::Ps1Synth() : device(machine_config(), 0, 0, clock_rate_hz)
 
 	auto sample_rate = static_cast<int32_t>(channel->GetSampleRate());
 	device.convert_samplerate(sample_rate);
-	last_write = 0;
+	last_write = 0ms;
 }
 
 void Ps1Synth::WriteSoundGeneratorPort205(io_port_t, uint8_t data, io_width_t)

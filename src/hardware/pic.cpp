@@ -134,7 +134,7 @@ struct PIC_Controller {
 static PIC_Controller pics[2];
 static PIC_Controller &primary_controller = pics[0];
 static PIC_Controller &secondary_controller = pics[1];
-uint32_t PIC_Ticks = 0;
+system_tick_t PIC_Ticks = 0ms;
 uint32_t PIC_IRQCheck = 0; // x86 dynamic core expects a 32 bit variable size
 
 void PIC_Controller::set_imr(Bit8u val) {
@@ -617,7 +617,7 @@ public:
 	PIC_8259A(Section* configuration):Module_base(configuration){
 		/* Setup pic0 and pic1 with initial values like DOS has normally */
 		PIC_IRQCheck = 0;
-		PIC_Ticks = 0;
+		PIC_Ticks = 0ms;
 		Bitu i;
 		for (i=0;i<2;i++) {
 			pics[i].auto_eoi=false;
