@@ -29,13 +29,13 @@ jobs:
           - name: GCC, Ubuntu 18.04
             os: ubuntu-18.04
             build_flags: -Duse_fluidsynth=false
-            max_warnings: 0
+            max_warnings: 2
 
           - name: GCC 7, Ubuntu 18.04
             os: ubuntu-18.04
             packages: g++-7
             build_flags: --native-file=.github/meson/native-gcc-7.ini --wrap-mode=nofallback -Dunit_tests=disabled -Duse_fluidsynth=false -Duse_mt32emu=false
-            max_warnings: 0
+            max_warnings: 2
 
           - name: GCC, +tests
             os: ubuntu-20.04

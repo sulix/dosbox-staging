@@ -12,10 +12,10 @@ jobs:
         conf:
           - name: MSVC 32-bit
             arch: x86
-            max_warnings: 0
+            max_warnings: 49
           - name: MSVC 64-bit
             arch: x64
-            max_warnings: 1338
+            max_warnings: 1387
     steps:
       - name:  Backup existing vcpkg installation
         shell: pwsh
