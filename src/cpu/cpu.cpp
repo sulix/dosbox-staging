@@ -30,6 +30,7 @@
 #include "paging.h"
 #include "lazyflags.h"
 #include "support.h"
+#include "timer.h"
 
 Bitu DEBUG_EnableDebugger(void);
 extern void GFX_SetTitle(Bit32s cycles ,int frameskip,bool paused);
@@ -2168,13 +2169,13 @@ void CPU_Disable_SkipAutoAdjust(void) {
 }
 
 
-extern int ticksDone;
-extern int ticksScheduled;
+extern system_tick_t ticksDone;
+extern system_tick_t ticksScheduled;
 
 void CPU_Reset_AutoAdjust(void) {
 	CPU_IODelayRemoved = 0;
-	ticksDone = 0;
-	ticksScheduled = 0;
+	ticksDone = 0ms;
+	ticksScheduled = 0ms;
 }
 
 class CPU final : public Module_base {

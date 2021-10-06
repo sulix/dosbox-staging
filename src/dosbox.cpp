@@ -137,11 +137,11 @@ void INT10_Init(Section*);
 
 static LoopHandler * loop;
 
-static int ticksRemain;
-static int64_t ticksLast;
-static int ticksAdded;
-int ticksDone;
-int ticksScheduled;
+static system_tick_t ticksRemain;
+static system_tick_t ticksLast;
+static system_tick_t ticksAdded;
+system_tick_t ticksDone;
+system_tick_t ticksScheduled;
 bool ticksLocked;
 void increaseticks();
 
@@ -164,9 +164,9 @@ static Bitu Normal_Loop(void) {
 		} else {
 			if (!GFX_Events())
 				return 0;
-			if (ticksRemain > 0) {
+			if (ticksRemain >= 1ms) {
 				TIMER_AddTick();
-				ticksRemain--;
+				ticksRemain -= 1ms;
 			} else {increaseticks();return 0;}
 		}
 	}
@@ -174,29 +174,31 @@ static Bitu Normal_Loop(void) {
 
 void increaseticks() { //Make it return ticksRemain and set it in the function above to remove the global variable.
 	if (GCC_UNLIKELY(ticksLocked)) { // For Fast Forward Mode
-		ticksRemain=5;
+		ticksRemain=5ms;
 		/* Reset any auto cycle guessing for this frame */
-		ticksLast = GetTicks();
-		ticksAdded = 0;
-		ticksDone = 0;
-		ticksScheduled = 0;
+		ticksLast = GetTicksChrono();
+		ticksAdded = 0ms;
+		ticksDone = 0ms;
+		ticksScheduled = 0ms;
 		return;
 	}
 
-	const auto ticksNew = GetTicks();
+	const auto ticksNew = GetTicksChrono();
 	ticksScheduled += ticksAdded;
-	if (ticksNew <= ticksLast) { //lower should not be possible, only equal.
-		ticksAdded = 0;
+	if (ticksNew - ticksLast < 1ms) {
+		ticksAdded = 0ms;
 
-		constexpr auto duration = std::chrono::milliseconds(1);
+		constexpr auto duration = 1ms;
+		const auto ticksBeforeSleep = GetTicksChrono();
 		std::this_thread::sleep_for(duration);
+		const auto ticksAfterSleep = GetTicksChrono();
 
-		const auto timeslept = GetTicksSince(ticksNew);
+		const auto timeslept = ticksAfterSleep - ticksBeforeSleep;
 
 		// Update ticksDone with the time spent sleeping
 		ticksDone -= timeslept;
-		if (ticksDone < 0)
-			ticksDone = 0;
+		if (ticksDone < 0ms)
+			ticksDone = 0ms;
 		return; //0
 
 		// If we do work this tick and sleep till the next tick, then ticksDone is decreased,
@@ -209,24 +211,24 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 	}
 
 	//TicksNew > ticksLast
-	ticksRemain = GetTicksDiff(ticksNew, ticksLast);
+	ticksRemain = ticksNew - ticksLast;
 	ticksLast = ticksNew;
 	ticksDone += ticksRemain;
-	if ( ticksRemain > 20 ) {
+	if ( ticksRemain > 20ms ) {
 //		LOG(LOG_MISC,LOG_ERROR)("large remain %d",ticksRemain);
-		ticksRemain = 20;
+		ticksRemain = 20ms;
 	}
 	ticksAdded = ticksRemain;
 
 	// Is the system in auto cycle mode guessing ? If not just exit. (It can be temporary disabled)
 	if (!CPU_CycleAutoAdjust || CPU_SkipCycleAutoAdjust) return;
 
-	if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
-		if(ticksDone < 1) ticksDone = 1; // Protect against div by zero
+	if (ticksScheduled >= 250ms || ticksDone >= 250ms || (ticksAdded > 15ms && ticksScheduled >= 5ms) ) {
+		if(ticksDone < 1ms) ticksDone = 1ms; // Protect against div by zero
 		/* ratio we are aiming for is around 90% usage*/
 		Bit32s ratio = (ticksScheduled * (CPU_CyclePercUsed*90*1024/100/100)) / ticksDone;
 		Bit32s new_cmax = CPU_CycleMax;
-		Bit64s cproc = (Bit64s)CPU_CycleMax * (Bit64s)ticksScheduled;
+		Bit64s cproc = CPU_CycleMax * ticksScheduled.count();
 		double ratioremoved = 0.0; //increase scope for logging
 		if (cproc > 0) {
 			/* ignore the cycles added due to the IO delay code in order
@@ -238,15 +240,15 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 
 				/* Don't allow very high ratio which can cause us to lock as we don't scale down
 				 * for very low ratios. High ratio might result because of timing resolution */
-				if (ticksScheduled >= 250 && ticksDone < 10 && ratio > 16384)
+				if (ticksScheduled >= 250ms && ticksDone < 10ms && ratio > 16384)
 					ratio = 16384;
 
 				// Limit the ratio even more when the cycles are already way above the realmode default.
-				if (ticksScheduled >= 250 && ticksDone < 10 && ratio > 5120 && CPU_CycleMax > 50000)
+				if (ticksScheduled >= 250ms && ticksDone < 10ms && ratio > 5120 && CPU_CycleMax > 50000)
 					ratio = 5120;
 
 				// When downscaling multiple times in a row, ensure a minimum amount of downscaling
-				if (ticksAdded > 15 && ticksScheduled >= 5 && ticksScheduled <= 20 && ratio > 800)
+				if (ticksAdded > 15ms && ticksScheduled >= 5ms && ticksScheduled <= 20ms && ratio > 800)
 					ratio = 800;
 
 				if (ratio <= 1024) {
@@ -280,7 +282,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 			/* ratios below 12% along with a large time since the last update
 			   has taken place are most likely caused by heavy load through a
 			   different application, the cycles adjusting is skipped as well */
-			if ((ratio > 120) || (ticksDone < 700)) {
+			if ((ratio > 120) || (ticksDone < 700ms)) {
 				CPU_CycleMax = new_cmax;
 				if (CPU_CycleLimit > 0) {
 					if (CPU_CycleMax > CPU_CycleLimit) CPU_CycleMax = CPU_CycleLimit;
@@ -290,9 +292,9 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 
 		//Reset cycleguessing parameters.
 		CPU_IODelayRemoved = 0;
-		ticksDone = 0;
-		ticksScheduled = 0;
-	} else if (ticksAdded > 15) {
+		ticksDone = 0ms;
+		ticksScheduled = 0ms;
+	} else if (ticksAdded > 15ms) {
 		/* ticksAdded > 15 but ticksScheduled < 5, lower the cycles
 		   but do not reset the scheduled/done ticks to take them into
 		   account during the next auto cycle adjustment */
@@ -340,8 +342,8 @@ static void DOSBOX_UnlockSpeed( bool pressed ) {
 static void DOSBOX_RealInit(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	/* Initialize some dosbox internals */
-	ticksRemain=0;
-	ticksLast=GetTicks();
+	ticksRemain=0ms;
+	ticksLast=GetTicksChrono();
 	ticksLocked = false;
 	DOSBOX_SetLoop(&Normal_Loop);
 	MSG_Init(section);

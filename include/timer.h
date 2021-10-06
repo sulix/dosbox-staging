@@ -25,6 +25,11 @@
 #include <limits>
 #include <thread>
 
+using std::chrono_literals::operator""ms;
+using std::chrono_literals::operator""us;
+
+typedef std::chrono::milliseconds system_tick_t;
+
 /* underlying clock rate in HZ */
 
 constexpr int PIT_TICK_RATE = 1193182;
@@ -60,6 +65,12 @@ static inline int64_t GetTicksUs()
 	return std::chrono::duration_cast<std::chrono::microseconds>(
 	               std::chrono::steady_clock::now() - system_start_time)
 	        .count();
+}
+
+static inline system_tick_t GetTicksChrono()
+{
+	return std::chrono::duration_cast<system_tick_t>(
+	               std::chrono::steady_clock::now() - system_start_time);
 }
 
 static inline int GetTicksDiff(const int64_t new_ticks, const int64_t old_ticks)
