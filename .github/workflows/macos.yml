@@ -137,10 +137,12 @@ jobs:
           - host: macos-latest
             arch: x86_64
             needs_deps: true
+            deployment_target: "10.15"
 
           - host: [self-hosted, macOS, arm64, release-builds]
             arch: arm64
             needs_deps: false
+            deployment_target: "11.0"
 
     steps:
       - name: Checkout repository
@@ -211,7 +213,7 @@ jobs:
             build
 
       - name: Build
-        run:  arch -arch=${{ matrix.runner.arch }} ninja -C build
+        run:  MACOSX_DEPLOYMENT_TARGET=${{ matrix.runner.deployment_target }} arch -arch=${{ matrix.runner.arch }} ninja -C build
 
       - name: Upload binary
         uses: actions/upload-artifact@v2
