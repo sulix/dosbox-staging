@@ -1395,12 +1395,9 @@ dosurface:
 					sdl.opengl.ruby.texture_size = glGetUniformLocation(sdl.opengl.program_object, "rubyTextureSize");
 					sdl.opengl.ruby.input_size = glGetUniformLocation(sdl.opengl.program_object, "rubyInputSize");
 					sdl.opengl.ruby.output_size = glGetUniformLocation(sdl.opengl.program_object, "rubyOutputSize");
-					sdl.opengl.ruby.frame_count = glGetUniformLocation(sdl.opengl.program_object, "rubyFrameCount");
-					// If the shader has a required frame-count, then
-					// force rendering updates to ensure each frame is provided.
-					if (sdl.opengl.ruby.frame_count > 0) {
-						RENDER_SetForceUpdate(true);
-					}
+					sdl.opengl.ruby.frame_count = glGetUniformLocation(
+					        sdl.opengl.program_object,
+					        "rubyFrameCount");
 				}
 			}
 		}
@@ -1775,7 +1772,7 @@ void GFX_EndUpdate(const Bit16u *changedLines)
 #else
 	const bool using_opengl = false;
 #endif
-	if ((!using_opengl || !RENDER_GetForceUpdate()) && !sdl.updating)
+	if (!using_opengl && !sdl.updating)
 		return;
 	[[maybe_unused]] bool actually_updating = sdl.updating;
 	sdl.updating = false;
