@@ -1231,7 +1231,7 @@ bool INT10_SetVideoMode(Bit16u mode)
 			misc_output|=0x0c;		//Select clock 3
 
 			// Use 70 Hz as the lower-bound
-			constexpr int vesa_min_refresh = 70;
+			constexpr int8_t vesa_min_refresh = 70;
 
 			// But allow a higher rate from the host and inform the user if so.
 			const auto refresh = std::max(vesa_min_refresh, GFX_GetDisplayRefreshRate());
