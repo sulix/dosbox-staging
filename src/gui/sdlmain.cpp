@@ -863,8 +863,10 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 
 		// Adjust the window dimensions if our window isn't sized yet or
 		// we're in PP mode
-		if (window_is_too_small || (sdl.scaling_mode == SCALING_MODE::PERFECT &&
-		                            window_dimensions_not_exact)) {
+		if (window_is_too_small ||
+		    (window_dimensions_not_exact &&
+		     (sdl.scaling_mode == SCALING_MODE::PERFECT ||
+		      sdl.desktop.type == SCREEN_SURFACE))) {
 			SDL_SetWindowSize(sdl.window, width, height);
 		}
 		// If we're switching down from fullscreen, then it will use the set window size
