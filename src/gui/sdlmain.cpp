@@ -2270,8 +2270,12 @@ static void DisplaySplash(int time_ms)
 	}
 
 	const uint16_t lines[2] = {0, src_h}; // output=surface won't work otherwise
+
+	assert(sdl.updating && sdl.update_display_contents);
+	render_pacer.Reset();
 	GFX_EndUpdate(lines);
 	Delay(time_ms);
+	render_pacer.Reset();
 }
 
 [[maybe_unused]] static std::string get_glshader_value()
