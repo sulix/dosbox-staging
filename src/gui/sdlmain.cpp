@@ -262,6 +262,10 @@ using present_frame_f = void();
 
 static void UpdateSurface(const uint16_t *changedLines);
 static void PresentSurface();
+static inline void DoNothing()
+{
+	// deliberatey empty
+}
 
 struct SDL_Block {
 	bool initialized = false;
@@ -362,6 +366,8 @@ struct SDL_Block {
 	std::atomic_bool is_frame_due = false;
 	update_texture_f *update_texture = UpdateSurface;
 	present_frame_f *present_frame = PresentSurface;
+	present_frame_f *maybe_present_frame_on_change = DoNothing;
+	present_frame_f *maybe_present_frame_at_host_rate = DoNothing;
 
 	std::string render_driver = "";
 	int display_number = 0;
@@ -2056,16 +2062,37 @@ static void update_frame_tempo()
 void GFX_EndUpdate(const uint16_t *changedLines)
 {
 	sdl.update_texture(changedLines);
- 	if (IsFrameDue())
-		sdl.present_frame();
-	else
-		render_pacer.Reset();
+	sdl.maybe_present_frame_on_change();
 	sdl.updating = false;
 }
 
-void GFX_PresentFrame()
+static inline void MaybePresentFrameAtHostRate()
 {
-	sdl.present_frame();
+	if (IsFrameDue())
+		sdl.present_frame();
+	else
+		render_pacer.Reset();
+}
+
+static inline void MaybePresentFrameOnChange()
+{
+	if (sdl.updating)
+		sdl.present_frame();
+	else
+		render_pacer.Reset();
+}
+
+static inline void MaybePresentFrameOnChangeIfFrameIsDue()
+{
+	if (sdl.updating && IsFrameDue())
+		sdl.present_frame();
+	else
+		render_pacer.Reset();
+}
+
+void GFX_MaybePresentFrameAtHostRate()
+{
+	sdl.maybe_present_frame_at_host_rate();
 }
 
 Bitu GFX_GetRGB(Bit8u red, Bit8u green, Bit8u blue) {
@@ -2823,6 +2850,21 @@ static void GUI_StartUp(Section *sec)
 	//      correctly and is causing serious bugs.
 	sdl.desktop.vsync = section->Get_bool("vsync");
 	sdl.desktop.vsync_skip = section->Get_int("vsync_skip");
+
+	const auto frame_rate_choice = std::string_view(
+	        section->Get_string("frame_rate"));
+	if (frame_rate_choice == "variable") {
+		sdl.maybe_present_frame_on_change = MaybePresentFrameOnChange;
+		sdl.maybe_present_frame_at_host_rate = DoNothing;
+	} else if (frame_rate_choice == "capped") {
+		sdl.maybe_present_frame_on_change = MaybePresentFrameOnChangeIfFrameIsDue;
+		sdl.maybe_present_frame_at_host_rate = DoNothing;
+	} else if (frame_rate_choice == "host") {
+		sdl.maybe_present_frame_on_change = DoNothing;
+		sdl.maybe_present_frame_at_host_rate = MaybePresentFrameAtHostRate;
+	} else {
+		E_Exit("ERROR: Unhandled value for 'frame_rate' in [sdl] section");
+	}
 
 	const int display = section->Get_int("display");
 	if ((display >= 0) && (display < SDL_GetNumVideoDisplays())) {
@@ -3606,6 +3648,20 @@ void Config_Add_SDL() {
 #endif
 	Pstring->Set_help("What video system to use for output.");
 	Pstring->Set_values(outputs);
+
+	const char *frame_rates[] = {
+	        "variable",
+	        "capped",
+	        "host",
+	        0,
+	};
+	Pstring = sdl_sec->Add_string("frame_rate", always, "variable");
+	Pstring->Set_help(
+	        "Choose how frequently frames are rendered:\n"
+	        "  variable:   Frames are rendered only when changed (default).\n"
+	        "  capped:     Like variable but, capped at the host's display rate.\n"
+	        "  host:       Frames are steadily rendered at the host's display rate.");
+	Pstring->Set_values(frame_rates);
 
 	pstring = sdl_sec->Add_string("texture_renderer", always, "auto");
 	pstring->Set_help("Choose a renderer driver when using a texture output mode.\n"

@@ -164,10 +164,16 @@ static Bitu Normal_Loop(void) {
 		} else {
 			if (!GFX_Events())
 				return 0;
+
+			GFX_MaybePresentFrameAtHostRate();
+
 			if (ticksRemain > 0) {
 				TIMER_AddTick();
 				ticksRemain--;
-			} else {increaseticks();return 0;}
+			} else {
+				increaseticks();
+				return 0;
+			}
 		}
 	}
 }
