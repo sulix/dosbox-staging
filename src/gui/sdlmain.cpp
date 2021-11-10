@@ -906,33 +906,9 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		                                ? SDL_WINDOW_FULLSCREEN_DESKTOP
 		                                : SDL_WINDOW_FULLSCREEN);
 	} else {
-		if (sdl.desktop.switching_fullscreen) {
-			SDL_SetWindowFullscreen(sdl.window, 0);
-			if (!sdl.desktop.window.resizable) {
-				SDL_SetWindowSize(sdl.window, width, height);
-				RestoreWindowPosition();
-			}
-
-		} else {
-			// Does our window need resizing?
-			int current_w, current_h;
-			SDL_GetWindowSize(sdl.window, &current_w, &current_h);
-
-			const bool window_is_too_small = (current_w < width ||
-			                                  current_h < height);
-
-			const bool window_dimensions_not_exact =
-			        (current_w != width || current_h != height);
-
-			// Adjust the window dimensions if our window isn't
-			// sized yet or we're in PP mode
-			if (window_is_too_small ||
-			    (window_dimensions_not_exact &&
-			     (sdl.scaling_mode == SCALING_MODE::PERFECT ||
-			      sdl.desktop.type == SCREEN_SURFACE))) {
-				SDL_SetWindowSize(sdl.window, width, height);
-			}
-		}
+		SDL_SetWindowFullscreen(sdl.window, 0);
+		SDL_SetWindowSize(sdl.window, width, height);
+		RestoreWindowPosition();
 	}
 
 	// Maybe some requested fullscreen resolution is unsupported?
