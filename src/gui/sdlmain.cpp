@@ -257,9 +257,11 @@ enum PRIORITY_LEVELS {
 constexpr bool FIXED_SIZE = false;
 
 // Use a function pointer for the Present function based on rendering type
-using update_and_present_f = void(const uint16_t *);
+using update_texture_f = void(const uint16_t *);
+using present_frame_f = void();
 
-static void UpdateAndPresentSurface(const uint16_t *changedLines);
+static void UpdateSurface(const uint16_t *changedLines);
+static void PresentSurface();
 
 struct SDL_Block {
 	bool initialized = false;
@@ -331,6 +333,7 @@ struct SDL_Block {
 		bool pixel_buffer_object = false;
 		bool npot_textures_supported = false;
 		bool use_shader;
+		bool has_updates = false;
 		GLuint program_object;
 		const char *shader_src;
 		struct {
@@ -352,13 +355,16 @@ struct SDL_Block {
 	SDL_Window *window = nullptr;
 	SDL_Renderer *renderer = nullptr;
 	std::atomic_bool is_frame_due = false;
-	update_and_present_f *update_and_present = UpdateAndPresentSurface;
+	update_texture_f *update_texture = UpdateSurface;
+	present_frame_f *present_frame = PresentSurface;
+
 	std::string render_driver = "";
 	int display_number = 0;
 	struct {
 		SDL_Surface *input_surface = nullptr;
 		SDL_Texture *texture = nullptr;
 		SDL_PixelFormat *pixelFormat = nullptr;
+		bool has_updates = false;
 	} texture = {};
 	struct {
 		int xsensitivity = 0;
@@ -370,6 +376,7 @@ struct SDL_Block {
 	} mouse = {};
 	SDL_Point pp_scale = {1, 1};
 	SDL_Rect updateRects[1024];
+	int16_t pending_rect_count = 0;
 	bool window_resolution_specified = false;
 	bool use_max_resolution = false;
 	SDL_Point max_resolution = {-1, -1};
@@ -1116,10 +1123,8 @@ static bool IsFrameDue()
 
 // Updates SDL surface texture with the current changed lines (if any) and also
 // draws the content to the screen if the host can handle a frame.
-static void UpdateAndPresentSurface([[maybe_unused]] const uint16_t *changedLines)
+static void UpdateSurface([[maybe_unused]] const uint16_t *changedLines)
 {
-	static int16_t pending_rect_count = 0;
-
 	// Changed lines are "streamed in" over multiple ticks - so important
 	// we don't ignore or skip this content (otherwise parts of the image
 	// won't be updated). So no matter, we always processed these changes,
@@ -1149,49 +1154,44 @@ static void UpdateAndPresentSurface([[maybe_unused]] const uint16_t *changedLine
 		// track of the maximum number of rectangles updated so far, and
 		// when the host can handle a frame, we ask SDL to process those
 		// rectangles and then render the frame.
-		pending_rect_count = std::max(pending_rect_count, rect_count);
+		sdl.pending_rect_count = std::max(sdl.pending_rect_count, rect_count);
 	}
+}
 
+static void PresentSurface()
+{
 	// Note that we deliberate exclude the Frame Pacer here, and we also
 	// don't render dummy frames to satisfy VRRs displays. This is
 	// because surface rendering is done in software and slow, and if
 	// someone's using software rendering they surely don't have a high-end
 	// video card or VRR monitor.
-	if (IsFrameDue() && pending_rect_count) {
-		SDL_UpdateWindowSurfaceRects(sdl.window, sdl.updateRects,
-		                             pending_rect_count);
-		pending_rect_count = 0;
+	auto &rect_count = sdl.pending_rect_count;
+	if (rect_count) {
+		SDL_UpdateWindowSurfaceRects(sdl.window, sdl.updateRects, rect_count);
+		rect_count = 0;
 	}
 }
 
 // Updates and presents the SDL texture if the host is ready for a frame
-static void UpdateAndPresentTexture([[maybe_unused]] const uint16_t *changedLines)
+static void UpdateTexture([[maybe_unused]] const uint16_t *changedLines)
 {
-	static bool needs_updating = false;
-
 	// Keep track if new content has been written into the texture, even if
 	// we're not rendering a frame this pass.
 	if (sdl.updating && sdl.update_display_contents)
-		needs_updating = true;
+		sdl.texture.has_updates = true;
+}
 
-	// Beacuse the texture content was updated outside of this function, we
-	// can simply exit at this point. We also reset the pacer because we
-	// don't want the time associated with the next pass counting against
-	// it.
-	if (!IsFrameDue()) {
-		render_pacer.Reset();
-		return;
-	}
-	// If we're here, we know that the host is ready for a frame, and if
-	// there's been updates then we can process the texture in one-go.
-	if (needs_updating) {
+static void PresentTexture()
+{
+	// If we're here, we know that the host is ready for a frame
+	if (sdl.texture.has_updates) {
 		assert(sdl.texture.texture);
 		assert(sdl.texture.input_surface);
 		SDL_UpdateTexture(sdl.texture.texture,
 		                  nullptr, // update entire texture
 		                  sdl.texture.input_surface->pixels,
 		                  sdl.texture.input_surface->pitch);
-		needs_updating = false;
+		sdl.texture.has_updates = false;
 	}
 	// At this point, even regardless if the texture's been updated or not,
 	// we try to render/present to stay on-pace with the frame tempo.  SDL's
@@ -1207,43 +1207,9 @@ static void UpdateAndPresentTexture([[maybe_unused]] const uint16_t *changedLine
 }
 
 #if C_OPENGL
-// Updates and presents the openGL texture via the PBO object if the host is
-// ready for a frame
-static void UpdateAndPresentGlPixelBuffer([[maybe_unused]] const uint16_t *changedLines)
+
+static void SwapGlWindow()
 {
-	static bool needs_updating = false;
-
-	// Keep track if new content has been written into the texture, even if
-	// we're not rendering a frame this pass.
-	if (sdl.updating)
-		needs_updating = true;
-	else
-		sdl.opengl.actual_frame_count++;
-
-	// Beacuse the texture content was updated outside of this function, we
-	// can simply exit at this point. We also reset the pacer because we
-	// don't want the time associated with the next pass counting against
-	// it.
-	if (!IsFrameDue()) {
-		render_pacer.Reset();
-		return;
-	}
-
-	// Always clear the screen before updating or rendering
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	// If we're here, we know that the host is ready for a frame, and if
-	// there's been updates then we can process the texture in one-go.
-	if (needs_updating) {
-		glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sdl.draw.width,
-		                sdl.draw.height, GL_BGRA_EXT,
-		                GL_UNSIGNED_INT_8_8_8_8_REV, 0);
-		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
-		needs_updating = false;
-	}
-
 	// At this point, even regardless if the texture's been updated or not,
 	// we try to render/present to stay on-pace with the frame tempo.
 	// OpenGL's texture is (usually) hardware-accelerated, so this last step
@@ -1262,8 +1228,39 @@ static void UpdateAndPresentGlPixelBuffer([[maybe_unused]] const uint16_t *chang
 	render_pacer.Checkpoint();
 }
 
+// Updates and presents the openGL texture via the PBO object if the host is
+// ready for a frame
+static void UpdateGlPixelBuffer([[maybe_unused]] const uint16_t *changedLines)
+{
+	// Keep track if new content has been written into the texture, even if
+	// we're not rendering a frame this pass.
+	if (sdl.updating)
+		sdl.opengl.has_updates = true;
+	else
+		sdl.opengl.actual_frame_count++;
+}
+
+static void PresentGlPixelBuffer()
+{
+	// Always clear the screen before updating or rendering
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	// If we're here, we know that the host is ready for a frame, and if
+	// there's been updates then we can process the texture in one-go.
+	if (sdl.opengl.has_updates) {
+		glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sdl.draw.width,
+		                sdl.draw.height, GL_BGRA_EXT,
+		                GL_UNSIGNED_INT_8_8_8_8_REV, 0);
+		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
+		sdl.opengl.has_updates = false;
+	}
+	SwapGlWindow();
+}
+
 // Updates and presents the openGL frame-buffer, if the host is ready for a frame
-static void UpdateAndPresentGlFrameBuffer(const uint16_t *changedLines)
+static void UpdateGlFrameBuffer(const uint16_t *changedLines)
 {
 	// When using the frame-buffer, changed lines are "streamed in" over
 	// multiple ticks - so important to we don't ignore or skip this content
@@ -1291,31 +1288,14 @@ static void UpdateAndPresentGlFrameBuffer(const uint16_t *changedLines)
 			}
 			index++;
 		}
+		sdl.opengl.has_updates = true;
 	}
-	// Given we've saved the updated line in the framebuffer, we can simply
-	// exit at this point (if a frame isn't due). We also reset the pacer
-	// because we don't want the time associated with the next pass counting
-	// against it.
-	if (!IsFrameDue()) {
-		render_pacer.Reset();
-		return;
-	}
-	// At this point, even regardless if the framebuffer's been updated or
-	// not, we try to render/present to stay on-pace with the frame tempo.
-	// OpenGL's texture is (usually) hardware-accelerated, so this last step
-	// is low-cost. Also, because we've made sure host is ready for a frame,
-	// this step shouldn't block for long if vsync is enabled.
-	if (render_pacer.CanRun()) {
-		if (sdl.opengl.program_object) {
-			glUniform1i(sdl.opengl.ruby.frame_count,
-			            sdl.opengl.actual_frame_count++);
-			glDrawArrays(GL_TRIANGLES, 0, 3);
-		} else {
-			glCallList(sdl.opengl.displaylist);
-		}
-		SDL_GL_SwapWindow(sdl.window);
-	}
-	render_pacer.Checkpoint();
+}
+
+static void PresentGlFrameBuffer()
+{
+	SwapGlWindow();
+	sdl.opengl.has_updates = false;
 }
 #endif
 
@@ -1422,7 +1402,9 @@ dosurface:
 		SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
 		SDL_UpdateWindowSurface(sdl.window);
 
-		sdl.update_and_present = UpdateAndPresentSurface;
+		sdl.update_texture = UpdateSurface;
+		sdl.present_frame = PresentSurface;
+
 		sdl.desktop.type = SCREEN_SURFACE;
 		break; // SCREEN_SURFACE
 
@@ -1491,7 +1473,9 @@ dosurface:
 		if (rinfo.flags & SDL_RENDERER_ACCELERATED)
 			retFlags |= GFX_HARDWARE;
 
-		sdl.update_and_present = UpdateAndPresentTexture;
+		sdl.update_texture = UpdateTexture;
+		sdl.present_frame = PresentTexture;
+
 		sdl.desktop.type = SCREEN_TEXTURE;
 		break; // SCREEN_TEXTURE
 	}
@@ -1758,9 +1742,11 @@ dosurface:
 		retFlags = GFX_CAN_32 | GFX_SCALING;
 		if (sdl.opengl.pixel_buffer_object) {
 			retFlags |= GFX_HARDWARE;
-			sdl.update_and_present = UpdateAndPresentGlPixelBuffer;
+			sdl.update_texture = UpdateGlPixelBuffer;
+			sdl.present_frame = PresentGlPixelBuffer;
 		} else {
-			sdl.update_and_present = UpdateAndPresentGlFrameBuffer;
+			sdl.update_texture = UpdateGlFrameBuffer;
+			sdl.present_frame = PresentGlFrameBuffer;
 		}
 		sdl.desktop.type = SCREEN_OPENGL;
 		break; // SCREEN_OPENGL
@@ -2022,11 +2008,20 @@ static void update_frame_tempo()
 
 void GFX_EndUpdate(const uint16_t *changedLines)
 {
-	sdl.update_and_present(changedLines);
+	sdl.update_texture(changedLines);
+ 	if (IsFrameDue())
+		sdl.present_frame();
+	else
+		render_pacer.Reset();
 	sdl.updating = false;
 }
 
-Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue) {
+void GFX_PresentFrame()
+{
+	sdl.present_frame();
+}
+
+Bitu GFX_GetRGB(Bit8u red, Bit8u green, Bit8u blue) {
 	switch (sdl.desktop.type) {
 	case SCREEN_SURFACE:
 		return SDL_MapRGB(sdl.surface->format,red,green,blue);
