@@ -2015,7 +2015,7 @@ static void update_frame_tempo()
 	static std::thread tempo_thread = {};
 
 	// Record the current refresh rate
-	static std::atomic<int8_t> rate = 0;
+	static std::atomic<int8_t> rate(0);
 	const auto current_rate = GFX_GetDisplayRefreshRate();
 	if (rate.load() == current_rate)
 		return;
@@ -2024,9 +2024,13 @@ static void update_frame_tempo()
 	auto &is_due = sdl.is_frame_due;
 	std::thread t([&]() {
 		const auto rounded_us = (1000000 + rate - 1) / rate;
-		const auto tempo = std::chrono::microseconds(rounded_us);
+		const auto tempo = rounded_us * 1e-6;
 		while (true) {
-			std::this_thread::sleep_for(tempo);
+			//const auto start = std::chrono::steady_clock::now();
+			DelayPrecise(tempo);
+			//const auto end = std::chrono::steady_clock::now();
+			//const auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+			//LOG_INFO("SDL: Frame tempo wanted %dus, got: %lldus", rounded_us, elapsed);
 			is_due.store(true);
 		}
 	});

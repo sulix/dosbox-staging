@@ -20,6 +20,7 @@
 #define DOSBOX_TIMER_H
 
 #include <cassert>
+#include <cmath>
 
 #include <chrono>
 #include <limits>
@@ -91,6 +92,33 @@ static inline void Delay(const int milliseconds)
 static inline void DelayUs(const int microseconds)
 {
 	std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
+}
+
+static inline void DelayPrecise(double seconds) {
+    static double estimate = 5e-3;
+    static double mean = 5e-3;
+    static double m2 = 0;
+    static int64_t count = 1;
+
+    while (seconds > estimate) {
+        const auto start = std::chrono::steady_clock::now();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        const auto end = std::chrono::steady_clock::now();
+
+        const auto observed = (end - start).count() * 1e-9;
+        seconds -= observed;
+
+        ++count;
+        const auto delta = observed - mean;
+        mean += delta / count;
+        m2   += delta * (observed - mean);
+        const auto stddev = std::sqrt(m2 / (count - 1));
+        estimate = mean + stddev;
+    }
+
+    // spin lock
+    const auto start = std::chrono::steady_clock::now();
+    while ((std::chrono::steady_clock::now() - start).count() * 1e-9 < seconds);
 }
 
 #endif
