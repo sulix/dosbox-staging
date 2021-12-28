@@ -37,6 +37,8 @@
 
 #define MODEM_DEFAULT_PORT 23
 
+#define MODEM_ANSWER_MAGIC 0x01
+
 #define MODEM_TX_EVENT SERIAL_BASE_EVENT_COUNT + 1
 #define MODEM_RX_POLLING SERIAL_BASE_EVENT_COUNT + 2
 #define MODEM_RING_EVENT SERIAL_BASE_EVENT_COUNT + 3
@@ -57,6 +59,13 @@ enum ResTypes {
 	ResNODIALTONE,
 	ResNOCARRIER,
 	ResNOANSWER
+};
+
+enum ModemNetMode {
+	MODEM_NET_RAW = 0, // Raw null-modem like connection
+	MODEM_NET_TELNET,  // Interpret IAC
+	MODEM_NET_AUTH,    // Custom protocol for modem emulation
+	MODEM_NET_COUNT
 };
 
 #define TEL_CLIENT 0
@@ -179,6 +188,7 @@ public:
 	CSerialModem(const uint8_t port_idx, CommandLine *cmd);
 	~CSerialModem();
 	void Reset();
+	void SetNetMode(const ModemNetMode val);
 
 	void SendLine(const char *line);
 	void SendRes(const ResTypes response);
@@ -229,9 +239,9 @@ protected:
 	bool ringing = false;
 	bool numericresponse = false; // true: send control response as number.
 	                              // false: send text (i.e. NO DIALTONE)
-	bool telnet_mode = false; // Default to direct null modem connection;
-	                         // Telnet mode interprets IAC
+	ModemNetMode netmode = MODEM_NET_RAW;
 	bool connected = false;
+	bool dialing = false;
 	uint32_t doresponse = 0;
 	uint8_t waiting_tx_character = 0;
 	uint32_t cmdpause = 0;

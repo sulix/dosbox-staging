@@ -143,11 +143,13 @@ CSerialModem::CSerialModem(const uint8_t port_idx, CommandLine *cmd)
 	Reset(); // reset calls EnterIdleState
 	setEvent(SERIAL_POLLING_EVENT, MODEM_TICKTIME);
 
-	// Enable telnet-mode if configured
-	if (getUintFromString("telnet:", val, cmd)) {
-		telnet_mode = (val == 1);
-		LOG_MSG("SERIAL: Port %" PRIu8 " telnet-mode %s",
-		        GetPortNumber(), telnet_mode ? "enabled" : "disabled");
+	// Select communication mode.
+	if (getUintFromString("telnet:", val, cmd) && val) {
+		SetNetMode(MODEM_NET_TELNET);
+	} else if (getUintFromString("netmode:", val, cmd) && val < MODEM_NET_COUNT) {
+		SetNetMode((ModemNetMode)val);
+	} else {
+		SetNetMode(MODEM_NET_RAW);
 	}
 
 	InstallationSuccessful=true;
@@ -158,6 +160,22 @@ CSerialModem::~CSerialModem() {
 	for (uint32_t i = SERIAL_BASE_EVENT_COUNT + 1;
 	     i <= SERIAL_MODEM_EVENT_COUNT; i++)
 		removeEvent(i);
+
+}
+
+void CSerialModem::SetNetMode(ModemNetMode val)
+{
+	netmode = val;
+
+	const char *modename;
+	switch (netmode) {
+	case MODEM_NET_RAW:    modename = "raw"; break;
+	case MODEM_NET_TELNET: modename = "telnet"; break;
+	case MODEM_NET_AUTH:   modename = "auth"; break;
+	default:               modename = "ERROR"; break;
+	}
+	LOG_MSG("SERIAL: Port %" PRIu8 " modem set to %s mode", GetPortNumber(),
+	        modename);
 }
 
 void CSerialModem::handleUpperEvent(uint16_t type)
@@ -296,11 +314,20 @@ bool CSerialModem::Dial(const char * host) {
 	if (!clientsocket->isopen) {
 		clientsocket.reset(nullptr);
 		LOG_MSG("SERIAL: Port %" PRIu8 " failed to connect.", GetPortNumber());
-		SendRes(ResNOCARRIER);
+		SendRes(ResNODIALTONE);
 		EnterIdleState();
 		return false;
 	} else {
-		EnterConnectedState();
+		if (netmode == MODEM_NET_AUTH) {
+			// Don't accept calls while dialing.
+			serversocket.reset();
+			// Wait for answer confirmation.
+			assert(!dialing);
+			dialing = true;
+		} else {
+			// Enter data mode immediately.
+			EnterConnectedState();
+		}
 		return true;
 	}
 }
@@ -309,6 +336,11 @@ void CSerialModem::AcceptIncomingCall() {
 	if (waitingclientsocket) {
 		clientsocket = std::move(waitingclientsocket);
 		EnterConnectedState();
+
+		if (netmode == MODEM_NET_AUTH)
+			// Send answer confirmation.
+			assert(!dialing);
+			clientsocket->Putchar(MODEM_ANSWER_MAGIC);
 	} else {
 		EnterIdleState();
 	}
@@ -363,16 +395,16 @@ void CSerialModem::Reset(){
 void CSerialModem::EnterIdleState(){
 	connected = false;
 	ringing = false;
+	dialing = false;
 	dtrofftimer = -1;
 	clientsocket.reset(nullptr);
 	waitingclientsocket.reset(nullptr);
 
 	// get rid of everything
 	if (serversocket) {
-		waitingclientsocket.reset(serversocket->Accept());
-		while (waitingclientsocket) {
+		do {
 			waitingclientsocket.reset(serversocket->Accept());
-		}
+		} while (waitingclientsocket);
 	}
 	if (listenport) {
 		serversocket.reset(nullptr);
@@ -407,6 +439,7 @@ void CSerialModem::EnterConnectedState() {
 	telClient = {}; // reset values
 	connected = true;
 	ringing = false;
+	dialing = false;
 	dtrofftimer = -1;
 	CSerial::setCD(true);
 	CSerial::setRI(false);
@@ -458,16 +491,12 @@ void CSerialModem::DoCommand()
 				const uint32_t requested_mode = ScanNumber(scanbuf);
 
 				// If the mode isn't valid then stop parsing
-				if (requested_mode != 1 && requested_mode != 0) {
+				if (requested_mode >= MODEM_NET_COUNT) {
 					SendRes(ResERROR);
 					return;
 				}
-				// Inform the user on changes
-				if (telnet_mode != static_cast<bool>(requested_mode)) {
-					telnet_mode = requested_mode;
-					LOG_MSG("SERIAL: Port %" PRIu8 " telnet-mode %s",
-					        GetPortNumber(),
-					        telnet_mode ? "enabled" : "disabled");
+				if (netmode != requested_mode) {
+					SetNetMode((ModemNetMode)requested_mode);
 				}
 				break;
 			}
@@ -581,7 +610,8 @@ void CSerialModem::DoCommand()
 		case 'H': // Hang up
 			switch (ScanNumber(scanbuf)) {
 			case 0:
-				if (connected) {
+				if (connected || dialing) {
+					assert(clientsocket);
 					SendRes(ResNOCARRIER);
 					EnterIdleState();
 					return;
@@ -592,7 +622,8 @@ void CSerialModem::DoCommand()
 		case 'O': // Return to data mode
 			switch (ScanNumber(scanbuf)) {
 			case 0:
-				if (clientsocket) {
+				if (connected) {
+					assert(clientsocket);
 					commandmode = false;
 					return;
 				} else {
@@ -619,7 +650,7 @@ void CSerialModem::DoCommand()
 		case 'Z': { // Reset and load profiles
 			// scan the number away, if any
 			ScanNumber(scanbuf);
-			if (clientsocket)
+			if (connected)
 				SendRes(ResNOCARRIER);
 			Reset();
 			break;
@@ -852,7 +883,25 @@ void CSerialModem::Echo(uint8_t ch)
 
 void CSerialModem::Timer2()
 {
-	uint32_t txbuffersize = 0;
+	if (dialing && clientsocket) {
+		// Don't enter connected state and data mode until we get answer
+		// confirmation.
+		assert(netmode == MODEM_NET_AUTH);
+		size_t usesize = 1;
+		if (!clientsocket->ReceiveArray(tmpbuf, usesize)) {
+			LOG_MSG("SERIAL: Remote host hung up without answering.");
+			SendRes(ResNOANSWER);
+			EnterIdleState();
+		} else if (usesize) {
+			if (tmpbuf[0] == MODEM_ANSWER_MAGIC) {
+				EnterConnectedState();
+			} else {
+				LOG_MSG("SERIAL: Wrong answer packet from remote host.");
+				SendRes(ResNOANSWER);
+				EnterIdleState();
+			}
+		}
+	}
 
 	// Check for eventual break command
 	if (!commandmode) {
@@ -872,6 +921,8 @@ void CSerialModem::Timer2()
 			}
 		}
 	}
+
+	uint32_t txbuffersize = 0;
 
 	// Handle incoming data from serial port, read as much as available
 	CSerial::setCTS(true);	// buffer will get 'emptier', new data can be received
@@ -927,7 +978,7 @@ void CSerialModem::Timer2()
 		}
 	} // while loop
 
-	if (clientsocket && txbuffersize) {
+	if (connected && clientsocket && txbuffersize) {
 		// down here it saves a lot of network traffic
 		if (!clientsocket->SendArray(tmpbuf,txbuffersize)) {
 			SendRes(ResNOCARRIER);
@@ -945,12 +996,13 @@ void CSerialModem::Timer2()
 			EnterIdleState();
 		} else if (usesize) {
 			// Filter telnet commands
-			if (telnet_mode)
+			if (netmode == MODEM_NET_TELNET)
 				TelnetEmulation(tmpbuf, usesize);
 			else
 				rqueue->adds(tmpbuf,usesize);
 		}
 	}
+
 	// Check for incoming calls
 	if (!connected && !waitingclientsocket && serversocket) {
 		waitingclientsocket.reset(serversocket->Accept());
@@ -985,6 +1037,7 @@ void CSerialModem::Timer2()
 		--ringtimer;
 	}
 
+	// Handle DTR drop actions
 	if (connected && !getDTR()) {
 		if (dtrofftimer == 0) {
 			switch (dtrmode) {
