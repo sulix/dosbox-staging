@@ -1,0 +1,7 @@
+Welcome to DOSBox Staging, a fork of the DOSBox project that focuses on ease of use, modern technology and best practices.
+
+DOSBox Staging is an attempt to revitalize DOSBox's development process. It's not a rewrite, but a continuation and improvement on the existing DOSBox codebase while leveraging modern development tools and practices.
+
+This project is maintained by the DOSBox Staging Team.
+
+Project Homepage: https://dosbox-staging.github.io/
