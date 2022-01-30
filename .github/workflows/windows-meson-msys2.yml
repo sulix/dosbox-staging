@@ -13,6 +13,7 @@ env:
   BUILD_FLAGS: "-Dbuildtype=release -Db_asneeded=true --force-fallback-for=fluidsynth,mt32emu -Dtry_static_libs=fluidsynth,mt32emu,opusfile,png,slirp -Dfluidsynth:try-static-deps=true"
   BUILD_RELEASE_DIR: build/release
   BUILD_DEBUGGER_DIR: build/debugger
+  INNO_VERSION: 6.2.0
 
 jobs:
   build_msys2:
@@ -260,6 +261,23 @@ jobs:
               Get-Content -Path $env:TEMP\MpCmdRun.log
               Throw "Exit $LASTEXITCODE : Windows Defender found an issue"
           }
+
+      - name: Install Inno Setup installer
+        shell: bash
+        run: |
+          curl -L -o installer.exe http://files.jrsoftware.org/is/6/innosetup-${{ env.INNO_VERSION }}.exe
+          ./installer.exe /verysilent /portable=1 /currentusers /dir=inst
+
+      - name: Build windows installer
+        shell: bash
+        run: |
+          cd inst
+          mkdir program
+          cp ${{ github.workspace }}/contrib/windows/installer/* .
+          cp ${{ github.workspace }}/contrib/icons/dosbox-staging.ico .
+          cp -R ${{ github.workspace }}/${{ env.PKG_RELEASE }}/* program/
+          ./ISCC.exe dosbox-staging-setup.iss
+          cp dosbox-staging-0.78.1-setup.exe ${{ github.workspace }}/${{ env.PKG_RELEASE }}/
 
       - name: Upload package
         uses: actions/upload-artifact@v2
