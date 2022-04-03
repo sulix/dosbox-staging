@@ -1500,7 +1500,16 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 	}
 	assert(w > 0 && h > 0);
 
-	const auto render_resolution = restrict_to_max_resolution(w, h);
+	auto render_resolution = restrict_to_max_resolution(w, h);
+
+	SDL_SetWindowSize(sdl.window, render_resolution.x, render_resolution.y);
+	SDL_GetWindowSize(sdl.window, &w, &h);
+	if (sdl.desktop.type == SCREEN_OPENGL)
+		SDL_GL_GetDrawableSize(sdl.window, &render_resolution.x, &render_resolution.y);
+	else
+		SDL_GetRendererOutputSize(sdl.renderer, &render_resolution.x, &render_resolution.y);
+
+	float dpi_scale = w / render_resolution.x;
 
 	sdl.pp_scale = calc_pp_scale(render_resolution.x, render_resolution.y);
 
@@ -1512,14 +1521,14 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 		win_width = w;
 		win_height = h;
 	} else {
-		win_width = (sdl.desktop.fullscreen ? w : img_width);
-		win_height = (sdl.desktop.fullscreen ? h : img_height);
+		win_width = (sdl.desktop.fullscreen ? w : img_width * dpi_scale);
+		win_height = (sdl.desktop.fullscreen ? h : img_height * dpi_scale);
 	}
 
 	sdl.clip.w = img_width;
 	sdl.clip.h = img_height;
-	sdl.clip.x = (win_width - img_width) / 2;
-	sdl.clip.y = (win_height - img_height) / 2;
+	sdl.clip.x = (render_resolution.x - img_width) / 2;
+	sdl.clip.y = (render_resolution.y - img_height) / 2;
 
 	sdl.window = SetWindowMode(screen_type, win_width, win_height,
 	                           sdl.desktop.fullscreen, resizable);
