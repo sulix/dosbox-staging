@@ -1573,10 +1573,13 @@ static SDL_Window *SetupWindowScaled(SCREEN_TYPES screen_type, bool resizable)
 		const auto is_window_fullscreen = SDL_GetWindowFlags(sdl.window) &
 		                                  SDL_WINDOW_FULLSCREEN;
 		if (sdl.window && is_window_fullscreen) {
-			int win_width;
-			SDL_GetWindowSize(sdl.window, &win_width, NULL);
-			sdl.clip.x = (win_width - sdl.clip.w) / 2;
-			sdl.clip.y = (h - sdl.clip.h) / 2;
+			int viewport_width, viewport_height;
+			if (sdl.desktop.type == SCREEN_OPENGL)
+				SDL_GL_GetDrawableSize(sdl.window, &viewport_width, &viewport_height);
+			else
+				SDL_GetRendererOutputSize(sdl.renderer, &viewport_width, &viewport_height);
+			sdl.clip.x = (viewport_width - sdl.clip.w) / 2;
+			sdl.clip.y = (viewport_height - sdl.clip.h) / 2;
 		}
 		return sdl.window;
 
@@ -2104,18 +2107,18 @@ dosurface:
 
 		if (sdl.clip.x == 0 && sdl.clip.y == 0 &&
 		    sdl.desktop.fullscreen && !sdl.desktop.full.fixed &&
-		    (sdl.clip.w != windowWidth || sdl.clip.h != windowHeight)) {
+		    (sdl.clip.w != renderWidth || sdl.clip.h != renderHeight)) {
 			// LOG_MSG("attempting to fix the centering to %d %d %d %d",(windowWidth-sdl.clip.w)/2,(windowHeight-sdl.clip.h)/2,sdl.clip.w,sdl.clip.h);
-			sdl.clip = calc_viewport(renderWidth, renderHeight);
+			sdl.clip = calc_viewport(windowWidth, windowHeight);
 			glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 		} else if (sdl.desktop.window.resizable) {
-			sdl.clip = calc_viewport(renderWidth, renderHeight);
+			sdl.clip = calc_viewport(windowWidth, windowHeight);
 			glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 		} else {
 			/* We don't just pass sdl.clip.y as-is, so we cover the case of non-vertical
 			 * centering on Android (in order to leave room for the on-screen keyboard)
 			 */
-			sdl.clip = calc_viewport(renderWidth, renderHeight);
+			sdl.clip = calc_viewport(windowWidth, windowHeight);
 			glViewport(sdl.clip.x,
 			           renderHeight - (sdl.clip.y + sdl.clip.h),
 			           sdl.clip.w,
@@ -3235,7 +3238,11 @@ static SDL_Rect calc_viewport_fit(int win_width, int win_height)
 	const double prog_aspect_ratio = (sdl.draw.width * sdl.draw.scalex) / (sdl.draw.height * sdl.draw.scaley);
 	const double win_aspect_ratio = double(win_width) / double(win_height);
 
-	const auto render_resolution = restrict_to_max_resolution(win_width, win_height);
+	auto render_resolution = restrict_to_max_resolution(win_width, win_height);
+	if (sdl.desktop.type == SCREEN_OPENGL)
+		SDL_GL_GetDrawableSize(sdl.window, &render_resolution.x, &render_resolution.y);
+	else
+		SDL_GetRendererOutputSize(sdl.renderer, &render_resolution.x, &render_resolution.y);
 
 	int w, h;
 	if (prog_aspect_ratio > win_aspect_ratio) {
@@ -3245,24 +3252,28 @@ static SDL_Rect calc_viewport_fit(int win_width, int win_height)
 		h = render_resolution.y;
 		w = iround(h * prog_aspect_ratio);
 	}
-	assert(win_width >= w);
-	assert(win_height >= h);
+	assert(render_resolution.x >= w);
+	assert(render_resolution.y >= h);
 
-	const int x = (win_width - w) / 2;
-	const int y = (win_height - h) / 2;
+	const int x = (render_resolution.x - w) / 2;
+	const int y = (render_resolution.y - h) / 2;
 
 	return {x, y, w, h};
 }
 
 static SDL_Rect calc_viewport_pp(int win_width, int win_height)
 {
-	const auto render_resolution = restrict_to_max_resolution(win_width, win_height);
+	auto render_resolution = restrict_to_max_resolution(win_width, win_height);
+	if (sdl.desktop.type == SCREEN_OPENGL)
+		SDL_GL_GetDrawableSize(sdl.window, &render_resolution.x, &render_resolution.y);
+	else
+		SDL_GetRendererOutputSize(sdl.renderer, &render_resolution.x, &render_resolution.y);
 	sdl.pp_scale = calc_pp_scale(render_resolution.x, render_resolution.y);
 
 	const int w = sdl.pp_scale.output_w;
 	const int h = sdl.pp_scale.output_h;
-	const int x = (win_width - w) / 2;
-	const int y = (win_height - h) / 2;
+	const int x = (render_resolution.x - w) / 2;
+	const int y = (render_resolution.y - h) / 2;
 
 	return {x, y, w, h};
 }
