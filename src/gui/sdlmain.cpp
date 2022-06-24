@@ -70,6 +70,8 @@
 #include "vga.h"
 #include "video.h"
 
+#include <Tracy.hpp>
+
 #define MAPPERFILE "mapper-sdl2-" VERSION ".map"
 
 #if C_OPENGL
@@ -2318,6 +2320,7 @@ void GFX_EndUpdate(const uint16_t *changedLines)
 		break;
 	}
 	sdl.updating = false;
+	FrameMark
 }
 
 // Texture update and presentation

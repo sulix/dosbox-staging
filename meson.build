@@ -23,8 +23,7 @@ project('dosbox-staging', 'c', 'cpp',
     'glib:xattr=false',
     'gtest:warning_level=0',
     'mt32emu:warning_level=0',
-    'slirp:warning_level=0',
-    'tracy:tracy_enable=false'
+    'slirp:warning_level=0'
   ]
 )
 
@@ -346,6 +345,9 @@ tracy_dep = dependency('tracy',
                         static : prefers_static_libs or ('tracy' in static_libs_list),
                         not_found_message : msg.format('use_tracy'))
 
+if get_option('use_tracy')
+  add_project_arguments('-DTRACY_ENABLE', language : ['c','cpp'])
+endif
 # macOS-only dependencies
 #
 if host_machine.system() == 'darwin'
