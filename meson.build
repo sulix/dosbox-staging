@@ -343,9 +343,9 @@ endif
 tracy_dep = dependency('tracy',
                         fallback : ['tracy', 'tracy_dep'],
                         static : prefers_static_libs or ('tracy' in static_libs_list),
-                        not_found_message : msg.format('use_tracy'))
+                        not_found_message : msg.format('enable_tracy'))
 
-if get_option('use_tracy')
+if get_option('enable_tracy')
   add_project_arguments('-DTRACY_ENABLE', language : ['c','cpp'])
 endif
 # macOS-only dependencies

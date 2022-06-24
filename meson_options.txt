@@ -16,7 +16,7 @@ option('use_png', type : 'boolean', value : true,
 option('use_slirp', type : 'boolean', value : true,
        description : 'Enable Ethernet emulation using Libslirp')
 
-option('use_tracy', type : 'boolean', value : false,
+option('enable_tracy', type : 'boolean', value : false,
        description : 'Enable profiling using Tracy')
 
 # This option exists only for rare situations when Linux developer cannot
