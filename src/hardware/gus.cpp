@@ -137,8 +137,8 @@ public:
 	uint8_t ReadWaveState() const noexcept;
 	void ResetCtrls() noexcept;
 	void WritePanPot(uint8_t pos) noexcept;
-	void WriteVolRate(uint16_t rate, int playback_rate) noexcept;
-	void WriteWaveRate(uint16_t rate, int playback_rate) noexcept;
+	void WriteVolRate(uint16_t rate, double gus_to_channel_rate_ratio) noexcept;
+	void WriteWaveRate(uint16_t rate, double gus_to_channel_rate_ratio) noexcept;
 	bool UpdateVolState(uint8_t state) noexcept;
 	bool UpdateWaveState(uint8_t state) noexcept;
 
@@ -277,11 +277,14 @@ private:
 	mixer_channel_t audio_channel = nullptr;
 	AudioFrame accumulator_scalar = {};
 
-	// Playback related
+	// Playback and rate related
 	double last_render_time_ms = 0.0;
-	double frame_rate_per_ms = 0.0;
-	int frame_rate_hz = 0;
-	uint16_t unused_for_ms = 0;
+	double gus_to_channel_rate_ratio = 0.0;
+	double channel_rate_per_ms       = 0.0;
+
+	int gus_frame_rate_hz     = 0;
+	int channel_frame_rate_hz = 0;
+	uint16_t unused_for_ms    = 0;
 
 	uint8_t &adlib_command_reg = adlib_commandreg;
 
@@ -564,35 +567,47 @@ void Voice::WritePanPot(uint8_t pos) noexcept
 // volume scalar value (a floating point fraction between 0.0 and 1.0) is never
 // actually operated on, and is simply looked up from the final index position
 // at the time of sample population.
-void Voice::WriteVolRate(uint16_t val, int playback_rate) noexcept
+void Voice::WriteVolRate(uint16_t val, double gus_to_channel_rate_ratio) noexcept
 {
 	vol_ctrl.rate = val;
 	constexpr uint8_t bank_lengths = 63u;
 	const int pos_in_bank = val & bank_lengths;
 	const int decimator = 1 << (3 * (val >> 6));
-        /*
-	vol_ctrl.inc = ceil_sdivide(pos_in_bank * VOLUME_INC_SCALAR, decimator);
-        */
-        double frameadd = (double)pos_in_bank/decimator;
-        double realadd = (frameadd*(double)playback_rate/44100.0) * (double)WAVE_WIDTH;
-        vol_ctrl.inc = (uint32_t)realadd;
-        /*
-	vol_ctrl.inc = ceil_sdivide(pos_in_bank * VOLUME_INC_SCALAR * (double)playback_rate/44100.0), decimator);
-        */
+
+	// Calculate the GUS's native volume increment width
+	const auto gus_vol_inc = ceil_sdivide(pos_in_bank * VOLUME_INC_SCALAR,
+	                                      decimator);
+
+	// Adjust the increment to fit the channel's rate
+	const auto channel_vol_inc = gus_vol_inc * gus_to_channel_rate_ratio;
+	//
+	// Typically the ratio will be less than 1, producing a narrower
+	// increment. By shrinking the increment width, the GUS will produce
+	// more interwave frames (satisfying the channel's greater frame rate
+	// needs), instead of fewer frames for the GUS's lower frame rate.
+
+	vol_ctrl.inc = iround(channel_vol_inc);
 
 	// Sanity check the bounds of the incrementer
 	assert(vol_ctrl.inc >= 0 && vol_ctrl.inc <= bank_lengths * VOLUME_INC_SCALAR);
 }
 
-void Voice::WriteWaveRate(uint16_t val, int playback_rate) noexcept
+void Voice::WriteWaveRate(uint16_t val, double gus_to_channel_rate_ratio) noexcept
 {
+	// Calculate the GUS's native wave increment width
 	wave_ctrl.rate = val;
-    /*
-	wave_ctrl.inc = ceil_udivide(val, 2u);
-    */
-        double frameadd = double(val >> 1)/512.0;		//Samples / original gus frame
-        double realadd = (frameadd*(double)playback_rate/44100.0) * (double)WAVE_WIDTH;
-        wave_ctrl.inc = (uint32_t)realadd;
+
+	const auto gus_wave_inc = ceil_udivide(val, 2u);
+
+	// Adjust the increment to fit the channel's rate
+	const auto channel_wav_inc = gus_wave_inc * gus_to_channel_rate_ratio;
+	//
+	// Typically the ratio will be less than 1, producing a narrower
+	// increment. By shrinking the increment width, the GUS will produce
+	// more interwave frames (satisfying the channel's greater frame rate
+	// needs), instead of fewer frames for the GUS's lower frame rate.
+
+	wave_ctrl.inc = iround(channel_wav_inc);
 }
 
 Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
@@ -611,12 +626,16 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 	// Register the Audio and DMA channels
 	const auto mixer_callback = std::bind(&Gus::AudioCallback, this,
 	                                      std::placeholders::_1);
-	audio_channel = MIXER_AddChannel(mixer_callback,
-	                                 44100,
-	                                 "GUS",
-	                                 {ChannelFeature::Stereo,
-	                                  ChannelFeature::ReverbSend,
-	                                  ChannelFeature::ChorusSend});
+	audio_channel             = MIXER_AddChannel(mixer_callback,
+                                         0,
+                                         "GUS",
+                                         {ChannelFeature::Stereo,
+	                                              ChannelFeature::ReverbSend,
+	                                              ChannelFeature::ChorusSend});
+
+	assert(audio_channel);
+	channel_frame_rate_hz = audio_channel->GetSampleRate();
+	channel_rate_per_ms   = channel_frame_rate_hz / 1000.0;
 
 	// Let the mixer command adjust the GUS's internal amplitude level's
 	const auto set_level_callback = std::bind(&Gus::SetLevelCallback, this, _1);
@@ -641,9 +660,10 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 		// Gravis' calculation to convert from number of active voices
 		// to playback frame rate. Ref: UltraSound Lowlevel ToolKit
 		// v2.22 (21 December 1994), pp. 3 of 113.
-		frame_rate_per_ms = 1000.0 / (1.619695497 * active_voices);
+		const auto rate   = 1000000.0 / (1.619695497 * active_voices);
+		gus_frame_rate_hz = iround(rate);
 
-		frame_rate_hz = iround(frame_rate_per_ms * 1000.0);
+		gus_to_channel_rate_ratio = rate / channel_frame_rate_hz;
 	}
 }
 
@@ -685,7 +705,7 @@ AudioFrame Gus::RenderFrame()
 bool Gus::RenderForMs(const double interval_ms)
 {
 	// How many frames fall within the given duration?
-	auto frames_to_render = static_cast<int>(interval_ms * frame_rate_per_ms);
+	auto frames_to_render = static_cast<int>(interval_ms * channel_rate_per_ms);
 
 	// Capture our return state
 	const auto did_some_rendering = frames_to_render > 0;
@@ -717,7 +737,7 @@ void Gus::RenderUpToNow()
 
 double Gus::ConvertFramesToMs(const int frames) const
 {
-	return frames / frame_rate_per_ms;
+	return frames / channel_rate_per_ms;
 }
 
 void Gus::AudioCallback(uint16_t requested_frames)
@@ -748,7 +768,9 @@ void Gus::BeginPlayback()
 	irq_enabled = ((register_data & 0x400) != 0);
 	audio_channel->Enable(true);
 	if (prev_logged_voices != active_voices) {
-		LOG_MSG("GUS: Activated %u voices at %d Hz", active_voices, frame_rate_hz);
+		LOG_MSG("GUS: Activated %u voices at %d Hz",
+		        active_voices,
+		        gus_frame_rate_hz);
 		prev_logged_voices = active_voices;
 	}
 	is_running = true;
@@ -1506,7 +1528,7 @@ void Gus::WriteToRegister()
 			CheckVoiceIrq();
 		break;
 	case 0x1: // Voice rate control register
-		target_voice->WriteWaveRate(register_data, frame_rate_hz);
+		target_voice->WriteWaveRate(register_data, gus_to_channel_rate_ratio);
 		break;
 	case 0x2: // Voice MSW start address register
 		UpdateWaveMsw(target_voice->wave_ctrl.start);
@@ -1521,7 +1543,8 @@ void Gus::WriteToRegister()
 		UpdateWaveLsw(target_voice->wave_ctrl.end);
 		break;
 	case 0x6: // Voice volume rate register
-		target_voice->WriteVolRate(register_data >> 8, frame_rate_hz);
+		target_voice->WriteVolRate(register_data >> 8,
+		                           gus_to_channel_rate_ratio);
 		break;
 	case 0x7: // Voice volume start register  EEEEMMMM
 		data = register_data >> 8;
