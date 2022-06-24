@@ -50,6 +50,8 @@
 #include "lazyflags.h"
 #include "pic.h"
 
+#include <Tracy.hpp>
+
 #define CACHE_MAXSIZE	(4096*2)
 #define CACHE_TOTAL		(1024*1024*8)
 #define CACHE_PAGES		(512)
@@ -208,6 +210,7 @@ CacheBlock *LinkBlocks(BlockReturn ret)
 */
 
 Bits CPU_Core_Dynrec_Run(void) {
+	ZoneScoped
 	for (;;) {
 		// Determine the linear address of CS:EIP
 		PhysPt ip_point=SegPhys(cs)+reg_eip;

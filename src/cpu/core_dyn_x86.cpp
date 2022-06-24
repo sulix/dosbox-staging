@@ -49,6 +49,8 @@
 #include "inout.h"
 #include "fpu.h"
 
+#include <Tracy.hpp>
+
 #define CACHE_MAXSIZE	(4096*3)
 #define CACHE_TOTAL		(1024*1024*8)
 #define CACHE_PAGES		(512)
@@ -248,6 +250,7 @@ static void dyn_restoreregister(DynReg * src_reg, DynReg * dst_reg) {
 #include "core_dyn_x86/decoder.h"
 
 Bits CPU_Core_Dyn_X86_Run(void) {
+	ZoneScoped	
 	// helper class to auto-save DH_FPU state on function exit
 	class auto_dh_fpu {
 	public:

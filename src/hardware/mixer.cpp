@@ -60,6 +60,8 @@
 #include "programs.h"
 #include "midi.h"
 
+#include <Tracy.hpp>
+
 constexpr auto mixer_frame_size = 4;
 
 #define FREQ_SHIFT 14
@@ -1052,6 +1054,7 @@ static constexpr int calc_tickadd(const int freq)
 /* Mix a certain amount of new sample frames */
 static void MIXER_MixData(int frames_requested)
 {
+	ZoneScoped
 	for (auto &it : mixer.channels)
 		it.second->Mix(frames_requested);
 
@@ -1144,6 +1147,7 @@ static void MIXER_Mix_NoSound()
 static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
                                    Uint8 *stream, int len)
 {
+	ZoneScoped
 	memset(stream, 0, len);
 
 	auto frames_requested = len / mixer_frame_size;
