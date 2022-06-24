@@ -347,6 +347,8 @@ tracy_dep = dependency('tracy',
 
 if get_option('enable_tracy')
   add_project_arguments('-DTRACY_ENABLE', language : ['c','cpp'])
+  add_project_arguments('-g', language : ['c','cpp'])
+  add_project_arguments('-fno-omit-frame-pointer', language : ['c','cpp'])
 endif
 # macOS-only dependencies
 #
