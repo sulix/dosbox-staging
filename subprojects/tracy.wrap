@@ -1,0 +1,12 @@
+[wrap-file]
+directory = tracy-0.8.1
+source_url = https://github.com/wolfpld/tracy/archive/v0.8.1.tar.gz
+source_filename = tracy-0.8.1.tar.gz
+source_hash = 004992012b2dc879a9f6d143cbf94d7ea30e88135db3ef08951605d214892891
+patch_filename = tracy_0.8.1-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/tracy_0.8.1-1/get_patch
+patch_hash = b1e2ea9f713c63b627062bc5c2d598f23acc97a0c98de21764c06c7b0fe709c3
+
+[provide]
+tracy = tracy_dep
+

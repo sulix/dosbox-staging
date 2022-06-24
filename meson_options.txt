@@ -53,6 +53,7 @@ option('try_static_libs',
            'sdl2_net',
            'slirp',
            'speexdsp',
+           'tracy',
            'zlib'],
        value : [],
        description : 'Attempt to statically link selected libraries.'

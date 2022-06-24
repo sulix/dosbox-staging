@@ -24,6 +24,7 @@ project('dosbox-staging', 'c', 'cpp',
     'gtest:warning_level=0',
     'mt32emu:warning_level=0',
     'slirp:warning_level=0',
+    'tracy:tracy_enable=false'
   ]
 )
 
@@ -279,7 +280,7 @@ sdl2_dep           = dependency('sdl2', version : '>= 2.0.5',
 zlib_dep           = dependency('zlib', version : '>= 1.2.11',
                                 static : ('zlib' in static_libs_list))
 speexdsp_dep       = dependency('speexdsp', version : '> 1.1.9',
-                                static : ('speexdsp' in static_libs_list))
+                                static : ('speexdsp' in static_libs_list))         
 sdl2_net_dep       = optional_dep
 opengl_dep         = optional_dep
 fluid_dep          = optional_dep
@@ -339,6 +340,11 @@ if get_option('use_png')
                        static : prefers_static_libs or ('png' in static_libs_list),
                        not_found_message : msg.format('use_png'))
 endif
+
+tracy_dep = dependency('tracy',
+                        fallback : ['tracy', 'tracy_dep'],
+                        static : prefers_static_libs or ('tracy' in static_libs_list),
+                        not_found_message : msg.format('use_tracy'))
 
 # macOS-only dependencies
 #
