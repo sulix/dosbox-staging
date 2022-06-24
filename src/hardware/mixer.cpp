@@ -87,7 +87,7 @@ static constexpr int16_t MIXER_CLIP(const int sample)
 {
 	if (sample <= MIN_AUDIO) return MIN_AUDIO;
 	if (sample >= MAX_AUDIO) return MAX_AUDIO;
-	
+
 	return static_cast<int16_t>(sample);
 }
 
@@ -1821,6 +1821,23 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed (off)\n"
 	        "               and 100 full crossfeed (effectively turning stereo content into mono).\n"
 	        "Note: You can set per-channel crossfeed via mixer commands.");
+
+	string_prop = sec_prop.Add_string("reverb", when_idle, "off");
+	string_prop->Set_help(
+	        "Enable reverb globally on all audio channels to add a sense of space to the sound:\n"
+	        "  off:     No reverb (default).\n"
+	        "  on:      Enable reverb (medium preset).\n"
+	        "  tiny:    Simulates the sound of a small integrated speaker in a room;\n"
+	        "           specifically designed for small-speaker audio systems (PC Speaker,\n"
+	        "           Tandy, PS/1 Audio, and Disney).\n"
+	        "  small:   Recommended for fast-paced music, or when a subtle ambience is desired.\n"
+	        "  medium:  Middle-of-the-road preset suitable for a wide variety of games.\n"
+	        "  large:   Large hall preset that works best with slow, atmospheric music.\n"
+	        "A second 'keeplevels' parameter may be provided to change the type of the reverb only while\n"
+	        "keeping the per-channel reverb levels intact.\n"
+	        "A muliplier ranging from 0.0 to 2.0 may be provided as the second parameter to scale the\n"
+	        "reverb levels of the preset by this amount.\n"
+	        "Note: You can fine-tune the per-channel reverb levels via mixer commands.\n");
 
 	MAPPER_AddHandler(ToggleMute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
 }
