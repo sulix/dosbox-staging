@@ -137,8 +137,8 @@ public:
 	uint8_t ReadWaveState() const noexcept;
 	void ResetCtrls() noexcept;
 	void WritePanPot(uint8_t pos) noexcept;
-	void WriteVolRate(uint16_t rate) noexcept;
-	void WriteWaveRate(uint16_t rate) noexcept;
+	void WriteVolRate(uint16_t rate, int playback_rate) noexcept;
+	void WriteWaveRate(uint16_t rate, int playback_rate) noexcept;
 	bool UpdateVolState(uint8_t state) noexcept;
 	bool UpdateWaveState(uint8_t state) noexcept;
 
@@ -564,22 +564,35 @@ void Voice::WritePanPot(uint8_t pos) noexcept
 // volume scalar value (a floating point fraction between 0.0 and 1.0) is never
 // actually operated on, and is simply looked up from the final index position
 // at the time of sample population.
-void Voice::WriteVolRate(uint16_t val) noexcept
+void Voice::WriteVolRate(uint16_t val, int playback_rate) noexcept
 {
 	vol_ctrl.rate = val;
 	constexpr uint8_t bank_lengths = 63u;
 	const int pos_in_bank = val & bank_lengths;
 	const int decimator = 1 << (3 * (val >> 6));
+        /*
 	vol_ctrl.inc = ceil_sdivide(pos_in_bank * VOLUME_INC_SCALAR, decimator);
+        */
+        double frameadd = (double)pos_in_bank/decimator;
+        double realadd = (frameadd*(double)playback_rate/44100.0) * (double)WAVE_WIDTH;
+        vol_ctrl.inc = (uint32_t)realadd;
+        /*
+	vol_ctrl.inc = ceil_sdivide(pos_in_bank * VOLUME_INC_SCALAR * (double)playback_rate/44100.0), decimator);
+        */
 
 	// Sanity check the bounds of the incrementer
 	assert(vol_ctrl.inc >= 0 && vol_ctrl.inc <= bank_lengths * VOLUME_INC_SCALAR);
 }
 
-void Voice::WriteWaveRate(uint16_t val) noexcept
+void Voice::WriteWaveRate(uint16_t val, int playback_rate) noexcept
 {
 	wave_ctrl.rate = val;
+    /*
 	wave_ctrl.inc = ceil_udivide(val, 2u);
+    */
+        double frameadd = double(val >> 1)/512.0;		//Samples / original gus frame
+        double realadd = (frameadd*(double)playback_rate/44100.0) * (double)WAVE_WIDTH;
+        wave_ctrl.inc = (uint32_t)realadd;
 }
 
 Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
@@ -599,7 +612,7 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 	const auto mixer_callback = std::bind(&Gus::AudioCallback, this,
 	                                      std::placeholders::_1);
 	audio_channel = MIXER_AddChannel(mixer_callback,
-	                                 0,
+	                                 44100,
 	                                 "GUS",
 	                                 {ChannelFeature::Stereo,
 	                                  ChannelFeature::ReverbSend,
@@ -631,8 +644,6 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 		frame_rate_per_ms = 1000.0 / (1.619695497 * active_voices);
 
 		frame_rate_hz = iround(frame_rate_per_ms * 1000.0);
-
-		audio_channel->SetSampleRate(frame_rate_hz);
 	}
 }
 
@@ -1495,7 +1506,7 @@ void Gus::WriteToRegister()
 			CheckVoiceIrq();
 		break;
 	case 0x1: // Voice rate control register
-		target_voice->WriteWaveRate(register_data);
+		target_voice->WriteWaveRate(register_data, frame_rate_hz);
 		break;
 	case 0x2: // Voice MSW start address register
 		UpdateWaveMsw(target_voice->wave_ctrl.start);
@@ -1510,7 +1521,7 @@ void Gus::WriteToRegister()
 		UpdateWaveLsw(target_voice->wave_ctrl.end);
 		break;
 	case 0x6: // Voice volume rate register
-		target_voice->WriteVolRate(register_data >> 8);
+		target_voice->WriteVolRate(register_data >> 8, frame_rate_hz);
 		break;
 	case 0x7: // Voice volume start register  EEEEMMMM
 		data = register_data >> 8;
