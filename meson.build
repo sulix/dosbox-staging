@@ -340,10 +340,8 @@ if get_option('use_png')
                        not_found_message : msg.format('use_png'))
 endif
 
-tracy_dep = dependency('tracy',
-                        fallback : ['tracy', 'tracy_dep'],
-                        static : prefers_static_libs or ('tracy' in static_libs_list),
-                        not_found_message : msg.format('enable_tracy'))
+tracy_proj = subproject('tracy')
+tracy_dep = tracy_proj.get_variable('tracy_dep')
 
 if get_option('enable_tracy')
   add_project_arguments('-DTRACY_ENABLE', language : ['c','cpp'])
