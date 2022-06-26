@@ -472,6 +472,7 @@ third_party_deps = [atomic_dep,
                     libghc_dep,
                     libloguru_dep,
                     libsdlcd_dep,
+                    tracy_dep,
                     libwhereami_dep]
 
 # A list of DOSBox's internal libraries populated
