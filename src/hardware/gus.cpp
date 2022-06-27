@@ -222,13 +222,16 @@ private:
 	Gus(const Gus &) = delete;            // prevent copying
 	Gus &operator=(const Gus &) = delete; // prevent assignment
 
+	enum class FrameSink : uint8_t {
+		Queue,
+		Channel,
+	};
 
 	void ActivateVoices(uint8_t requested_voices);
 	void AudioCallback(uint16_t requested_frames);
 	void BeginPlayback();
 	void CheckIrq();
 	void CheckVoiceIrq();
-	double ConvertFramesToMs(const int frames) const;
 	uint32_t GetDmaOffset() noexcept;
 	void UpdateDmaAddr(uint32_t offset) noexcept;
 	void DmaCallback(DmaChannel *chan, DMAEvent event);
@@ -244,8 +247,8 @@ private:
 
 	void RegisterIoHandlers();
 	void Reset(uint8_t state);
-	AudioFrame RenderFrame();
-	bool RenderForMs(const double interval_ms);
+	AudioFrame AccumulateVoices();
+	void RenderFrame(const FrameSink sink);
 	void RenderUpToNow();
 	void SetLevelCallback(const AudioFrame &levels);
 	void StopPlayback();
@@ -278,9 +281,9 @@ private:
 	AudioFrame accumulator_scalar = {};
 
 	// Playback related
-	double last_render_time_ms = 0.0;
-	double frame_rate_per_ms = 0.0;
-	int frame_rate_hz = 0;
+	double last_rendered_ms = 0.0;
+	double ms_per_render    = 0.0;
+	int frame_rate_hz       = 0;
 	uint16_t unused_for_ms = 0;
 
 	uint8_t &adlib_command_reg = adlib_commandreg;
@@ -605,6 +608,9 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 	                                  ChannelFeature::ReverbSend,
 	                                  ChannelFeature::ChorusSend});
 
+	assert(audio_channel);
+	ms_per_render = 1000.0 / audio_channel->GetSampleRate();
+
 	// Let the mixer command adjust the GUS's internal amplitude level's
 	const auto set_level_callback = std::bind(&Gus::SetLevelCallback, this, _1);
 	audio_channel->RegisterLevelCallBack(set_level_callback);
@@ -628,9 +634,9 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 		// Gravis' calculation to convert from number of active voices
 		// to playback frame rate. Ref: UltraSound Lowlevel ToolKit
 		// v2.22 (21 December 1994), pp. 3 of 113.
-		frame_rate_per_ms = 1000.0 / (1.619695497 * active_voices);
-
-		frame_rate_hz = iround(frame_rate_per_ms * 1000.0);
+		frame_rate_hz = static_cast<int>(1000000.0 /
+		                                 (1.619695497 * active_voices));
+		ms_per_render = 1000.0 / frame_rate_hz;
 
 		audio_channel->SetSampleRate(frame_rate_hz);
 	}
@@ -646,7 +652,7 @@ void Gus::SetLevelCallback(const AudioFrame &levels)
 	accumulator_scalar = {levels.left * rms_squared, levels.right * rms_squared};
 }
 
-AudioFrame Gus::RenderFrame()
+AudioFrame Gus::AccumulateVoices()
 {
 	AudioFrame accumulator = {};
 
@@ -671,63 +677,65 @@ AudioFrame Gus::RenderFrame()
 	return accumulator;
 }
 
-bool Gus::RenderForMs(const double interval_ms)
+void Gus::RenderFrame(const FrameSink sink)
 {
-	// How many frames fall within the given duration?
-	auto frames_to_render = static_cast<int>(interval_ms * frame_rate_per_ms);
+	// Get the next frame from the device
+	AudioFrame frame = AccumulateVoices();
 
-	// Capture our return state
-	const auto did_some_rendering = frames_to_render > 0;
+	// Increment our time datum up to which the device has rendered
+	last_rendered_ms += ms_per_render;
 
-	// Render and queue the frames, which will be drained by the callback
-	while (frames_to_render-- > 0)
-		fifo.emplace(RenderFrame());
-
-	return did_some_rendering;
+	// Deposit the frame in the requested sink
+	if (sink == FrameSink::Channel) {
+		audio_channel->AddSamples_sfloat(1, &frame[0]);
+	} else {
+		assert(sink == FrameSink::Queue);
+		fifo.emplace(frame);
+	}
 }
 
 void Gus::RenderUpToNow()
 {
-	unused_for_ms = 0;
 	const auto now = PIC_FullIndex();
-
+	assert(audio_channel);
 	if (audio_channel->is_enabled) {
-		if (RenderForMs(now - last_render_time_ms)) {
-			last_render_time_ms = now;
-		}
+		while (last_rendered_ms < now)
+			RenderFrame(FrameSink::Queue);
 		return;
 	}
-
 	// Otherwise wake up the channel and mark the new last-update time.
 	// Subsequent renderings will get the new stream of frames.
 	audio_channel->Enable(true);
-	last_render_time_ms = now;
-}
-
-double Gus::ConvertFramesToMs(const int frames) const
-{
-	return frames / frame_rate_per_ms;
+	last_rendered_ms = now;
 }
 
 void Gus::AudioCallback(uint16_t requested_frames)
 {
 	assert(audio_channel);
+
+	//if (fifo.size())
+	//	LOG_MSG("GUS: Queued %2lu cycle-accurate frames", fifo.size());
+
 	while (requested_frames && fifo.size()) {
 		audio_channel->AddSamples_sfloat(1, &fifo.front()[0]);
 		fifo.pop();
 		--requested_frames;
 	}
-
-	if (requested_frames) {
-		last_render_time_ms += ConvertFramesToMs(requested_frames);
-		while (requested_frames--) {
-			const auto frame = RenderFrame();
-			audio_channel->AddSamples_sfloat(1, &frame[0]);
-		}
+	// If the queue's run dry, then get the remainder from the device
+	while (requested_frames) {
+		RenderFrame(FrameSink::Channel);
+		--requested_frames;
 	}
-	// Pause the channel if the card hasn't been written to for 3 seconds
-	constexpr uint16_t three_seconds_of_ticks = 3 * 1000;
-	if (++unused_for_ms > three_seconds_of_ticks)
+
+	// At this point, we've given the channel enough frames to catch up
+	// with "realtime". We can consider the current PIC index as our new
+	// time datum, against which we can queue new frame on IO write events.
+	assert(!requested_frames);
+	last_rendered_ms = PIC_FullIndex();
+
+	// Maybe idle the channel if the device has been unused for some time
+	constexpr uint16_t three_seconds_of_callbacks = 3 * 1000;
+	if (++unused_for_ms > three_seconds_of_callbacks)
 		audio_channel->Enable(false);
 }
 
@@ -1303,6 +1311,8 @@ void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 {
 	RenderUpToNow();
 
+	unused_for_ms = 0;
+
 	const auto val = check_cast<uint16_t>(value);
 
 	//	LOG_MSG("GUS: Write to port %x val %x", port, val);
@@ -1410,6 +1420,8 @@ void Gus::UpdateWaveMsw(int32_t &addr) const noexcept
 void Gus::WriteToRegister()
 {
 	RenderUpToNow();
+
+	unused_for_ms = 0;
 
 	// Registers that write to the general DSP
 	switch (selected_register) {
