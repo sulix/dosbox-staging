@@ -110,8 +110,6 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 
 	// Calculate rates and ratio based on the mixer's rate
 	const auto frame_rate_hz = channel->GetSampleRate();
-	frame_rate_per_ms = frame_rate_hz / 1000.0;
-	render_to_play_ratio = static_cast<double>(render_rate_hz) / frame_rate_hz;
 
 	// Setup the resampler to convert from the render rate to the mixer's frame rate
 	const auto max_freq = std::max(frame_rate_hz * 0.9 / 2, 8000.0);
@@ -133,7 +131,7 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	is_open = true;
 }
 
-bool GameBlaster::RenderOnce()
+bool GameBlaster::MaybeRenderFrame(const FrameSink sink)
 {
 	// Static containers setup once and reused
 	constexpr auto num_channels = 2; // left and right
@@ -150,93 +148,106 @@ bool GameBlaster::RenderOnce()
 	accumulator[0] += frame[0];
 	accumulator[1] += frame[1];
 
+	// Increment our time datum up to which the device has rendered
+	last_rendered_ms += ms_per_render;
+
 	// Limit the accumulated frame to avoid hard-clipping
 	soft_limiter->Process(accumulator, 1, frame);
 
-	// Pass the resulting samples into the resamplers
+	// Resample the limited frame
 	const auto l_sample_ready = resamplers[0]->input(frame[0]);
 	const auto r_sample_ready = resamplers[1]->input(frame[1]);
-
 	// The resamplers should always have samples ready at the same time
 	assert(l_sample_ready == r_sample_ready);
-	return l_sample_ready && r_sample_ready;
-}
 
-std::vector<int16_t> GameBlaster::GetFrame()
-{
-	const auto l_sample = check_cast<int16_t>(resamplers[0]->output());
-	const auto r_sample = check_cast<int16_t>(resamplers[1]->output());
-	return {l_sample, r_sample};
-}
+	// Inform the caller if we don't have a frame to fill the sink
+	if (!l_sample_ready || !r_sample_ready)
+		return false;
 
-void GameBlaster::RenderForMs(const double duration_ms)
-{
-	auto render_count = iround(duration_ms * render_rate_per_ms);
-	while (render_count-- > 0)
-		if (RenderOnce())
-			fifo.emplace(GetFrame());
+	// Get the frame from the resampler
+	accumulator[0] = static_cast<float>(resamplers[0]->output());
+	accumulator[1] = static_cast<float>(resamplers[1]->output());
+
+	// Deposit the frame in the requested sink
+	if (sink == FrameSink::Channel) {
+		assert(channel);
+		channel->AddSamples_sfloat(1, accumulator.data());
+	} else {
+		assert(sink == FrameSink::Queue);
+		fifo.emplace(accumulator);
+	}
+	return true;
 }
 
 void GameBlaster::RenderUpToNow()
 {
 	const auto now = PIC_FullIndex();
-	if (channel->is_enabled)
-		RenderForMs(now - last_render_time);
-	else
-		channel->Enable(true);
-	last_render_time = now;
-	unwritten_for_ms = 0;
+
+	if (channel->is_enabled) {
+		while (last_rendered_ms < now)
+			MaybeRenderFrame(FrameSink::Queue);
+		return;
+	}
+	// Otherwise wake up the channel and mark the new last-update time.
+	// Subsequent renderings will get the new stream of frames.
+	channel->Enable(true);
+	last_rendered_ms = now;
 }
 
 void GameBlaster::WriteDataToLeftDevice(io_port_t, io_val_t value, io_width_t)
 {
 	RenderUpToNow();
+	unused_for_ms = 0;
 	devices[0]->data_w(0, 0, check_cast<uint8_t>(value));
 }
 
 void GameBlaster::WriteControlToLeftDevice(io_port_t, io_val_t value, io_width_t)
 {
 	RenderUpToNow();
+	unused_for_ms = 0;
 	devices[0]->control_w(0, 0, check_cast<uint8_t>(value));
 }
 
 void GameBlaster::WriteDataToRightDevice(io_port_t, io_val_t value, io_width_t)
 {
 	RenderUpToNow();
+	unused_for_ms = 0;
 	devices[1]->data_w(0, 0, check_cast<uint8_t>(value));
 }
 
 void GameBlaster::WriteControlToRightDevice(io_port_t, io_val_t value, io_width_t)
 {
 	RenderUpToNow();
+	unused_for_ms = 0;
 	devices[1]->control_w(0, 0, check_cast<uint8_t>(value));
-}
-
-double GameBlaster::ConvertFramesToMs(const int frames) const
-{
-	return frames / frame_rate_per_ms;
 }
 
 void GameBlaster::AudioCallback(uint16_t requested_frames)
 {
 	assert(channel);
+
+	//if (fifo.size())
+	//	LOG_MSG("%s: Queued %2lu cycle-accurate frames", CardName(), fifo.size());
+
+	// First, add any frames we've queued since the last callback
 	while (requested_frames && fifo.size()) {
-		channel->AddSamples_s16(1, fifo.front().data());
+		channel->AddSamples_sfloat(1, fifo.front().data());
 		fifo.pop();
 		--requested_frames;
 	}
+	// When the queue's run dry, get the remainder from the device
+	while (requested_frames)
+		requested_frames -= MaybeRenderFrame(FrameSink::Channel);
 
-	if (requested_frames) {
-		last_render_time += ConvertFramesToMs(requested_frames);
-		while (requested_frames--) {
-			while (!RenderOnce())
-				; // render until a frame is ready
-			const auto frame = GetFrame();
-			channel->AddSamples_s16(1, frame.data());
-		}
-	}
-	// Pause the card if it hasn't been written to for 10 seconds
-	if (unwritten_for_ms++ > 10000)
+	// At this point, we've given the channel enough frames to catch up
+	// with "realtime". We can consider the current PIC index as our new
+	// time datum, against which we can queue new frame on IO write events.
+	assert(!requested_frames);
+	last_rendered_ms = PIC_FullIndex();
+
+	// Maybe idle the channel if the device has been unused for some time
+	constexpr auto ten_ms_of_callbacks = 10 * 1000;
+	if (unused_for_ms++ > ten_ms_of_callbacks)
 		channel->Enable(false);
 }
 
