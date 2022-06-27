@@ -343,7 +343,7 @@ endif
 tracy_proj = subproject('tracy')
 tracy_dep = tracy_proj.get_variable('tracy_dep')
 
-if get_option('enable_tracy')
+if get_option('tracy')
   add_project_arguments('-DTRACY_ENABLE', language : ['c','cpp'])
   add_project_arguments('-g', language : ['c','cpp'])
   add_project_arguments('-fno-omit-frame-pointer', language : ['c','cpp'])
