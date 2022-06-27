@@ -70,10 +70,11 @@ void Innovation::Open(const std::string &model_choice,
 	else if (clock_choice == "c64ntsc")
 		chip_clock = 1022727.14;
 	else if (clock_choice == "c64pal")
-		chip_clock = 985250;
+		chip_clock = 985250.0;
 	else if (clock_choice == "hardsid")
-		chip_clock = 1000000;
+		chip_clock = 1000000.0;
 	assert(chip_clock);
+	ms_per_clock = 1000.0 / chip_clock;
 
 	// Setup the mixer and get it's sampling rate
 	using namespace std::placeholders;
@@ -85,10 +86,9 @@ void Innovation::Open(const std::string &model_choice,
 	                                             ChannelFeature::ChorusSend});
 
 	const auto frame_rate_hz = mixer_channel->GetSampleRate();
-	frame_rate_per_ms = frame_rate_hz / 1000.0;
 
 	// Compute how many silent samples before idling the service
-	idle_after_silent_frames = iround(frame_rate_per_ms * idle_after_ms);
+	idle_after_silent_frames = iround(idle_after_ms * frame_rate_hz / 1000.0);
 
 	// Determine the passband frequency, which is capped at 90% of Nyquist.
 	const double passband = 0.9 * frame_rate_hz / 2;
@@ -109,10 +109,10 @@ void Innovation::Open(const std::string &model_choice,
 	channel = std::move(mixer_channel);
 
 	// Ready state-values for rendering
-	last_render_time = 0;
-	unwritten_for_ms = 0;
-	silent_frames = 0;
-	is_enabled = false;
+	last_rendered_ms = 0.0;
+	unused_for_ms    = 0;
+	silent_frames    = 0;
+	is_enabled       = false;
 
 	constexpr auto us_per_s = 1'000'000.0;
 	if (filter_strength == 0)
@@ -155,65 +155,84 @@ uint8_t Innovation::ReadFromPort(io_port_t port, io_width_t)
 
 void Innovation::WriteToPort(io_port_t port, io_val_t value, io_width_t)
 {
-	const auto now = PIC_FullIndex();
+	RenderUpToNow();
 
-	// Turn on the channel after the data's written
-	if (!is_enabled) {
-		assert(channel);
-		channel->Enable(true);
-		is_enabled = true;
-	} else {
-		RenderForMs(now - last_render_time);
-	}
-	last_render_time = now;
+	unused_for_ms = 0;
 
 	const auto data = check_cast<uint8_t>(value);
 	const auto sid_port = static_cast<io_port_t>(port - base_port);
 	service->write(sid_port, data);
-	unwritten_for_ms = 0;
 }
 
-int16_t Innovation::RenderOnce()
+void Innovation::RenderUpToNow()
 {
-	int16_t sample = 0;
-	while (!service->clock(1, &sample))
-		; // cycle until we have a sample
-	if (!sample) {
-		++silent_frames;
-		return 0;
+	const auto now = PIC_FullIndex();
+	assert(channel);
+	if (channel->is_enabled) {
+		while (last_rendered_ms < now)
+			MaybeRenderFrame(FrameSink::Queue);
+		return;
 	}
-	silent_frames = 0;
-	return check_cast<int16_t>(sample * 2);
+	// Otherwise wake up the channel and mark the new last-update time.
+	// Subsequent renderings will get the new stream of frames.
+	channel->Enable(true);
+	last_rendered_ms = now;
 }
 
-void Innovation::RenderForMs(const double duration_ms)
+int16_t Innovation::TallySilence(const int16_t sample)
 {
-	auto render_count = iround(duration_ms * frame_rate_per_ms);
-	while (render_count-- > 0)
-		fifo.push(RenderOnce());
+	if (!sample)
+		++silent_frames;
+	else
+		silent_frames = 0;
+	return sample;
 }
 
-double Innovation::ConvertFramesToMs(const int frames)
+bool Innovation::MaybeRenderFrame(const FrameSink sink)
 {
-	return frames / frame_rate_per_ms;
+	// Request a frame from the audio device
+	int16_t sample = 0;
+
+	// Increment our time datum up to which the device has rendered
+	last_rendered_ms += ms_per_clock;
+
+	// Inform the caller if we don't have a frame to fill the sink
+	assert(service);
+	if (!service->clock(1, &sample))
+		return false;
+
+	// Pass the frame through our silence tracker and scale it
+	const auto f_sample = static_cast<float>(TallySilence(sample) * 2);
+
+	// Deposit the frame in the requested sink
+	if (sink == FrameSink::Channel) {
+		assert(channel);
+		channel->AddSamples_mfloat(1, &f_sample);
+	} else {
+		assert(sink == FrameSink::Queue);
+		fifo.emplace(f_sample);
+	}
+	return true;
 }
 
 void Innovation::MixerCallBack(uint16_t requested_frames)
 {
+	assert(channel);
+
+	//if (fifo.size())
+	//	LOG_MSG("INNOVATION: Queued %2lu cycle-accurate frames", fifo.size());
+
 	while (requested_frames && fifo.size()) {
-		channel->AddSamples_m16(1, &fifo.front());
+		channel->AddSamples_mfloat(1, &fifo.front());
 		fifo.pop();
 		--requested_frames;
 	}
-	if (requested_frames) {
-		last_render_time += ConvertFramesToMs(requested_frames);
-		while (requested_frames--) {
-			const auto frame = RenderOnce();
-			channel->AddSamples_m16(1, &frame);
-		}
-	}
+	// If the queue's run dry, then get the remainder from the device
+	while (requested_frames)
+		requested_frames -= MaybeRenderFrame(FrameSink::Channel);
 
-	if (unwritten_for_ms++ > idle_after_ms &&
+	// Maybe idle the channel if the device has been unused and playing silence
+	if (unused_for_ms++ > idle_after_ms &&
 	    silent_frames > idle_after_silent_frames) {
 		channel->Enable(false);
 		is_enabled = false;
