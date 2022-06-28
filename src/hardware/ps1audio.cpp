@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cassert>
 #include <memory>
+#include <queue>
 #include <string.h>
 
 #include "control.h"
@@ -36,6 +37,7 @@
 
 #include "mame/emu.h"
 #include "mame/sn76496.h"
+#include "../libs/residfp/resample/TwoPassSincResampler.h"
 
 using namespace std::placeholders;
 
@@ -382,22 +384,53 @@ public:
 	~Ps1Synth();
 
 private:
-	void Update(uint16_t samples);
+	// Block alternate construction routes
+	Ps1Synth()                            = delete;
+	Ps1Synth(const Ps1Synth &)            = delete;
+	Ps1Synth &operator=(const Ps1Synth &) = delete;
+
+	enum class FrameSink : uint8_t {
+		Queue,
+		Channel,
+	};
+	void AudioCallback(uint16_t requested_frames);
+	bool MaybeRenderFrame(const FrameSink sink);
+	void RenderUpToNow();
+	int TallySilence(const int sample);
+
 	void WriteSoundGeneratorPort205(io_port_t port, io_val_t, io_width_t);
 
-	mixer_channel_t channel = nullptr;
+	// Managed objects
+	mixer_channel_t channel            = nullptr;
 	IO_WriteHandleObject write_handler = {};
-	static constexpr auto clock_rate_hz = 4000000;
 	sn76496_device device;
-	static constexpr auto max_samples_expected = 64;
-	int16_t buffer[1][max_samples_expected];
-	size_t last_write = 0;
+	std::unique_ptr<reSIDfp::TwoPassSincResampler> resampler = {};
+	std::queue<float> fifo                                   = {};
+	//	static constexpr auto max_samples_expected = 64;
+
+	// Static rate-related configuration
+	static constexpr auto ps1_psg_clock_hz = 4000000;
+	static constexpr auto render_divisor   = 16;
+	static constexpr auto render_rate_hz   = ceil_sdivide(ps1_psg_clock_hz,
+                                                            render_divisor);
+	static constexpr auto ms_per_render    = 1000.0 / render_rate_hz;
+	static constexpr auto idle_after_ms    = 2000;
+
+	// Runtime states
+	device_sound_interface *dsi = static_cast<sn76496_base_device *>(&device);
+	double last_rendered_ms     = 0.0;
+	int idle_after_silent_samples = 0;
+	int silent_samples            = 0;
+	int unused_for_ms             = 0;
+	// bool is_enabled                   = false;
+	/* 	int16_t buffer[1][max_samples_expected];
+	        size_t last_write = 0; */
 };
 
 Ps1Synth::Ps1Synth(const std::string &filter_choice)
-        : device(machine_config(), 0, 0, clock_rate_hz)
+        : device(machine_config(), 0, 0, ps1_psg_clock_hz)
 {
-	const auto callback = std::bind(&Ps1Synth::Update, this, _1);
+	const auto callback = std::bind(&Ps1Synth::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(callback,
 	                           0,
@@ -420,38 +453,114 @@ Ps1Synth::Ps1Synth(const std::string &filter_choice)
 		channel->SetLowPassFilter(FilterState::Off);
 	}
 
+	// Setup the resampler
+	const auto channel_rate_hz = channel->GetSampleRate();
+	const auto max_freq = std::max(channel_rate_hz * 0.9 / 2, 8000.0);
+	resampler.reset(reSIDfp::TwoPassSincResampler::create(render_rate_hz,
+	                                                      channel_rate_hz,
+	                                                      max_freq));
+
+	// Compute how many silent samples before idling the PSG
+	idle_after_silent_samples = channel_rate_hz * idle_after_ms / 1000;
+
 	const auto generate_sound =
 	        std::bind(&Ps1Synth::WriteSoundGeneratorPort205, this, _1, _2, _3);
 	write_handler.Install(0x205, generate_sound, io_width_t::byte);
 	static_cast<device_t &>(device).device_start();
+	device.convert_samplerate(render_rate_hz);
+}
 
-	auto sample_rate = static_cast<int32_t>(channel->GetSampleRate());
-	device.convert_samplerate(sample_rate);
-	last_write = 0;
+int Ps1Synth::TallySilence(const int sample)
+{
+	if (!sample)
+		++silent_samples;
+	else
+		silent_samples = 0;
+	return sample;
+}
+
+bool Ps1Synth::MaybeRenderFrame(const FrameSink sink)
+{
+	// Request a frame from the audio device
+	static int16_t sample;
+	static int16_t *frame[] = {&sample, nullptr};
+	static device_sound_interface::sound_stream ss;
+	dsi->sound_stream_update(ss, nullptr, frame, 1);
+
+	// Increment our time datum up to which the device has rendered
+	last_rendered_ms += ms_per_render;
+
+	// Inform the caller if we don't have a frame to fill the sink
+	if (!resampler->input(sample))
+		return false;
+
+	// Get the frame and pass it through the silence-tracker
+	const auto f_sample = static_cast<float>(TallySilence(resampler->output()));
+
+	// Deposit the frame in the requested sink
+	if (sink == FrameSink::Channel) {
+		assert(channel);
+		channel->AddSamples_mfloat(1, &f_sample);
+	} else {
+		assert(sink == FrameSink::Queue);
+		fifo.emplace(f_sample);
+	}
+	return true;
+}
+
+void Ps1Synth::RenderUpToNow()
+{
+	const auto now = PIC_FullIndex();
+	assert(channel);
+	if (channel->is_enabled) {
+		while (last_rendered_ms < now)
+			MaybeRenderFrame(FrameSink::Queue);
+		return;
+	}
+	// Otherwise wake up the channel and mark the new last-update time.
+	// Subsequent renderings will get the new stream of frames.
+	channel->Enable(true);
+	last_rendered_ms = now;
 }
 
 void Ps1Synth::WriteSoundGeneratorPort205(io_port_t, io_val_t value, io_width_t)
 {
+	unused_for_ms = 0;
+
+	RenderUpToNow();
+
 	const auto data = check_cast<uint8_t>(value);
-	keep_alive_channel(last_write, channel);
 	device.write(data);
 }
 
-void Ps1Synth::Update(uint16_t samples)
+void Ps1Synth::AudioCallback(uint16_t requested_frames)
 {
-	assert(samples <= max_samples_expected);
+	assert(channel);
 
-	// sound_stream_update's API requires an array of two pointers that
-	// point to either the mono array head or left and right heads. In this
-	// case, we're using a mono array but we still want to comply with the
-	// API, so we give it a valid two-element pointer array.
-	int16_t *buffer_head[] = {buffer[0], buffer[0]};
+	// if (fifo.size())
+	//	LOG_MSG("PS1: Queued %2lu cycle-accurate frames", fifo.size());
 
-	device_sound_interface::sound_stream ss;
-	static_cast<device_sound_interface &>(device).sound_stream_update(
-	        ss, nullptr, buffer_head, samples);
-	channel->AddSamples_m16(samples, buffer[0]);
-	maybe_suspend_channel(last_write, channel);
+	// First, send any frames we've queued since the last callback
+	while (requested_frames && fifo.size()) {
+		channel->AddSamples_mfloat(1, &fifo.front());
+		fifo.pop();
+		--requested_frames;
+	}
+	// If the queue's run dry, then get the remainder from the device
+	while (requested_frames)
+		requested_frames -= MaybeRenderFrame(FrameSink::Channel);
+
+	// At this point, we've given the channel enough frames to catch up
+	// with "realtime". We can consider the current PIC index as our new
+	// time datum, against which we can queue new frame on IO write events.
+	assert(!requested_frames);
+	last_rendered_ms = PIC_FullIndex();
+
+	// Maybe idle the channel if the device has been unused and playing silence
+	if (unused_for_ms++ > idle_after_ms &&
+	    silent_samples > idle_after_silent_samples) {
+		channel->Enable(false);
+	}
 }
 
 Ps1Synth::~Ps1Synth()
